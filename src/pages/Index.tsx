@@ -4,6 +4,8 @@ import ProfitLossCard from "@/components/ProfitLossCard";
 import SalesTable from "@/components/SalesTable";
 import ProfitChart from "@/components/ProfitChart";
 import ExpenseBreakdown from "@/components/ExpenseBreakdown";
+import ClientBreakdown from "@/components/ClientBreakdown";
+import BrokerBalance from "@/components/BrokerBalance";
 import {
   goldPurchases,
   sales,
@@ -77,6 +79,14 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <ProfitChart />
           <ExpenseBreakdown />
+        </div>
+
+        {/* Client Breakdown & Broker Balance */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <ClientBreakdown />
+          </div>
+          <BrokerBalance />
         </div>
 
         {/* P&L and Sales */}
