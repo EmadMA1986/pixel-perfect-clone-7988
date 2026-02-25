@@ -9,16 +9,14 @@ import {
   sales,
   profitLoss,
   brokerBalances,
+  goldInventory,
   formatCurrency,
   formatNumber,
 } from "@/data/goldData";
 
 const Index = () => {
-  const totalGoldBought = goldPurchases.reduce((s, p) => s + p.qtyPure, 0);
-  const totalGoldSold = sales.reduce((s, p) => s + p.qtyGrams, 0);
-  const remainingGold = totalGoldBought - totalGoldSold;
   const totalSalesRevenue = sales.reduce((s, p) => s + p.amountUSD, 0);
-  const avgBuyRate = goldPurchases.reduce((s, p) => s + p.amountUSD, 0) / totalGoldBought;
+  const avgCostPerGram = goldInventory.costOfRemainingUSD / goldInventory.balanceGrams;
 
   return (
     <div className="min-h-screen bg-background">
@@ -56,8 +54,8 @@ const Index = () => {
           />
           <SummaryCard
             title="Gold Inventory"
-            value={`${formatNumber(remainingGold, 1)}g`}
-            subtitle={`Avg cost $${formatNumber(avgBuyRate, 2)}/g`}
+            value={`${formatNumber(goldInventory.balanceGrams, 2)}g`}
+            subtitle={`Avg cost $${formatNumber(avgCostPerGram, 2)}/g`}
             icon={Gem}
           />
           <SummaryCard

@@ -124,6 +124,14 @@ export const brokerBalances = {
   brokerZHOU: { usd: 0, aed: 0 },
 };
 
+// From spreadsheet Page 3 final row: 99.010g remaining
+// From Page 9 inventory: 243.652g (trans 260126-160539) + 300g (trans 260206-184307)
+export const goldInventory = {
+  balanceGrams: 99.01,
+  totalMeltingLossGrams: 444.642, // 0.29 + 5 + 82.09 + 10.47 + 428.612 + 16.03
+  costOfRemainingUSD: 78349.93, // 32689.52 + 45660.41 from Page 9
+};
+
 export const formatCurrency = (value: number, currency = "USD") => {
   const prefix = currency === "USD" ? "$" : currency === "AED" ? "AED " : "R$ ";
   return `${prefix}${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
