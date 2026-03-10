@@ -37,16 +37,31 @@ export const goldPurchases: GoldTransaction[] = [
   { transId: "260123-162659", date: "10/21/25", transType: "Buy", party: "LDO", qtyGrams: 350, amountBRL: 248115, meltingLoss: 0, laborGrams: 0, qtyPure: 350, rateUSD: 131.521, amountUSD: 46032.47, amountAED: 168939.16 },
   { transId: "260123-162816", date: "10/22/25", transType: "Buy", party: "khansa", qtyGrams: 1000, amountBRL: 0, meltingLoss: 5, laborGrams: 0, qtyPure: 995, rateUSD: 129.656, amountUSD: 129008, amountAED: 473459.36 },
   { transId: "260123-163502", date: "10/23/25", transType: "Buy", party: "GUITO", qtyGrams: 628.19, amountBRL: 0, meltingLoss: 0, laborGrams: 0, qtyPure: 628.19, rateUSD: 136.296, amountUSD: 85619.95, amountAED: 314225.22 },
+  { transId: "260123-163653", date: "10/25/25", transType: "Buy", party: "LDO", qtyGrams: 293.4, amountBRL: 166372.11, meltingLoss: 82.09, laborGrams: 0, qtyPure: 211.31, rateUSD: 146.891, amountUSD: 31039.57, amountAED: 113915.23 },
+  { transId: "260126-143112", date: "10/25/25", transType: "Buy", party: "LDO", qtyGrams: 200, amountBRL: 135000, meltingLoss: 0, laborGrams: 0, qtyPure: 200, rateUSD: 125.933, amountUSD: 25186.57, amountAED: 92434.70 },
+  { transId: "260126-143237", date: "10/26/25", transType: "Buy", party: "LDO", qtyGrams: 60.79, amountBRL: 40261.9, meltingLoss: 10.47, laborGrams: 0, qtyPure: 50.32, rateUSD: 151.825, amountUSD: 7639.83, amountAED: 28038.17 },
   { transId: "260126-143555", date: "10/28/25", transType: "Buy", party: "LOUCS", qtyGrams: 400, amountBRL: 264000, meltingLoss: 0, laborGrams: 0, qtyPure: 400, rateUSD: 124.411, amountUSD: 49764.37, amountAED: 182635.25 },
   { transId: "260126-143758", date: "10/31/25", transType: "Buy", party: "LOUCS", qtyGrams: 1000, amountBRL: 654500, meltingLoss: 0, laborGrams: 0, qtyPure: 1000, rateUSD: 123.491, amountUSD: 123490.57, amountAED: 453210.38 },
   { transId: "260126-143947", date: "11/2/25", transType: "Buy", party: "LOUCS", qtyGrams: 1000, amountBRL: 653000, meltingLoss: 0, laborGrams: 0, qtyPure: 1000, rateUSD: 122.285, amountUSD: 122284.64, amountAED: 448784.64 },
   { transId: "260126-144147", date: "11/5/25", transType: "Buy", party: "LOUCS", qtyGrams: 2500, amountBRL: 1632500, meltingLoss: 0, laborGrams: 0, qtyPure: 2500, rateUSD: 121.375, amountUSD: 303438.66, amountAED: 1113619.89 },
+  { transId: "260126-144336", date: "12/2/25", transType: "Buy", party: "LOUCS", qtyGrams: 1000, amountBRL: 653000, meltingLoss: 0, laborGrams: 0, qtyPure: 1000, rateUSD: 121.874, amountUSD: 121873.83, amountAED: 447276.97 },
+  { transId: "260126-150453", date: "12/5/25", transType: "Buy", party: "LOUCS", qtyGrams: 1000, amountBRL: 650000, meltingLoss: 0, laborGrams: 0, qtyPure: 1000, rateUSD: 119.705, amountUSD: 119705.34, amountAED: 439318.60 },
+  { transId: "260126-150609", date: "12/8/25", transType: "Buy", party: "LOUCS", qtyGrams: 1000, amountBRL: 650000, meltingLoss: 0, laborGrams: 0, qtyPure: 1000, rateUSD: 119.485, amountUSD: 119485.29, amountAED: 438511.03 },
+  { transId: "260126-150723", date: "12/9/25", transType: "Buy", party: "LOUCS", qtyGrams: 2000, amountBRL: 1296000, meltingLoss: 0, laborGrams: 0, qtyPure: 2000, rateUSD: 119.337, amountUSD: 238674.03, amountAED: 875933.70 },
+  { transId: "260126-150953", date: "12/10/25", transType: "Buy", party: "LDO", qtyGrams: 100, amountBRL: 64000, meltingLoss: 0, laborGrams: 0, qtyPure: 100, rateUSD: 116.682, amountUSD: 11668.19, amountAED: 42822.24 },
   { transId: "260126-151120", date: "12/11/25", transType: "Buy", party: "ELIZEU", qtyGrams: 2000, amountBRL: 1296000, meltingLoss: 0, laborGrams: 0, qtyPure: 2000, rateUSD: 119.227, amountUSD: 238454.46, amountAED: 875127.88 },
+  { transId: "260126-151947", date: "12/16/25", transType: "Buy", party: "ELIZEU", qtyGrams: 1000, amountBRL: 648000, meltingLoss: 0, laborGrams: 0, qtyPure: 1000, rateUSD: 118.899, amountUSD: 118899.08, amountAED: 436359.63 },
+  { transId: "260126-152322", date: "12/16/25", transType: "Buy", party: "LDO", qtyGrams: 105.16, amountBRL: 67828.2, meltingLoss: 0, laborGrams: 0, qtyPure: 105.16, rateUSD: 118.240, amountUSD: 12434.13, amountAED: 45633.27 },
   { transId: "260126-152920", date: "12/19/25", transType: "Buy", party: "ELIZEU", qtyGrams: 4000, amountBRL: 2600000, meltingLoss: 0, laborGrams: 0, qtyPure: 4000, rateUSD: 117.435, amountUSD: 469738.03, amountAED: 1723938.57 },
+  { transId: "260126-153223", date: "12/19/25", transType: "Buy", party: "GUITO", qtyGrams: 1163.12, amountBRL: 0, meltingLoss: 0, laborGrams: 0, qtyPure: 1163.12, rateUSD: 135.500, amountUSD: 157602.49, amountAED: 578401.14 },
+  { transId: "260126-154145", date: "12/19/25", transType: "Buy", party: "LDO", qtyGrams: 54, amountBRL: 34830, meltingLoss: 0, laborGrams: 0, qtyPure: 54, rateUSD: 116.531, amountUSD: 6292.68, amountAED: 23094.15 },
+  { transId: "260126-154611", date: "12/29/25", transType: "Buy", party: "ELIZEU", qtyGrams: 2000, amountBRL: 1360000, meltingLoss: 0, laborGrams: 0, qtyPure: 2000, rateUSD: 121.864, amountUSD: 243727.60, amountAED: 894480.29 },
   { transId: "260126-154728", date: "1/6/26", transType: "Buy", party: "ELIZEU", qtyGrams: 5000, amountBRL: 3375000, meltingLoss: 0, laborGrams: 0, qtyPure: 5000, rateUSD: 125.465, amountUSD: 627323.42, amountAED: 2302276.95 },
+  { transId: "260126-154843", date: "1/12/26", transType: "Buy", party: "ELIZEU", qtyGrams: 2000, amountBRL: 1350000, meltingLoss: 0, laborGrams: 0, qtyPure: 2000, rateUSD: 125.581, amountUSD: 251162.79, amountAED: 921767.44 },
+  { transId: "260126-160157", date: "1/14/26", transType: "Buy", party: "LDO", qtyGrams: 100, amountBRL: 67500, meltingLoss: 0, laborGrams: 0, qtyPure: 100, rateUSD: 125.465, amountUSD: 12546.47, amountAED: 46045.54 },
   { transId: "260126-160434", date: "1/19/26", transType: "Buy", party: "LDO", qtyGrams: 3000, amountBRL: 2085000, meltingLoss: 0, laborGrams: 0, qtyPure: 3000, rateUSD: 129.495, amountUSD: 388485.19, amountAED: 1425740.64 },
   { transId: "260126-160539", date: "1/23/26", transType: "Buy", party: "ELIZEU", qtyGrams: 2000, amountBRL: 1420000, meltingLoss: 0, laborGrams: 0, qtyPure: 2000, rateUSD: 134.165, amountUSD: 268329.55, amountAED: 984769.46 },
-  { transId: "260206-184049", date: "1/30/26", transType: "Buy", party: "ELIZEU", qtyGrams: 5000, amountBRL: 3775000, meltingLoss: 0, laborGrams: 0, qtyPure: 5000, rateUSD: 144.498, amountUSD: 722488.04, amountAED: 2651531.1 },
+  { transId: "260206-184049", date: "1/30/26", transType: "Buy", party: "ELIZEU", qtyGrams: 5000, amountBRL: 3775000, meltingLoss: 0, laborGrams: 0, qtyPure: 5000, rateUSD: 144.498, amountUSD: 722488.04, amountAED: 2651531.10 },
   { transId: "260206-184307", date: "1/31/26", transType: "Buy", party: "CAMS", qtyGrams: 300, amountBRL: 240173.74, meltingLoss: 0, laborGrams: 0, qtyPure: 300, rateUSD: 152.201, amountUSD: 45660.41, amountAED: 167573.69 },
 ];
 
@@ -65,8 +80,10 @@ export const sales: SaleTransaction[] = [
   { transId: "260127-152402", date: "1/20/26", customer: "Moti", qtyGrams: 2476.35, rateUSD: 151.430, amountUSD: 374993.68, costUSD: 293967.11, profitUSD: 81026.57 },
   { transId: "260203-133659", date: "1/30/26", customer: "Moti", qtyGrams: 4000, rateUSD: 162.618, amountUSD: 650473.42, costUSD: 505282.91, profitUSD: 145190.51 },
   { transId: "260206-184527", date: "1/31/26", customer: "UNIP HK", qtyGrams: 5744.97, rateUSD: 158.053, amountUSD: 908009.74, costUSD: 720960.97, profitUSD: 187048.77 },
-  { transId: "260211-153658", date: "2/11/26", customer: "UNIP HK", qtyGrams: 5398.69, rateUSD: 162.458, amountUSD: 877058.23, costUSD: 767935.44, profitUSD: 109122.79 },
+  { transId: "260211-153658", date: "2/11/26", customer: "UNIP HK", qtyGrams: 5379.53, rateUSD: 162.458, amountUSD: 873947.69, costUSD: 714219.62, profitUSD: 159728.07 },
   { transId: "260219-141227", date: "2/17/26", customer: "Moti", qtyGrams: 5000, rateUSD: 158.664, amountUSD: 793319.08, costUSD: 659332.36, profitUSD: 133986.72 },
+  { transId: "260309-131753", date: "2/26/26", customer: "UNIP HK", qtyGrams: 14.70, rateUSD: 166.862, amountUSD: 2452.88, costUSD: 1972.22, profitUSD: 480.65 },
+  { transId: "260310-133410", date: "3/9/26", customer: "Moti", qtyGrams: 412.096, rateUSD: 163.808, amountUSD: 67504.59, costUSD: 57086.71, profitUSD: 10417.88 },
 ];
 
 export const expenses: ExpenseItem[] = [
@@ -89,23 +106,41 @@ export const expenses: ExpenseItem[] = [
   { transId: "260126-155847", date: "1/13/26", category: "Transport", amount: 1610.60 },
   { transId: "260126-155959", date: "1/13/26", category: "Transport", amount: 1412.64 },
   { transId: "260126-160053", date: "1/13/26", category: "BONUS", amount: 501.86 },
+  { transId: "260126-160347", date: "1/15/26", category: "Labor", amount: 802.97 },
   { transId: "260217-154532", date: "1/31/26", category: "BONUS", amount: 5166.10 },
   { transId: "260127-154815", date: "1/23/26", category: "Hedge Expenses", amount: 73206 },
-  { transId: "260127-165138", date: "1/23/26", category: "Melting Loss", amount: 53793.37 },
   { transId: "260206-190209", date: "1/31/26", category: "Transport", amount: 7113.20 },
   { transId: "260206-190250", date: "1/31/26", category: "Hotel", amount: 1000 },
   { transId: "260206-190359", date: "1/31/26", category: "Transport", amount: 5877.67 },
   { transId: "260209-125207", date: "1/19/26", category: "Labor", amount: 343.50 },
-  { transId: "260209-134041", date: "2/5/26", category: "Melting Loss", amount: 2164.05 },
+  { transId: "260309-132352", date: "2/26/26", category: "Hedge Expenses", amount: 50000 },
+  { transId: "260310-140715", date: "3/9/26", category: "Melting Loss", amount: 5101.65 },
+];
+
+// Sales discounts tracked separately
+export const salesDiscounts: ExpenseItem[] = [
+  { transId: "260126-161527", date: "10/18/25", category: "Sales Discount", amount: 73.38 },
+  { transId: "260127-131022", date: "11/27/25", category: "Sales Discount", amount: 585.07 },
+  { transId: "260127-140916", date: "12/9/25", category: "Sales Discount", amount: 907.95 },
+  { transId: "260127-143327", date: "12/18/25", category: "Sales Discount", amount: 1870.02 },
+  { transId: "260127-144654", date: "12/17/25", category: "Sales Discount", amount: 2017.80 },
+  { transId: "260127-150045", date: "12/26/25", category: "Sales Discount", amount: 4708.02 },
+  { transId: "260127-154453", date: "1/21/26", category: "Sales Discount", amount: 874.48 },
+  { transId: "260203-133250", date: "1/21/26", category: "Sales Discount", amount: 67.59 },
+  { transId: "260203-133845", date: "1/30/26", category: "Sales Discount", amount: 2086.34 },
+  { transId: "260206-144217", date: "1/30/26", category: "Sales Discount", amount: 230.77 },
+  { transId: "260209-133856", date: "1/31/26", category: "Sales Discount", amount: 1945.39 },
+  { transId: "260219-141901", date: "2/17/26", category: "Sales Discount", amount: 2785.08 },
+  { transId: "260309-132227", date: "2/26/26", category: "Sales Discount", amount: 1735.76 },
 ];
 
 export const profitLoss = {
-  sales: 5980623.76,
-  salesDiscount: 18151.89,
-  costOfSales: 5043668.47,
-  meltingLoss: 55957.42,
-  hedgeExpenses: 173206,
-  grossProfit: 689639.97,
+  sales: 6047470.68,
+  salesDiscount: 19887.65,
+  costOfSales: 5049011.58,
+  meltingLoss: 5101.65,
+  hedgeExpenses: 223206,
+  grossProfit: 750263.80,
   transport: 39388.01,
   labor: 4442.07,
   hotel: 1343.49,
@@ -113,23 +148,23 @@ export const profitLoss = {
   taxBonus: 780.67,
   otherExp: 92.94,
   totalAdminExpenses: 56219.64,
-  operatingProfit: 633420.33,
+  operatingProfit: 694044.16,
   fxGain: 771.42,
   fxLoss: 1128.97,
-  netProfit: 633062.78,
+  netProfit: 693686.61,
 };
 
 export const brokerBalances = {
-  brokerPY: { usd: 395119.47, aed: 0 },
+  brokerPY: { usd: 489784.27, aed: 0 },
   brokerZHOU: { usd: 0, aed: 0 },
 };
 
-// From spreadsheet Page 3 final row: 99.010g remaining
-// From Page 9 inventory: 243.652g (trans 260126-160539) + 300g (trans 260206-184307)
+// From Page 3: final balance 95.848g after melting loss on 3/9/26
+// From Page 9: remaining lots - 260126-160434 (2836.016g), 260126-160539 (2000g), 260206-184307 (300g)
 export const goldInventory = {
-  balanceGrams: 99.01,
-  totalMeltingLossGrams: 444.642, // 0.29 + 5 + 82.09 + 10.47 + 428.612 + 16.03
-  costOfRemainingUSD: 78349.93, // 32689.52 + 45660.41 from Page 9
+  balanceGrams: 95.848,
+  totalMeltingLossGrams: 137.95, // 0.29 + 5 + 82.09 + 10.47 + 40.168 (latest)
+  costOfRemainingUSD: 681240.03, // 367250.07 + 268329.55 + 45660.41 from Page 9
 };
 
 export const formatCurrency = (value: number, currency = "USD") => {

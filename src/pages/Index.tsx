@@ -34,7 +34,7 @@ const Index = () => {
               <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Trading Dashboard</p>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground">Last updated: Feb 19, 2026</p>
+          <p className="text-xs text-muted-foreground">Last updated: Mar 10, 2026</p>
         </div>
       </header>
 
