@@ -155,8 +155,8 @@ export const profitLoss = {
 };
 
 export const brokerBalances = {
-  brokerPY: { usd: 489784.27, aed: 0 },
-  brokerZHOU: { usd: 0, aed: 0 },
+  brokerPY: { usd: 1824.32, aed: 0 },
+  brokerZHOU: { usd: 487959.95, aed: 0 },
 };
 
 // From Page 3: final balance 95.848g after melting loss on 3/9/26
