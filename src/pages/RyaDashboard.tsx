@@ -325,10 +325,101 @@ const RyaDashboard = () => {
         {/* Tabs: Clients / Suppliers / Brokers */}
         <Tabs defaultValue="clients" className="space-y-4">
           <TabsList className="bg-secondary/50">
+            <TabsTrigger value="balances">Balances</TabsTrigger>
             <TabsTrigger value="clients">Clients</TabsTrigger>
             <TabsTrigger value="suppliers">Suppliers</TabsTrigger>
             <TabsTrigger value="brokers">Brokers</TabsTrigger>
           </TabsList>
+
+          {/* Customer & Supplier Balances */}
+          <TabsContent value="balances">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-serif text-foreground">Customer Balances (USD)</CardTitle>
+                  <p className="text-xs text-muted-foreground">AED converted at rate {AED_TO_USD_RATE}</p>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-border/50 hover:bg-transparent">
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">Customer</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">AED Balance</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">USD Balance</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Total (USD)</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {customerBalances.map((c) => (
+                          <TableRow key={c.name} className="border-border/30 hover:bg-secondary/30">
+                            <TableCell className="text-sm font-medium text-foreground">{c.name}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-muted-foreground">
+                              {c.balanceAED > 0 ? `AED ${formatNumber(c.balanceAED)}` : "—"}
+                            </TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-foreground">
+                              {c.balanceUSD > 0 ? formatCurrency(c.balanceUSD) : "—"}
+                            </TableCell>
+                            <TableCell className={`text-sm tabular-nums text-right font-medium ${c.totalUSD > 0 ? "text-success" : "text-muted-foreground"}`}>
+                              {c.totalUSD > 0 ? formatCurrency(c.totalUSD) : "$0.00"}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        <TableRow className="border-border/50 bg-secondary/30 font-semibold">
+                          <TableCell className="text-sm text-foreground">Total Outstanding</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">
+                            AED {formatNumber(customerBalances.reduce((s, c) => s + c.balanceAED, 0))}
+                          </TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-foreground">
+                            {formatCurrency(customerBalances.reduce((s, c) => s + c.balanceUSD, 0))}
+                          </TableCell>
+                          <TableCell className="text-sm tabular-nums text-right font-bold text-success">
+                            {formatCurrency(customerBalances.reduce((s, c) => s + c.totalUSD, 0))}
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-serif text-foreground">Supplier Balances (USD)</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-border/50 hover:bg-transparent">
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">Supplier</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">AED Balance</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">USD Balance</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Total (USD)</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {supplierBalances.map((s) => (
+                          <TableRow key={s.name} className="border-border/30 hover:bg-secondary/30">
+                            <TableCell className="text-sm font-medium text-foreground">{s.name}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-muted-foreground">—</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-foreground">$0.00</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-muted-foreground">$0.00</TableCell>
+                          </TableRow>
+                        ))}
+                        <TableRow className="border-border/50 bg-secondary/30 font-semibold">
+                          <TableCell className="text-sm text-foreground">Total</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">—</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-foreground">$0.00</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">$0.00</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
 
           <TabsContent value="clients">
             <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
