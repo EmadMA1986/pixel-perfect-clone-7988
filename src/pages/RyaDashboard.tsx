@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { Gem, TrendingUp, DollarSign, Wallet, Scale, Filter, CalendarIcon } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Gem, TrendingUp, DollarSign, Wallet, Scale, Filter, CalendarIcon, Building } from "lucide-react";
 import { format, isValid } from "date-fns";
 import SummaryCard from "@/components/SummaryCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
