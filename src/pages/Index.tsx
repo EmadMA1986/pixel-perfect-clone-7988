@@ -1,4 +1,6 @@
 import { Gem, TrendingUp, DollarSign, Wallet, Scale } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import SummaryCard from "@/components/SummaryCard";
 import ProfitLossCard from "@/components/ProfitLossCard";
 import SalesTable from "@/components/SalesTable";
@@ -34,7 +36,14 @@ const Index = () => {
               <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Trading Dashboard</p>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground">Last updated: Mar 10, 2026</p>
+          <div className="flex items-center gap-3">
+            <Link to="/rya">
+              <Button variant="outline" size="sm" className="text-xs">
+                RYA Dashboard
+              </Button>
+            </Link>
+            <p className="text-xs text-muted-foreground hidden sm:block">Last updated: Mar 10, 2026</p>
+          </div>
         </div>
       </header>
 
