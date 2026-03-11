@@ -36,14 +36,7 @@ const Index = () => {
               <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Trading Dashboard</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Link to="/rya">
-              <Button variant="outline" size="sm" className="text-xs">
-                RYA Dashboard
-              </Button>
-            </Link>
-            <p className="text-xs text-muted-foreground hidden sm:block">Last updated: Mar 10, 2026</p>
-          </div>
+          <p className="text-xs text-muted-foreground hidden sm:block">Last updated: Mar 10, 2026</p>
         </div>
       </header>
 
