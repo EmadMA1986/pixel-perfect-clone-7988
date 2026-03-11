@@ -1,6 +1,4 @@
 import { Gem, TrendingUp, DollarSign, Wallet, Scale } from "lucide-react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import SummaryCard from "@/components/SummaryCard";
 import ProfitLossCard from "@/components/ProfitLossCard";
 import SalesTable from "@/components/SalesTable";
