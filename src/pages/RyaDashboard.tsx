@@ -167,6 +167,12 @@ const RyaDashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <Link to="/otc">
+              <Button variant="outline" size="sm" className="text-xs gap-1.5">
+                <Building className="h-3.5 w-3.5" />
+                OTC Dashboard
+              </Button>
+            </Link>
             <p className="text-xs text-muted-foreground hidden sm:block">Last updated: Mar 11, 2026</p>
           </div>
         </div>
