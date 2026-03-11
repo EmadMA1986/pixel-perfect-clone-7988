@@ -159,6 +159,33 @@ export const brokerBalances = {
   brokerZHOU: { usd: 487959.95, aed: 0 },
 };
 
+export const AED_TO_USD_RATE = 3.673;
+
+export interface LedgerBalance {
+  name: string;
+  role: "customer" | "supplier";
+  balanceUSD: number;
+  balanceAED: number;
+  balanceUSDEquiv: number; // AED converted to USD at 3.673
+  totalUSD: number; // combined USD position
+}
+
+export const customerBalances: LedgerBalance[] = [
+  { name: "Moti", role: "customer", balanceUSD: 0, balanceAED: 479356.58, balanceUSDEquiv: 479356.58 / AED_TO_USD_RATE, totalUSD: 479356.58 / AED_TO_USD_RATE },
+  { name: "AL MASA", role: "customer", balanceUSD: 0, balanceAED: 12775.12, balanceUSDEquiv: 12775.12 / AED_TO_USD_RATE, totalUSD: 12775.12 / AED_TO_USD_RATE },
+  { name: "GOLDEN", role: "customer", balanceUSD: 0, balanceAED: 0, balanceUSDEquiv: 0, totalUSD: 0 },
+  { name: "UNIP HK", role: "customer", balanceUSD: 0, balanceAED: 0, balanceUSDEquiv: 0, totalUSD: 0 },
+];
+
+export const supplierBalances: LedgerBalance[] = [
+  { name: "LDO", role: "supplier", balanceUSD: 0, balanceAED: 0, balanceUSDEquiv: 0, totalUSD: 0 },
+  { name: "GUITO", role: "supplier", balanceUSD: 0, balanceAED: 0, balanceUSDEquiv: 0, totalUSD: 0 },
+  { name: "LOUCS", role: "supplier", balanceUSD: 0, balanceAED: 0, balanceUSDEquiv: 0, totalUSD: 0 },
+  { name: "ELIZEU", role: "supplier", balanceUSD: 0, balanceAED: 0, balanceUSDEquiv: 0, totalUSD: 0 },
+  { name: "khansa", role: "supplier", balanceUSD: 0, balanceAED: 0, balanceUSDEquiv: 0, totalUSD: 0 },
+  { name: "CAMS", role: "supplier", balanceUSD: 0, balanceAED: 0, balanceUSDEquiv: 0, totalUSD: 0 },
+];
+
 // From Page 3: final balance 95.848g after melting loss on 3/9/26
 // From Page 9: remaining lots - 260126-160434 (2836.016g), 260126-160539 (2000g), 260206-184307 (300g)
 export const goldInventory = {
