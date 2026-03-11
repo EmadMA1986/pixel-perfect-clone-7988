@@ -323,7 +323,7 @@ const RyaDashboard = () => {
         </div>
 
         {/* Tabs: Clients / Suppliers / Brokers */}
-        <Tabs defaultValue="clients" className="space-y-4">
+        <Tabs defaultValue="balances" className="space-y-4">
           <TabsList className="bg-secondary/50">
             <TabsTrigger value="balances">Balances</TabsTrigger>
             <TabsTrigger value="clients">Clients</TabsTrigger>
