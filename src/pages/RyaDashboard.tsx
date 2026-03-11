@@ -166,11 +166,6 @@ const RyaDashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Link to="/">
-              <Button variant="outline" size="sm" className="text-xs">
-                MKX Dashboard
-              </Button>
-            </Link>
             <p className="text-xs text-muted-foreground hidden sm:block">Last updated: Mar 11, 2026</p>
           </div>
         </div>
