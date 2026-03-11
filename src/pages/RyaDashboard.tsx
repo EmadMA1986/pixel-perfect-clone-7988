@@ -256,7 +256,7 @@ const RyaDashboard = () => {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <SummaryCard title="Net Profit" value={formatCurrency(totalProfit)} subtitle={`Margin ${totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : 0}%`} icon={TrendingUp} trend="up" />
+          <SummaryCard title="Net Profit" value={formatCurrency(profitLoss.netProfit)} subtitle={`Operating margin ${((profitLoss.operatingProfit / profitLoss.sales) * 100).toFixed(1)}%`} icon={TrendingUp} trend="up" />
           <SummaryCard title="Revenue" value={formatCurrency(totalRevenue)} subtitle={`${filteredSales.length} sales`} icon={DollarSign} />
           <SummaryCard title="Purchases" value={formatCurrency(totalPurchaseAmount)} subtitle={`${formatNumber(totalPurchaseQty, 0)}g from ${filteredPurchases.length} buys`} icon={Gem} />
           <SummaryCard title="Gold Sold" value={`${formatNumber(totalSalesQty, 2)}g`} subtitle={`Avg $${totalSalesQty > 0 ? formatNumber(totalRevenue / totalSalesQty, 2) : 0}/g`} icon={Scale} />
