@@ -1,9 +1,8 @@
 import { useState, useMemo } from "react";
 import { Gem, TrendingUp, DollarSign, Wallet, Scale, Filter, CalendarIcon } from "lucide-react";
-import { format, parse, isWithinInterval, isValid } from "date-fns";
+import { format, isValid } from "date-fns";
 import SummaryCard from "@/components/SummaryCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
