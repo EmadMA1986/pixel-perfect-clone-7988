@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { Gem, TrendingUp, DollarSign, Wallet, Scale, Filter, CalendarIcon } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Gem, TrendingUp, DollarSign, Wallet, Scale, Filter, CalendarIcon, Building } from "lucide-react";
 import { format, isValid } from "date-fns";
 import SummaryCard from "@/components/SummaryCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -166,6 +167,12 @@ const RyaDashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <Link to="/otc">
+              <Button variant="outline" size="sm" className="text-xs gap-1.5">
+                <Building className="h-3.5 w-3.5" />
+                OTC Dashboard
+              </Button>
+            </Link>
             <p className="text-xs text-muted-foreground hidden sm:block">Last updated: Mar 11, 2026</p>
           </div>
         </div>
