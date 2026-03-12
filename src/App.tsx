@@ -19,6 +19,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<RyaDashboard />} />
           <Route path="/otc" element={<OtcDashboard />} />
+          <Route path="/mk-autos" element={<MkAutosDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
