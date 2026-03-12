@@ -70,9 +70,49 @@ export const expenseBreakdown = [
   { category: "Scam Loss", amount: 950000 },
 ];
 
+export interface CapitalTransaction {
+  date: string;
+  description: string;
+  mariaUSDT?: number;
+  ahmadUSDT?: number;
+  mariaAED?: number;
+  ahmadAED?: number;
+}
+
+export const capitalDeposits: CapitalTransaction[] = [
+  { date: "11/28/2023", description: "OTC Funding Maria/Ricardo", mariaUSDT: 100000, ahmadUSDT: 100000 },
+  { date: "6/12/2023", description: "OTC Funding Ahmad", ahmadAED: 500000 },
+  { date: "11/12/2023", description: "OTC Funding Ahmad", ahmadAED: 300000 },
+  { date: "2/24/2024", description: "OTC Funding Ricardo", ahmadUSDT: 100000 },
+  { date: "2/24/2024", description: "OTC Funding Maria", mariaUSDT: 100000 },
+  { date: "2/26/2024", description: "OTC Funding Ahmad", ahmadAED: 222100 },
+  { date: "5/21/2024", description: "OTC Funding Maria", mariaUSDT: 300000 },
+  { date: "3/3/2025", description: "OTC Funding Maria/Ahmad", mariaAED: 25000, ahmadAED: 25000 },
+  { date: "4/8/2025", description: "OTC Funding Maria/Ahmad", mariaUSDT: 64965.94, ahmadUSDT: 64965.94 },
+];
+
+export const capitalWithdrawals: CapitalTransaction[] = [
+  { date: "2/19/2024", description: "Partners Withdrawals > UTGL", mariaUSDT: 9200.54, ahmadUSDT: 9200.54 },
+  { date: "5/16/2024", description: "Partners Withdrawals > UTGL", mariaUSDT: 25000, ahmadUSDT: 25000 },
+  { date: "1/19/2024", description: "Ahmad Withdrawal", ahmadAED: 25000 },
+  { date: "4/20/2024", description: "Ahmad Withdrawal", ahmadUSDT: 1860.07, ahmadAED: 12106 },
+  { date: "6/13/2024", description: "Ahmad Withdrawal", ahmadUSDT: 2295 },
+  { date: "10/25/2024", description: "Ahmad Withdrawal", ahmadUSDT: 44000 },
+  { date: "9/1/2025", description: "Partners Withdrawals > MKX", mariaAED: 50000, ahmadAED: 50000 },
+  { date: "4/28/2025", description: "Partners Withdrawals > MKX", mariaAED: 20000, ahmadAED: 20000 },
+  { date: "5/5/2025", description: "Partners Withdrawals > MKX", mariaAED: 80000, ahmadAED: 80000 },
+  { date: "7/16/2025", description: "Ahmad Withdrawal to MKX", ahmadAED: 15000 },
+  { date: "5/1/2026", description: "Partners Withdrawals", mariaAED: 1000000, ahmadAED: 1000000 },
+];
+
+export const scamLosses: CapitalTransaction[] = [
+  { date: "1/23/2025", description: "Scam Loss", mariaAED: 75000, ahmadAED: 75000 },
+  { date: "7/7/2025", description: "Scam Loss", mariaAED: 400000, ahmadAED: 400000 },
+];
+
 export const partnerCapital = {
-  maria: { funding: 2099837.41, withdrawal: 1275601.48, net: 824235.93 },
-  ahmad: { funding: 2020187.41, withdrawal: 1504556.98, net: 515630.44 },
+  maria: { funding: 2099837.41, withdrawal: 1275601.48, net: 824235.93, scamLoss: 475000, expenses: 278964.48, netPosition: 70271.45 },
+  ahmad: { funding: 2020187.41, withdrawal: 1504556.98, net: 515630.44, scamLoss: 475000, expenses: 278964.48, netPosition: -238334.05 },
   totalFunding: 4120024.83,
   totalWithdrawal: 2780158.46,
   netCapital: 1339866.37,
