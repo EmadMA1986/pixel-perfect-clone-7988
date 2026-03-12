@@ -354,14 +354,14 @@ const RyaDashboard = () => {
                         {customerBalances.map((c) => (
                           <TableRow key={c.name} className="border-border/30 hover:bg-secondary/30">
                             <TableCell className="text-sm font-medium text-foreground">{c.name}</TableCell>
-                            <TableCell className="text-sm tabular-nums text-right text-muted-foreground">
-                              {c.balanceAED > 0 ? `AED ${formatNumber(c.balanceAED)}` : "—"}
+                            <TableCell className={`text-sm tabular-nums text-right ${c.balanceAED > 0 ? "text-muted-foreground" : c.balanceAED < 0 ? "text-destructive" : ""}`}>
+                              {c.balanceAED !== 0 ? `AED ${formatNumber(Math.abs(c.balanceAED))}${c.balanceAED < 0 ? " (Cr)" : ""}` : "—"}
                             </TableCell>
                             <TableCell className="text-sm tabular-nums text-right text-foreground">
                               {c.balanceUSD > 0 ? formatCurrency(c.balanceUSD) : "—"}
                             </TableCell>
-                            <TableCell className={`text-sm tabular-nums text-right font-medium ${c.totalUSD > 0 ? "text-success" : "text-muted-foreground"}`}>
-                              {c.totalUSD > 0 ? formatCurrency(c.totalUSD) : "$0.00"}
+                            <TableCell className={`text-sm tabular-nums text-right font-medium ${c.totalUSD > 0 ? "text-success" : c.totalUSD < 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                              {c.totalUSD !== 0 ? formatCurrency(c.totalUSD) : "$0.00"}
                             </TableCell>
                           </TableRow>
                         ))}
@@ -373,7 +373,7 @@ const RyaDashboard = () => {
                           <TableCell className="text-sm tabular-nums text-right text-foreground">
                             {formatCurrency(customerBalances.reduce((s, c) => s + c.balanceUSD, 0))}
                           </TableCell>
-                          <TableCell className="text-sm tabular-nums text-right font-bold text-success">
+                          <TableCell className={`text-sm tabular-nums text-right font-bold ${customerBalances.reduce((s, c) => s + c.totalUSD, 0) >= 0 ? "text-success" : "text-destructive"}`}>
                             {formatCurrency(customerBalances.reduce((s, c) => s + c.totalUSD, 0))}
                           </TableCell>
                         </TableRow>
