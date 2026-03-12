@@ -123,12 +123,11 @@ const RyaDashboard = () => {
 
   // Supplier breakdown
   const supplierData = useMemo(() => {
-    const grouped = filteredPurchases.reduce<Record<string, { qty: number; amount: number; count: number; meltingLoss: number }>>((acc, p) => {
-      if (!acc[p.party]) acc[p.party] = { qty: 0, amount: 0, count: 0, meltingLoss: 0 };
+    const grouped = filteredPurchases.reduce<Record<string, { qty: number; amount: number; count: number }>>((acc, p) => {
+      if (!acc[p.party]) acc[p.party] = { qty: 0, amount: 0, count: 0 };
       acc[p.party].qty += p.qtyPure;
       acc[p.party].amount += p.amountUSD;
       acc[p.party].count += 1;
-      acc[p.party].meltingLoss += p.meltingLoss;
       return acc;
     }, {});
     return Object.entries(grouped)
