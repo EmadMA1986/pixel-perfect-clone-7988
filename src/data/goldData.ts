@@ -172,7 +172,7 @@ export interface LedgerBalance {
 
 export const customerBalances: LedgerBalance[] = [
   { name: "Moti", role: "customer", balanceUSD: 0, balanceAED: 479356.58, balanceUSDEquiv: 479356.58 / AED_TO_USD_RATE, totalUSD: 479356.58 / AED_TO_USD_RATE },
-  { name: "AL MASA", role: "customer", balanceUSD: 0, balanceAED: 12775.12, balanceUSDEquiv: 12775.12 / AED_TO_USD_RATE, totalUSD: 12775.12 / AED_TO_USD_RATE },
+  { name: "AL MASA", role: "customer", balanceUSD: 0, balanceAED: -12775.12, balanceUSDEquiv: -12775.12 / AED_TO_USD_RATE, totalUSD: -12775.12 / AED_TO_USD_RATE },
   { name: "GOLDEN", role: "customer", balanceUSD: 0, balanceAED: 0, balanceUSDEquiv: 0, totalUSD: 0 },
   { name: "UNIP HK", role: "customer", balanceUSD: 0, balanceAED: 0, balanceUSDEquiv: 0, totalUSD: 0 },
 ];
