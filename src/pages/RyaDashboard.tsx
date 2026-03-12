@@ -153,7 +153,8 @@ const RyaDashboard = () => {
     setCustomerFilter("all");
   };
 
-  const hasFilters = dateFrom || dateTo || partyFilter !== "all" || customerFilter !== "all";
+   const hasFilters = dateFrom || dateTo || partyFilter !== "all" || customerFilter !== "all";
+   const isClientView = customerFilter !== "all";
 
   return (
     <div className="min-h-screen bg-background">
@@ -259,21 +260,39 @@ const RyaDashboard = () => {
         </Card>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <SummaryCard title="Net Profit" value={formatCurrency(profitLoss.netProfit)} subtitle={`Operating margin ${((profitLoss.operatingProfit / profitLoss.sales) * 100).toFixed(1)}%`} icon={TrendingUp} trend="up" />
-          <SummaryCard title="Revenue" value={formatCurrency(totalRevenue)} subtitle={`${filteredSales.length} sales`} icon={DollarSign} />
-          <SummaryCard title="Purchases" value={formatCurrency(totalPurchaseAmount)} subtitle={`${formatNumber(totalPurchaseQty, 0)}g from ${filteredPurchases.length} buys`} icon={Gem} />
-          <SummaryCard title="Gold Sold" value={`${formatNumber(totalSalesQty, 2)}g`} subtitle={`Avg $${totalSalesQty > 0 ? formatNumber(totalRevenue / totalSalesQty, 2) : 0}/g`} icon={Scale} />
-          <SummaryCard title="Expenses" value={formatCurrency(totalExpenses)} subtitle={`${filteredExpenses.length} items`} icon={Wallet} />
-          <SummaryCard title="Discounts" value={formatCurrency(totalDiscounts)} subtitle={`${filteredDiscounts.length} items`} icon={DollarSign} />
-        </div>
+        {isClientView ? (
+          <>
+            <div className="mb-2">
+              <Badge variant="outline" className="text-sm px-3 py-1 border-primary/50 text-primary">
+                Viewing: {customerFilter}
+              </Badge>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <SummaryCard title="Client Profit" value={formatCurrency(totalProfit)} subtitle={`Margin ${totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : 0}%`} icon={TrendingUp} trend="up" />
+              <SummaryCard title="Revenue" value={formatCurrency(totalRevenue)} subtitle={`${filteredSales.length} sales`} icon={DollarSign} />
+              <SummaryCard title="Gold Sold" value={`${formatNumber(totalSalesQty, 2)}g`} subtitle={`Avg $${totalSalesQty > 0 ? formatNumber(totalRevenue / totalSalesQty, 2) : 0}/g`} icon={Scale} />
+              <SummaryCard title="Cost of Sales" value={formatCurrency(totalCost)} subtitle={`Avg $${totalSalesQty > 0 ? formatNumber(totalCost / totalSalesQty, 2) : 0}/g`} icon={Wallet} />
+            </div>
+          </>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            <SummaryCard title="Net Profit" value={formatCurrency(profitLoss.netProfit)} subtitle={`Operating margin ${((profitLoss.operatingProfit / profitLoss.sales) * 100).toFixed(1)}%`} icon={TrendingUp} trend="up" />
+            <SummaryCard title="Revenue" value={formatCurrency(totalRevenue)} subtitle={`${filteredSales.length} sales`} icon={DollarSign} />
+            <SummaryCard title="Purchases" value={formatCurrency(totalPurchaseAmount)} subtitle={`${formatNumber(totalPurchaseQty, 0)}g from ${filteredPurchases.length} buys`} icon={Gem} />
+            <SummaryCard title="Gold Sold" value={`${formatNumber(totalSalesQty, 2)}g`} subtitle={`Avg $${totalSalesQty > 0 ? formatNumber(totalRevenue / totalSalesQty, 2) : 0}/g`} icon={Scale} />
+            <SummaryCard title="Expenses" value={formatCurrency(totalExpenses)} subtitle={`${filteredExpenses.length} items`} icon={Wallet} />
+            <SummaryCard title="Discounts" value={formatCurrency(totalDiscounts)} subtitle={`${filteredDiscounts.length} items`} icon={DollarSign} />
+          </div>
+        )}
 
         {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className={`grid grid-cols-1 ${isClientView ? "" : "lg:grid-cols-2"} gap-6`}>
           {/* Profit by Sale */}
           <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-serif text-foreground">Profit by Sale</CardTitle>
+              <CardTitle className="text-lg font-serif text-foreground">
+                {isClientView ? `${customerFilter} — Profit by Sale` : "Profit by Sale"}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={280}>
@@ -291,35 +310,37 @@ const RyaDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Expense Breakdown Pie */}
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-serif text-foreground">Expense Breakdown</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col lg:flex-row items-center gap-4">
-                <ResponsiveContainer width="100%" height={220}>
-                  <PieChart>
-                    <Pie data={expenseData} cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={3} dataKey="value" stroke="none">
-                      {expenseData.map((_, i) => (
-                        <Cell key={i} fill={pieColors[i % pieColors.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }} formatter={(value: number) => [formatCurrency(value), ""]} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="space-y-2 w-full lg:w-auto">
-                  {expenseData.map((item, i) => (
-                    <div key={item.name} className="flex items-center gap-2 text-xs">
-                      <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: pieColors[i % pieColors.length] }} />
-                      <span className="text-muted-foreground whitespace-nowrap">{item.name}</span>
-                      <span className="ml-auto tabular-nums text-foreground font-medium">{formatCurrency(item.value)}</span>
-                    </div>
-                  ))}
+          {/* Expense Breakdown Pie - hidden in client view */}
+          {!isClientView && (
+            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-serif text-foreground">Expense Breakdown</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col lg:flex-row items-center gap-4">
+                  <ResponsiveContainer width="100%" height={220}>
+                    <PieChart>
+                      <Pie data={expenseData} cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={3} dataKey="value" stroke="none">
+                        {expenseData.map((_, i) => (
+                          <Cell key={i} fill={pieColors[i % pieColors.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }} formatter={(value: number) => [formatCurrency(value), ""]} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="space-y-2 w-full lg:w-auto">
+                    {expenseData.map((item, i) => (
+                      <div key={item.name} className="flex items-center gap-2 text-xs">
+                        <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: pieColors[i % pieColors.length] }} />
+                        <span className="text-muted-foreground whitespace-nowrap">{item.name}</span>
+                        <span className="ml-auto tabular-nums text-foreground font-medium">{formatCurrency(item.value)}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Tabs: Clients / Suppliers / Brokers */}
