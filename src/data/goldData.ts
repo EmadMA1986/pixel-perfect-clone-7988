@@ -188,10 +188,13 @@ export const supplierBalances: LedgerBalance[] = [
 
 // From Page 3: final balance 95.848g after melting loss on 3/9/26
 // From Page 9: remaining lots - 260126-160434 (2836.016g), 260126-160539 (2000g), 260206-184307 (300g)
+// FIFO: 40,456.81g purchased, 40,360.96g consumed (sold + melting), 95.848g remains
+// Remaining 95.848g is from the newest lot: CAMS (300g @ $152.201/g)
 export const goldInventory = {
   balanceGrams: 95.848,
-  totalMeltingLossGrams: 137.95, // 0.29 + 5 + 82.09 + 10.47 + 40.168 (latest)
-  costOfRemainingUSD: 681240.03, // 367250.07 + 268329.55 + 45660.41 from Page 9
+  totalMeltingLossGrams: 137.95,
+  costPerGram: 152.201,
+  costOfRemainingUSD: 95.848 * 152.201, // $14,588.16 (FIFO)
 };
 
 export const formatCurrency = (value: number, currency = "USD") => {
