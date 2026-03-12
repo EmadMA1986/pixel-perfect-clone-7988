@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import RyaDashboard from "./pages/RyaDashboard";
 import OtcDashboard from "./pages/OtcDashboard";
 import MkAutosDashboard from "./pages/MkAutosDashboard";
+import MkxDashboard from "./pages/MkxDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -20,6 +21,7 @@ const App = () => (
           <Route path="/" element={<RyaDashboard />} />
           <Route path="/otc" element={<OtcDashboard />} />
           <Route path="/mk-autos" element={<MkAutosDashboard />} />
+          <Route path="/mkx" element={<MkxDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
