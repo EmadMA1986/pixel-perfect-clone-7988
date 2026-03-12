@@ -184,6 +184,12 @@ const RyaDashboard = () => {
                 MK Autos
               </Button>
             </Link>
+            <Link to="/mkx">
+              <Button variant="outline" size="sm" className="text-xs gap-1.5">
+                <Activity className="h-3.5 w-3.5" />
+                MKX
+              </Button>
+            </Link>
             <p className="text-xs text-muted-foreground hidden sm:block">Last updated: Mar 11, 2026</p>
           </div>
         </div>
