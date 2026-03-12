@@ -123,11 +123,12 @@ const RyaDashboard = () => {
 
   // Supplier breakdown
   const supplierData = useMemo(() => {
-    const grouped = filteredPurchases.reduce<Record<string, { qty: number; amount: number; count: number }>>((acc, p) => {
-      if (!acc[p.party]) acc[p.party] = { qty: 0, amount: 0, count: 0 };
+    const grouped = filteredPurchases.reduce<Record<string, { qty: number; amount: number; count: number; meltingLoss: number }>>((acc, p) => {
+      if (!acc[p.party]) acc[p.party] = { qty: 0, amount: 0, count: 0, meltingLoss: 0 };
       acc[p.party].qty += p.qtyPure;
       acc[p.party].amount += p.amountUSD;
       acc[p.party].count += 1;
+      acc[p.party].meltingLoss += p.meltingLoss;
       return acc;
     }, {});
     return Object.entries(grouped)
@@ -504,6 +505,7 @@ const RyaDashboard = () => {
                         <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">Supplier</TableHead>
                         <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Purchases</TableHead>
                         <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Pure Qty (g)</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Melting Loss (g)</TableHead>
                         <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Amount (USD)</TableHead>
                         <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Avg Rate</TableHead>
                       </TableRow>
@@ -514,6 +516,7 @@ const RyaDashboard = () => {
                           <TableCell className="text-sm font-medium text-foreground">{row.name}</TableCell>
                           <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{row.count}</TableCell>
                           <TableCell className="text-sm tabular-nums text-right text-foreground">{formatNumber(row.qty, 2)}</TableCell>
+                          <TableCell className={`text-sm tabular-nums text-right ${row.meltingLoss > 0 ? "text-destructive" : "text-muted-foreground"}`}>{row.meltingLoss > 0 ? formatNumber(row.meltingLoss, 2) : "—"}</TableCell>
                           <TableCell className="text-sm tabular-nums text-right text-foreground">{formatCurrency(row.amount)}</TableCell>
                           <TableCell className="text-sm tabular-nums text-right text-muted-foreground">${row.qty > 0 ? formatNumber(row.amount / row.qty, 2) : 0}/g</TableCell>
                         </TableRow>
@@ -523,6 +526,7 @@ const RyaDashboard = () => {
                           <TableCell className="text-sm text-foreground">Total</TableCell>
                           <TableCell className="text-sm tabular-nums text-right text-foreground">{supplierData.reduce((s, d) => s + d.count, 0)}</TableCell>
                           <TableCell className="text-sm tabular-nums text-right text-foreground">{formatNumber(totalPurchaseQty, 2)}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-destructive">{formatNumber(supplierData.reduce((s, d) => s + d.meltingLoss, 0), 2)}</TableCell>
                           <TableCell className="text-sm tabular-nums text-right text-foreground">{formatCurrency(totalPurchaseAmount)}</TableCell>
                           <TableCell className="text-sm tabular-nums text-right text-muted-foreground">${totalPurchaseQty > 0 ? formatNumber(totalPurchaseAmount / totalPurchaseQty, 2) : 0}/g</TableCell>
                         </TableRow>
