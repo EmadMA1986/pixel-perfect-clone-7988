@@ -232,55 +232,179 @@ const OtcDashboard = () => {
 
           {/* Partners / Capital */}
           <TabsContent value="capital">
-            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-serif text-foreground">Partner Capital Structure</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {[
-                  { name: "Maria", ...partnerCapital.maria },
-                  { name: "Ahmad", ...partnerCapital.ahmad },
-                ].map((p) => (
-                  <div key={p.name} className="p-4 rounded-lg bg-secondary/30 space-y-2">
+            <div className="space-y-6">
+              {/* Partner Summary Cards */}
+              {[
+                { name: "Maria", ...partnerCapital.maria },
+                { name: "Ahmad", ...partnerCapital.ahmad },
+              ].map((p) => (
+                <Card key={p.name} className="border-border/50 bg-card/80 backdrop-blur-sm">
+                  <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-serif font-semibold text-foreground">{p.name}</span>
-                      <Badge variant={p.net >= 0 ? "default" : "destructive"} className="text-xs">{p.net >= 0 ? "Positive" : "Negative"}</Badge>
+                      <CardTitle className="text-lg font-serif text-foreground">{p.name}</CardTitle>
+                      <Badge variant={p.netPosition >= 0 ? "default" : "destructive"} className="text-xs">
+                        Net: {formatAED(p.netPosition)}
+                      </Badge>
                     </div>
-                    <div className="grid grid-cols-3 gap-4 text-xs">
-                      <div>
-                        <p className="text-muted-foreground">Funding</p>
-                        <p className="tabular-nums font-medium text-foreground">{formatAED(p.funding)}</p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
+                      <div className="p-3 rounded-lg bg-secondary/30">
+                        <p className="text-muted-foreground mb-1">Total Funding</p>
+                        <p className="tabular-nums font-bold text-foreground">{formatAED(p.funding)}</p>
                       </div>
-                      <div>
-                        <p className="text-muted-foreground">Withdrawal</p>
-                        <p className="tabular-nums font-medium text-loss">{formatAED(p.withdrawal)}</p>
+                      <div className="p-3 rounded-lg bg-secondary/30">
+                        <p className="text-muted-foreground mb-1">Total Withdrawal</p>
+                        <p className="tabular-nums font-bold text-loss">{formatAED(p.withdrawal)}</p>
                       </div>
-                      <div>
-                        <p className="text-muted-foreground">Net Capital</p>
+                      <div className="p-3 rounded-lg bg-secondary/30">
+                        <p className="text-muted-foreground mb-1">Net Capital</p>
                         <p className={`tabular-nums font-bold ${p.net >= 0 ? "text-success" : "text-loss"}`}>{formatAED(p.net)}</p>
                       </div>
+                      <div className="p-3 rounded-lg bg-secondary/30">
+                        <p className="text-muted-foreground mb-1">Scam Loss</p>
+                        <p className="tabular-nums font-bold text-loss">{formatAED(p.scamLoss)}</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-secondary/30">
+                        <p className="text-muted-foreground mb-1">Expenses Share</p>
+                        <p className="tabular-nums font-bold text-muted-foreground">{formatAED(p.expenses)}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  </CardContent>
+                </Card>
+              ))}
 
-                <div className="p-4 rounded-lg bg-primary/10 border border-primary/20 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-serif font-semibold text-primary">Combined Capital</span>
-                    <span className="text-sm tabular-nums font-bold text-primary">{formatAED(partnerCapital.netCapital)}</span>
+              {/* Deposits Table */}
+              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-serif text-foreground">Capital Deposits</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-border/50 hover:bg-transparent">
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">Date</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">Description</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Maria (USDT)</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Ahmad (USDT)</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Maria (AED)</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Ahmad (AED)</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {capitalDeposits.map((row, i) => (
+                          <TableRow key={i} className="border-border/30 hover:bg-secondary/30">
+                            <TableCell className="text-sm text-foreground">{row.date}</TableCell>
+                            <TableCell className="text-sm font-medium text-foreground">{row.description}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-foreground">{row.mariaUSDT ? `$${row.mariaUSDT.toLocaleString("en-US", { minimumFractionDigits: 2 })}` : "—"}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-foreground">{row.ahmadUSDT ? `$${row.ahmadUSDT.toLocaleString("en-US", { minimumFractionDigits: 2 })}` : "—"}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-foreground">{row.mariaAED ? formatAED(row.mariaAED) : "—"}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-foreground">{row.ahmadAED ? formatAED(row.ahmadAED) : "—"}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                      <p className="text-muted-foreground">Scam Loss</p>
-                      <p className="tabular-nums font-medium text-loss">{formatAED(partnerCapital.scamLoss)}</p>
+                </CardContent>
+              </Card>
+
+              {/* Withdrawals Table */}
+              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-serif text-foreground">Capital Withdrawals</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-border/50 hover:bg-transparent">
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">Date</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">Description</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Maria (USDT)</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Ahmad (USDT)</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Maria (AED)</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Ahmad (AED)</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {capitalWithdrawals.map((row, i) => (
+                          <TableRow key={i} className="border-border/30 hover:bg-secondary/30">
+                            <TableCell className="text-sm text-foreground">{row.date}</TableCell>
+                            <TableCell className="text-sm font-medium text-foreground">{row.description}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-loss">{row.mariaUSDT ? `$${row.mariaUSDT.toLocaleString("en-US", { minimumFractionDigits: 2 })}` : "—"}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-loss">{row.ahmadUSDT ? `$${row.ahmadUSDT.toLocaleString("en-US", { minimumFractionDigits: 2 })}` : "—"}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-loss">{row.mariaAED ? formatAED(row.mariaAED) : "—"}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-loss">{row.ahmadAED ? formatAED(row.ahmadAED) : "—"}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Scam Losses Table */}
+              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-serif text-foreground">Scam Losses</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-border/50 hover:bg-transparent">
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">Date</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">Description</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Maria (AED)</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Ahmad (AED)</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {scamLosses.map((row, i) => (
+                          <TableRow key={i} className="border-border/30 hover:bg-secondary/30">
+                            <TableCell className="text-sm text-foreground">{row.date}</TableCell>
+                            <TableCell className="text-sm font-medium text-foreground">{row.description}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-loss">{row.mariaAED ? formatAED(row.mariaAED) : "—"}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-loss">{row.ahmadAED ? formatAED(row.ahmadAED) : "—"}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Combined Summary */}
+              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                <CardContent className="p-4">
+                  <div className="p-4 rounded-lg bg-primary/10 border border-primary/20 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-serif font-semibold text-primary">Combined Capital Position</span>
+                      <span className={`text-sm tabular-nums font-bold ${partnerCapital.equityPosition >= 0 ? "text-success" : "text-loss"}`}>{formatAED(partnerCapital.equityPosition)}</span>
                     </div>
-                    <div>
-                      <p className="text-muted-foreground">Equity Position</p>
-                      <p className={`tabular-nums font-bold ${partnerCapital.equityPosition >= 0 ? "text-success" : "text-loss"}`}>{formatAED(partnerCapital.equityPosition)}</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+                      <div>
+                        <p className="text-muted-foreground">Total Funding</p>
+                        <p className="tabular-nums font-medium text-foreground">{formatAED(partnerCapital.totalFunding)}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Total Withdrawal</p>
+                        <p className="tabular-nums font-medium text-loss">{formatAED(partnerCapital.totalWithdrawal)}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Scam Loss</p>
+                        <p className="tabular-nums font-medium text-loss">{formatAED(partnerCapital.scamLoss)}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Total Expenses</p>
+                        <p className="tabular-nums font-medium text-muted-foreground">{formatAED(partnerCapital.totalExpenses)}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </main>
