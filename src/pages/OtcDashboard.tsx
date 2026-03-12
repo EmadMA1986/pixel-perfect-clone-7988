@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend } from "recharts";
-import { otcSummary, monthlyPL, expenseBreakdown, partnerCapital, formatAED } from "@/data/otcData";
+import { otcSummary, monthlyPL, expenseBreakdown, partnerCapital, capitalDeposits, capitalWithdrawals, scamLosses, formatAED } from "@/data/otcData";
 
 const OtcDashboard = () => {
   const totalGrossProfit = monthlyPL.reduce((s, m) => s + m.grossProfit, 0);
