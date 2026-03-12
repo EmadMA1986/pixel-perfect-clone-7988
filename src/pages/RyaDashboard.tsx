@@ -337,7 +337,7 @@ const RyaDashboard = () => {
               <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg font-serif text-foreground">Customer Balances (USD)</CardTitle>
-                  <p className="text-xs text-muted-foreground">AED converted at rate {AED_TO_USD_RATE}</p>
+                  <p className="text-xs text-muted-foreground">AED converted at rate {AED_TO_USD_RATE} • (Cr) = Credit (client owes us)</p>
                 </CardHeader>
                 <CardContent className="p-0">
                   <div className="overflow-x-auto">
