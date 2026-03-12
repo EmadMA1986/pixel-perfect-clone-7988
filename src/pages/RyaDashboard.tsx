@@ -153,7 +153,8 @@ const RyaDashboard = () => {
     setCustomerFilter("all");
   };
 
-  const hasFilters = dateFrom || dateTo || partyFilter !== "all" || customerFilter !== "all";
+   const hasFilters = dateFrom || dateTo || partyFilter !== "all" || customerFilter !== "all";
+   const isClientView = customerFilter !== "all";
 
   return (
     <div className="min-h-screen bg-background">
