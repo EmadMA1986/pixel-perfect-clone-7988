@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { Gem, TrendingUp, DollarSign, Wallet, Scale, Filter, CalendarIcon, Building } from "lucide-react";
+import { Gem, TrendingUp, DollarSign, Wallet, Scale, Filter, CalendarIcon, Building, Download } from "lucide-react";
+import * as XLSX from "xlsx";
 import { format, isValid } from "date-fns";
 import SummaryCard from "@/components/SummaryCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -153,6 +154,56 @@ const RyaDashboard = () => {
     setCustomerFilter("all");
   };
 
+  const exportToExcel = useCallback(() => {
+    const wb = XLSX.utils.book_new();
+
+    // Sales sheet
+    const salesSheet = filteredSales.map(s => ({
+      Date: s.date, Customer: s.customer, "Qty (g)": s.qtyGrams,
+      "Rate $/g": s.rateUSD, "Amount USD": s.amountUSD, "Cost USD": s.costUSD, "Profit USD": s.profitUSD,
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(salesSheet), "Sales");
+
+    // Purchases sheet
+    const purchasesSheet = filteredPurchases.map(p => ({
+      Date: p.date, Supplier: p.party, "Qty (g)": p.qtyGrams, "Melting Loss (g)": p.meltingLoss,
+      "Pure Qty (g)": p.qtyPure, "Rate $/g": p.rateUSD, "Amount USD": p.amountUSD, "Amount AED": p.amountAED,
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(purchasesSheet), "Purchases");
+
+    // Client Breakdown sheet
+    const clientSheet = clientData.map(c => ({
+      Client: c.name, Deals: c.count, "Qty (g)": c.qty, "Revenue USD": c.revenue,
+      "Cost USD": c.cost, "Profit USD": c.profit, "Margin %": c.revenue > 0 ? +((c.profit / c.revenue) * 100).toFixed(1) : 0,
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(clientSheet), "Clients");
+
+    // Supplier Breakdown sheet
+    const supplierSheet = supplierData.map(s => ({
+      Supplier: s.name, Purchases: s.count, "Pure Qty (g)": s.qty,
+      "Amount USD": s.amount, "Avg Rate $/g": s.qty > 0 ? +(s.amount / s.qty).toFixed(2) : 0,
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(supplierSheet), "Suppliers");
+
+    // Expenses sheet
+    const expSheet = filteredExpenses.map(e => ({ Date: e.date, Category: e.category, "Amount USD": e.amount }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(expSheet), "Expenses");
+
+    // P&L sheet
+    const plSheet = [
+      { Item: "Sales Revenue", Amount: profitLoss.sales },
+      { Item: "Sales Discount", Amount: -profitLoss.salesDiscount },
+      { Item: "Cost of Sales", Amount: -profitLoss.costOfSales },
+      { Item: "Melting Loss (40.138g)", Amount: -profitLoss.meltingLoss },
+      { Item: "Gross Profit", Amount: profitLoss.grossProfit },
+      { Item: "Operating Profit", Amount: profitLoss.operatingProfit },
+      { Item: "Net Profit", Amount: profitLoss.netProfit },
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(plSheet), "P&L");
+
+    XLSX.writeFile(wb, "RYA_Gold_Report.xlsx");
+  }, [filteredSales, filteredPurchases, filteredExpenses, clientData, supplierData]);
+
    const hasFilters = dateFrom || dateTo || partyFilter !== "all" || customerFilter !== "all";
    const isClientView = customerFilter !== "all";
 
@@ -171,6 +222,10 @@ const RyaDashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={exportToExcel}>
+              <Download className="h-3.5 w-3.5" />
+              Export Excel
+            </Button>
             <Link to="/otc">
               <Button variant="outline" size="sm" className="text-xs gap-1.5">
                 <Building className="h-3.5 w-3.5" />
