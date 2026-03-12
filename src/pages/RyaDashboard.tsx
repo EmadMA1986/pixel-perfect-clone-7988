@@ -333,6 +333,9 @@ const RyaDashboard = () => {
                       <div key={item.name} className="flex items-center gap-2 text-xs">
                         <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: pieColors[i % pieColors.length] }} />
                         <span className="text-muted-foreground whitespace-nowrap">{item.name}</span>
+                        {item.name === "Melting Loss" && (
+                          <span className="text-muted-foreground tabular-nums">(40.138g)</span>
+                        )}
                         <span className="ml-auto tabular-nums text-foreground font-medium">{formatCurrency(item.value)}</span>
                       </div>
                     ))}
