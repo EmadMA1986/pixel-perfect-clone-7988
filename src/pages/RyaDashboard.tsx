@@ -504,7 +504,6 @@ const RyaDashboard = () => {
                         <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">Supplier</TableHead>
                         <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Purchases</TableHead>
                         <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Pure Qty (g)</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Melting Loss (g)</TableHead>
                         <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Amount (USD)</TableHead>
                         <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Avg Rate</TableHead>
                       </TableRow>
@@ -515,7 +514,6 @@ const RyaDashboard = () => {
                           <TableCell className="text-sm font-medium text-foreground">{row.name}</TableCell>
                           <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{row.count}</TableCell>
                           <TableCell className="text-sm tabular-nums text-right text-foreground">{formatNumber(row.qty, 2)}</TableCell>
-                          <TableCell className={`text-sm tabular-nums text-right ${row.meltingLoss > 0 ? "text-destructive" : "text-muted-foreground"}`}>{row.meltingLoss > 0 ? formatNumber(row.meltingLoss, 2) : "—"}</TableCell>
                           <TableCell className="text-sm tabular-nums text-right text-foreground">{formatCurrency(row.amount)}</TableCell>
                           <TableCell className="text-sm tabular-nums text-right text-muted-foreground">${row.qty > 0 ? formatNumber(row.amount / row.qty, 2) : 0}/g</TableCell>
                         </TableRow>
@@ -525,7 +523,6 @@ const RyaDashboard = () => {
                           <TableCell className="text-sm text-foreground">Total</TableCell>
                           <TableCell className="text-sm tabular-nums text-right text-foreground">{supplierData.reduce((s, d) => s + d.count, 0)}</TableCell>
                           <TableCell className="text-sm tabular-nums text-right text-foreground">{formatNumber(totalPurchaseQty, 2)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-destructive">{formatNumber(supplierData.reduce((s, d) => s + d.meltingLoss, 0), 2)}</TableCell>
                           <TableCell className="text-sm tabular-nums text-right text-foreground">{formatCurrency(totalPurchaseAmount)}</TableCell>
                           <TableCell className="text-sm tabular-nums text-right text-muted-foreground">${totalPurchaseQty > 0 ? formatNumber(totalPurchaseAmount / totalPurchaseQty, 2) : 0}/g</TableCell>
                         </TableRow>
