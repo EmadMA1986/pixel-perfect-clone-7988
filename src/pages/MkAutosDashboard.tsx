@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { TrendingUp, DollarSign, Wallet, Car, ArrowLeft, BarChart3, Percent } from "lucide-react";
+import { TrendingUp, DollarSign, Wallet, Car, ArrowLeft, BarChart3, Percent, User } from "lucide-react";
 import SummaryCard from "@/components/SummaryCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
