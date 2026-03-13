@@ -87,8 +87,8 @@ const MkAutosDashboard = () => {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Position vs Cars</p>
-                <p className="text-lg font-bold font-serif text-loss">{formatAED(ahmadCapital.positionAgainstCars)}</p>
-                <p className="text-[10px] text-muted-foreground">Owes the company</p>
+                <p className="text-lg font-bold font-serif text-success">{formatAED(ahmadCapital.positionAgainstCars)}</p>
+                <p className="text-[10px] text-muted-foreground">To collect from company</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground font-semibold">Net Position</p>
