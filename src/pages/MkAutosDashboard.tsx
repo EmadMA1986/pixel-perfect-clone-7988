@@ -56,6 +56,42 @@ const MkAutosDashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-6">
+        {/* Ahmad's Capital Position */}
+        <Card className="border-border/50 bg-gradient-to-r from-emerald-500/10 to-emerald-700/5 backdrop-blur-sm">
+          <CardContent className="p-5 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <User className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Ahmad's Capital Position</p>
+                <p className="text-2xl font-bold font-serif text-foreground">{formatAED(mkAutosSummary.totalInitialInvestment)}</p>
+                <p className="text-[10px] text-muted-foreground">Capital Investment (Cars)</p>
+              </div>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">Withdrawals</p>
+              <p className="text-lg font-bold font-serif text-loss">{formatAED(mkAutosSummary.totalCashWithdrawals)}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">Cash Expenses</p>
+              <p className="text-lg font-bold font-serif text-loss">{formatAED(mkAutosSummary.totalCashExpenses)}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">Capital Position</p>
+              <p className="text-lg font-bold font-serif text-foreground">{formatAED(mkAutosSummary.totalInitialInvestment - mkAutosSummary.totalCashWithdrawals - mkAutosSummary.totalCashExpenses)}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">Gross Profit</p>
+              <p className="text-lg font-bold font-serif text-success">{formatAED(mkAutosSummary.totalGrossProfit)}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground font-semibold">Net Position</p>
+              <p className="text-xl font-bold font-serif text-success">{formatAED(mkAutosSummary.totalInitialInvestment - mkAutosSummary.totalCashWithdrawals - mkAutosSummary.totalCashExpenses + mkAutosSummary.totalGrossProfit)}</p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <SummaryCard title="Total Gross Profit" value={formatAED(mkAutosSummary.totalGrossProfit)} subtitle="All vehicles YTD" icon={TrendingUp} trend="up" />
