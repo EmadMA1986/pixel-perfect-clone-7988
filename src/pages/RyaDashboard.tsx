@@ -247,10 +247,9 @@ const RyaDashboard = () => {
                 </div>
                 <span className="text-muted-foreground text-lg">=</span>
                 <div>
-                  <p className="text-xs text-muted-foreground font-semibold">Initial Capital</p>
-                  <p className={`text-xl font-bold font-serif ${goldCapital.initialCapital >= 0 ? "text-success" : "text-loss"}`}>
+                  <p className="text-xs text-muted-foreground font-semibold">Initial Investment</p>
+                  <p className="text-xl font-bold font-serif text-primary">
                     {formatCurrency(Math.abs(goldCapital.initialCapital))}
-                    {goldCapital.initialCapital < 0 && <span className="text-xs ml-1">(deficit)</span>}
                   </p>
                 </div>
               </div>
