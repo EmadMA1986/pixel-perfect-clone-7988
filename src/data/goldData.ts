@@ -197,6 +197,40 @@ export const goldInventory = {
   costOfRemainingUSD: 95.848 * 152.201, // $14,588.16 (FIFO)
 };
 
+// Capital position calculated from current balances
+export const goldCapital = {
+  // Current Assets
+  brokerPY: 1824.32,
+  brokerZHOU: 487959.95,
+  goldInventoryUSD: 14588.20, // 95.848g × $152.201
+  arMotiAED: 479356.58,
+  arAlMasaAED: 12775.12, // they owe us (Cr balance)
+  arUnipHK: 0,
+  arGolden: 0,
+  // Computed
+  get totalAR_USD() {
+    return (this.arMotiAED + this.arAlMasaAED) / AED_TO_USD_RATE;
+  },
+  get totalBrokers() {
+    return this.brokerPY + this.brokerZHOU;
+  },
+  get totalCurrentPosition() {
+    return this.totalBrokers + this.goldInventoryUSD + this.totalAR_USD;
+  },
+  // Withdrawals
+  ownerWithdrawal: 50000, // Owner Account transfer
+  mkmkTransfersAED: 17445, // MKMK transfers (10,000 + 7,445)
+  get totalWithdrawals() {
+    return this.ownerWithdrawal + this.mkmkTransfersAED / AED_TO_USD_RATE;
+  },
+  // Net Profit from P&L
+  netProfit: 693686.61,
+  // Initial Capital = Current Position + Withdrawals - Net Profit
+  get initialCapital() {
+    return this.totalCurrentPosition + this.totalWithdrawals - this.netProfit;
+  },
+};
+
 export const formatCurrency = (value: number, currency = "USD") => {
   const prefix = currency === "USD" ? "$" : currency === "AED" ? "AED " : "R$ ";
   return `${prefix}${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
