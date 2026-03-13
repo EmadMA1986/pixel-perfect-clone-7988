@@ -204,7 +204,7 @@ export const goldCapital = {
   brokerZHOU: 487959.95,
   goldInventoryUSD: 14588.20, // 95.848g × $152.201
   arMotiAED: 479356.58,
-  arAlMasaAED: 12775.12, // they owe us (Cr balance)
+  arAlMasaAED: -12775.12, // credit balance (we owe them)
   arUnipHK: 0,
   arGolden: 0,
   // Computed
