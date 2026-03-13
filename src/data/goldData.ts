@@ -217,17 +217,11 @@ export const goldCapital = {
   get totalCurrentPosition() {
     return this.totalBrokers + this.goldInventoryUSD + this.totalAR_USD;
   },
-  // Withdrawals
-  ownerWithdrawal: 50000, // Owner Account transfer
-  mkmkTransfersAED: 17445, // MKMK transfers (10,000 + 7,445)
-  get totalWithdrawals() {
-    return this.ownerWithdrawal + this.mkmkTransfersAED / AED_TO_USD_RATE;
-  },
   // Net Profit from P&L
   netProfit: 693686.61,
-  // Initial Capital = Current Position + Withdrawals - Net Profit
+  // Initial Capital = Current Position - Net Profit
   get initialCapital() {
-    return this.totalCurrentPosition + this.totalWithdrawals - this.netProfit;
+    return this.totalCurrentPosition - this.netProfit;
   },
 };
 
