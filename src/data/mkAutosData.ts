@@ -100,6 +100,15 @@ export const vehicleLabels: Record<string, string> = {
   cayenne: "Cayenne",
 };
 
+export const ahmadCapital = {
+  sharePercentage: 22,
+  shareCapital: 135000,
+  totalCarsInvestment: 4325615,
+  companyRetainedEarnings: -137725,
+  ahmadShareOfLoss: -30300,
+  positionAgainstCars: -464421, // owes the company
+};
+
 export const formatAED = (value: number) => {
   const prefix = value < 0 ? "-AED " : "AED ";
   return `${prefix}${Math.abs(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
