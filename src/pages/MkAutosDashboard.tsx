@@ -90,12 +90,7 @@ const MkAutosDashboard = () => {
             {/* Line 2: Cars Position */}
             <div className="flex flex-wrap items-center gap-6">
               <div>
-                <p className="text-xs text-muted-foreground">Cars Investment</p>
-                <p className="text-lg font-bold font-serif text-foreground">{formatAED(ahmadCapital.totalCarsInvestment)}</p>
-              </div>
-              <span className="text-muted-foreground text-lg">+</span>
-              <div>
-                <p className="text-xs text-muted-foreground">Cars Profit</p>
+                <p className="text-xs text-muted-foreground">Total Cars Profit</p>
                 <p className="text-lg font-bold font-serif text-success">{formatAED(ahmadCapital.totalCarsProfit)}</p>
               </div>
               <span className="text-muted-foreground text-lg">−</span>
