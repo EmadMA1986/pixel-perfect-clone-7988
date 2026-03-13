@@ -9,7 +9,8 @@ import {
   BarChart3,
   Shield,
   Activity,
-  ArrowUpDown,
+  FileText,
+  Building2,
 } from "lucide-react";
 import SummaryCard from "@/components/SummaryCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,6 +44,9 @@ import {
   mkxSummary,
   formatAED,
   formatAEDFull,
+  plData,
+  plMonths,
+  balanceSheet,
 } from "@/data/mkxData";
 
 const MkxDashboard = () => {
@@ -85,6 +89,11 @@ const MkxDashboard = () => {
     []
   );
 
+  const formatPLValue = (v: number) => {
+    if (v === 0) return "—";
+    return formatAEDFull(v);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -104,7 +113,7 @@ const MkxDashboard = () => {
                 MKX
               </h1>
               <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                Crypto Exchange Dashboard
+                Virtual Assets Broker & Dealer Services
               </p>
             </div>
           </div>
@@ -138,10 +147,10 @@ const MkxDashboard = () => {
             trend="down"
           />
           <SummaryCard
-            title="Total Expenses"
-            value={formatAED(mkxSummary.totalExpenses)}
-            subtitle="All months"
-            icon={Wallet}
+            title="Total Assets"
+            value={formatAED(mkxSummary.totalAssets)}
+            subtitle="As of Jan 2026"
+            icon={Building2}
           />
           <SummaryCard
             title="Asset Coverage"
@@ -389,18 +398,20 @@ const MkxDashboard = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="monthly" className="space-y-4">
-          <TabsList className="bg-secondary/50">
+          <TabsList className="bg-secondary/50 flex-wrap h-auto gap-1">
             <TabsTrigger value="monthly">Monthly P&L</TabsTrigger>
+            <TabsTrigger value="fullpl">Full Year P&L</TabsTrigger>
+            <TabsTrigger value="balance">Balance Sheet</TabsTrigger>
             <TabsTrigger value="kpi">KPI Analysis</TabsTrigger>
             <TabsTrigger value="flows">Client Flows</TabsTrigger>
           </TabsList>
 
-          {/* Monthly P&L */}
+          {/* Monthly P&L (summary) */}
           <TabsContent value="monthly">
             <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg font-serif text-foreground">
-                  Monthly Profit & Loss
+                  Monthly Profit & Loss (Aug 2025 – Jan 2026)
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
@@ -408,90 +419,166 @@ const MkxDashboard = () => {
                   <Table>
                     <TableHeader>
                       <TableRow className="border-border/50 hover:bg-transparent">
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">
-                          Month
-                        </TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">
-                          Revenue
-                        </TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">
-                          Gas Fees
-                        </TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">
-                          Gross Profit
-                        </TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">
-                          Expenses
-                        </TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">
-                          Other Income
-                        </TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right font-bold">
-                          Net Profit
-                        </TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">Month</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Revenue</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Gas Fees</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Gross Profit</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Expenses</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Other Income</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right font-bold">Net Profit</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {monthlyData.map((row) => (
-                        <TableRow
-                          key={row.month}
-                          className="border-border/30 hover:bg-secondary/30"
-                        >
-                          <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">
-                            {row.month}
-                          </TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">
-                            {formatAEDFull(row.revenue)}
-                          </TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">
-                            {formatAEDFull(row.gasFees)}
-                          </TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-success">
-                            {formatAEDFull(row.grossProfit)}
-                          </TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">
-                            {formatAEDFull(row.totalExpenses)}
-                          </TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">
-                            {row.otherIncome > 0
-                              ? formatAEDFull(row.otherIncome)
-                              : "—"}
-                          </TableCell>
-                          <TableCell className="text-sm tabular-nums text-right font-medium text-loss">
-                            {formatAEDFull(row.netProfit)}
-                          </TableCell>
+                        <TableRow key={row.month} className="border-border/30 hover:bg-secondary/30">
+                          <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">{row.month}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAEDFull(row.revenue)}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAEDFull(row.gasFees)}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-success">{formatAEDFull(row.grossProfit)}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAEDFull(row.totalExpenses)}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{row.otherIncome > 0 ? formatAEDFull(row.otherIncome) : "—"}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right font-medium text-loss">{formatAEDFull(row.netProfit)}</TableCell>
                         </TableRow>
                       ))}
                       <TableRow className="border-border/50 bg-secondary/30 font-semibold">
-                        <TableCell className="text-sm text-foreground">
-                          Total
-                        </TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-foreground">
-                          {formatAEDFull(mkxSummary.totalRevenue)}
-                        </TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-muted-foreground">
-                          {formatAEDFull(
-                            monthlyData.reduce((s, m) => s + m.gasFees, 0)
-                          )}
-                        </TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-success">
-                          {formatAEDFull(mkxSummary.totalGrossProfit)}
-                        </TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-muted-foreground">
-                          {formatAEDFull(mkxSummary.totalExpenses)}
-                        </TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-muted-foreground">
-                          {formatAEDFull(
-                            monthlyData.reduce((s, m) => s + m.otherIncome, 0)
-                          )}
-                        </TableCell>
-                        <TableCell className="text-sm tabular-nums text-right font-bold text-loss">
-                          {formatAEDFull(mkxSummary.totalNetProfit)}
-                        </TableCell>
+                        <TableCell className="text-sm text-foreground">Total</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAEDFull(mkxSummary.totalRevenue)}</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAEDFull(monthlyData.reduce((s, m) => s + m.gasFees, 0))}</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right text-success">{formatAEDFull(mkxSummary.totalGrossProfit)}</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAEDFull(mkxSummary.totalExpenses)}</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAEDFull(monthlyData.reduce((s, m) => s + m.otherIncome, 0))}</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right font-bold text-loss">{formatAEDFull(mkxSummary.totalNetProfit)}</TableCell>
                       </TableRow>
                     </TableBody>
                   </Table>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Full Year P&L */}
+          <TabsContent value="fullpl">
+            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-primary" />
+                  <div>
+                    <CardTitle className="text-lg font-serif text-foreground">
+                      Profit & Loss Statement
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      MKX Virtual Assets Broker & Dealer Services L.L.C — Jan 2025 to Jan 2026
+                    </p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-border/50 hover:bg-transparent">
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider min-w-[200px] sticky left-0 bg-card z-10">Account</TableHead>
+                        {plMonths.map((m) => (
+                          <TableHead key={m} className="text-xs text-muted-foreground uppercase tracking-wider text-right min-w-[100px]">{m}</TableHead>
+                        ))}
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right min-w-[110px] font-bold">Total</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {plData.map((row, idx) => {
+                        if (row.isHeader) {
+                          return (
+                            <TableRow key={idx} className="border-border/50 bg-secondary/20 hover:bg-secondary/30">
+                              <TableCell colSpan={15} className="text-sm font-bold text-foreground py-2 sticky left-0 bg-secondary/20">
+                                {row.label}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        }
+                        return (
+                          <TableRow
+                            key={idx}
+                            className={`border-border/30 hover:bg-secondary/30 ${row.isTotal ? "bg-secondary/20 font-semibold" : ""}`}
+                          >
+                            <TableCell className={`text-sm whitespace-nowrap sticky left-0 bg-card z-10 ${row.isTotal ? "font-semibold text-foreground bg-secondary/20" : row.indent ? "pl-8 text-muted-foreground" : "text-foreground"}`}>
+                              {row.label}
+                            </TableCell>
+                            {row.values.length > 0 ? row.values.map((v, i) => (
+                              <TableCell
+                                key={i}
+                                className={`text-xs tabular-nums text-right ${
+                                  row.isTotal
+                                    ? v < 0 ? "text-loss font-semibold" : "text-foreground font-semibold"
+                                    : v < 0 ? "text-loss" : v === 0 ? "text-muted-foreground/50" : "text-foreground"
+                                }`}
+                              >
+                                {formatPLValue(v)}
+                              </TableCell>
+                            )) : plMonths.map((_, i) => (
+                              <TableCell key={i} className="text-xs text-muted-foreground/50 text-right">—</TableCell>
+                            ))}
+                            <TableCell className={`text-xs tabular-nums text-right font-bold ${row.total < 0 ? "text-loss" : "text-foreground"}`}>
+                              {row.total !== 0 ? formatAEDFull(row.total) : "—"}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Balance Sheet */}
+          <TabsContent value="balance">
+            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5 text-primary" />
+                  <div>
+                    <CardTitle className="text-lg font-serif text-foreground">
+                      Balance Sheet
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      As of January 31, 2026
+                    </p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-0.5">
+                {balanceSheet.map((item, idx) => {
+                  if (item.isSectionHeader) {
+                    return (
+                      <div
+                        key={idx}
+                        className={`flex items-center justify-between py-2 px-3 rounded-md bg-secondary/30 mt-2 first:mt-0`}
+                        style={{ paddingLeft: `${(item.indent || 0) * 16 + 12}px` }}
+                      >
+                        <span className="text-sm font-bold text-foreground">{item.label}</span>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div
+                      key={idx}
+                      className={`flex items-center justify-between py-1.5 px-3 rounded-md text-sm ${
+                        item.isTotal ? "bg-secondary/20 font-semibold border border-border/30" : ""
+                      }`}
+                      style={{ paddingLeft: `${(item.indent || 0) * 16 + 12}px` }}
+                    >
+                      <span className={`${item.isTotal ? "text-foreground" : "text-muted-foreground"}`}>
+                        {item.label}
+                      </span>
+                      <span className={`tabular-nums ${
+                        item.isTotal ? "text-foreground font-serif" :
+                        item.value < 0 ? "text-loss" : "text-foreground"
+                      }`}>
+                        {item.value !== 0 ? formatAEDFull(item.value) : ""}
+                      </span>
+                    </div>
+                  );
+                })}
               </CardContent>
             </Card>
           </TabsContent>
@@ -509,117 +596,72 @@ const MkxDashboard = () => {
                   <Table>
                     <TableHeader>
                       <TableRow className="border-border/50 hover:bg-transparent">
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">
-                          KPI
-                        </TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">KPI</TableHead>
                         {kpiData.map((k) => (
-                          <TableHead
-                            key={k.month}
-                            className="text-xs text-muted-foreground uppercase tracking-wider text-right"
-                          >
-                            {k.month}
-                          </TableHead>
+                          <TableHead key={k.month} className="text-xs text-muted-foreground uppercase tracking-wider text-right">{k.month}</TableHead>
                         ))}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       <TableRow className="border-border/30 hover:bg-secondary/30">
-                        <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">
-                          Gross Margin
-                        </TableCell>
+                        <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Gross Margin</TableCell>
                         {kpiData.map((k) => (
-                          <TableCell
-                            key={k.month}
-                            className="text-sm tabular-nums text-right text-success"
-                          >
-                            {k.grossMarginPct.toFixed(1)}%
-                          </TableCell>
+                          <TableCell key={k.month} className="text-sm tabular-nums text-right text-success">{k.grossMarginPct.toFixed(1)}%</TableCell>
                         ))}
                       </TableRow>
                       <TableRow className="border-border/30 hover:bg-secondary/30">
-                        <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">
-                          Net Margin
-                        </TableCell>
+                        <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Net Margin</TableCell>
                         {kpiData.map((k) => (
-                          <TableCell
-                            key={k.month}
-                            className="text-sm tabular-nums text-right text-loss"
-                          >
-                            {k.netMarginPct.toFixed(1)}%
-                          </TableCell>
+                          <TableCell key={k.month} className="text-sm tabular-nums text-right text-loss">{k.netMarginPct.toFixed(1)}%</TableCell>
                         ))}
                       </TableRow>
                       <TableRow className="border-border/30 hover:bg-secondary/30">
-                        <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">
-                          Asset Coverage Ratio
-                        </TableCell>
+                        <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Asset Coverage Ratio</TableCell>
                         {kpiData.map((k) => (
-                          <TableCell
-                            key={k.month}
-                            className="text-sm tabular-nums text-right"
-                          >
-                            <Badge
-                              variant={
-                                k.assetCoverageRatio >= 1.5
-                                  ? "default"
-                                  : "destructive"
-                              }
-                              className="text-xs"
-                            >
+                          <TableCell key={k.month} className="text-sm tabular-nums text-right">
+                            <Badge variant={k.assetCoverageRatio >= 1.5 ? "default" : "destructive"} className="text-xs">
                               {k.assetCoverageRatio.toFixed(2)}x
                             </Badge>
                           </TableCell>
                         ))}
                       </TableRow>
                       <TableRow className="border-border/30 hover:bg-secondary/30">
-                        <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">
-                          Liquidity Buffer
-                        </TableCell>
+                        <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Liquidity Buffer</TableCell>
                         {kpiData.map((k) => (
-                          <TableCell
-                            key={k.month}
-                            className="text-sm tabular-nums text-right text-foreground"
-                          >
-                            {formatAED(k.liquidityBuffer)}
-                          </TableCell>
+                          <TableCell key={k.month} className="text-sm tabular-nums text-right text-foreground">{formatAED(k.liquidityBuffer)}</TableCell>
                         ))}
                       </TableRow>
                       <TableRow className="border-border/30 hover:bg-secondary/30">
-                        <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">
-                          Trading Vol / Deposits
-                        </TableCell>
+                        <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Trading Vol / Deposits</TableCell>
                         {kpiData.map((k) => (
-                          <TableCell
-                            key={k.month}
-                            className="text-sm tabular-nums text-right text-muted-foreground"
-                          >
-                            {k.tradingVolumePerTotalDeposits.toFixed(3)}
-                          </TableCell>
+                          <TableCell key={k.month} className="text-sm tabular-nums text-right text-muted-foreground">{k.tradingVolumePerTotalDeposits.toFixed(3)}</TableCell>
                         ))}
                       </TableRow>
                       <TableRow className="border-border/30 hover:bg-secondary/30">
-                        <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">
-                          Revenue / Trading Vol
-                        </TableCell>
+                        <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Revenue / Trading Vol</TableCell>
                         {kpiData.map((k) => (
-                          <TableCell
-                            key={k.month}
-                            className="text-sm tabular-nums text-right text-muted-foreground"
-                          >
-                            {(k.revenuePerTradingVolume * 100).toFixed(2)}%
-                          </TableCell>
+                          <TableCell key={k.month} className="text-sm tabular-nums text-right text-muted-foreground">{(k.revenuePerTradingVolume * 100).toFixed(2)}%</TableCell>
                         ))}
                       </TableRow>
                       <TableRow className="border-border/30 hover:bg-secondary/30">
-                        <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">
-                          Asset Valuation Diff
-                        </TableCell>
+                        <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Asset Valuation Diff</TableCell>
                         {kpiData.map((k) => (
-                          <TableCell
-                            key={k.month}
-                            className={`text-sm tabular-nums text-right ${k.assetValuationDiff >= 0 ? "text-success" : "text-loss"}`}
-                          >
+                          <TableCell key={k.month} className={`text-sm tabular-nums text-right ${k.assetValuationDiff >= 0 ? "text-success" : "text-loss"}`}>
                             {formatAED(k.assetValuationDiff)}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                      <TableRow className="border-border/30 hover:bg-secondary/30">
+                        <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Break-even Trading Vol</TableCell>
+                        {kpiData.map((k) => (
+                          <TableCell key={k.month} className="text-sm tabular-nums text-right text-muted-foreground">{formatAED(k.breakEvenTradingVolume)}</TableCell>
+                        ))}
+                      </TableRow>
+                      <TableRow className="border-border/30 hover:bg-secondary/30">
+                        <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Net Profit / Trading Vol</TableCell>
+                        {kpiData.map((k) => (
+                          <TableCell key={k.month} className={`text-sm tabular-nums text-right ${k.netProfitPerTradingVolume >= 0 ? "text-success" : "text-loss"}`}>
+                            {(k.netProfitPerTradingVolume * 100).toFixed(2)}%
                           </TableCell>
                         ))}
                       </TableRow>
@@ -643,66 +685,31 @@ const MkxDashboard = () => {
                   <Table>
                     <TableHeader>
                       <TableRow className="border-border/50 hover:bg-transparent">
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">
-                          Month
-                        </TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">
-                          Fiat Deposits
-                        </TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">
-                          Fiat Withdrawals
-                        </TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">
-                          Net Fiat Flow
-                        </TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">
-                          VA Deposits
-                        </TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">
-                          VA Withdrawals
-                        </TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">
-                          Net VA Flow
-                        </TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">
-                          Trading Volume
-                        </TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">Month</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Fiat Deposits</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Fiat Withdrawals</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Net Fiat Flow</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">VA Deposits</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">VA Withdrawals</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Net VA Flow</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Trading Volume</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {monthlyData.map((row, i) => (
-                        <TableRow
-                          key={row.month}
-                          className="border-border/30 hover:bg-secondary/30"
-                        >
-                          <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">
-                            {row.month}
-                          </TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">
-                            {formatAEDFull(row.clientDepositsFiat)}
-                          </TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">
-                            {formatAEDFull(row.clientWithdrawalsFiat)}
-                          </TableCell>
-                          <TableCell
-                            className={`text-sm tabular-nums text-right font-medium ${kpiData[i].netFiatFlow >= 0 ? "text-success" : "text-loss"}`}
-                          >
+                        <TableRow key={row.month} className="border-border/30 hover:bg-secondary/30">
+                          <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">{row.month}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAEDFull(row.clientDepositsFiat)}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAEDFull(row.clientWithdrawalsFiat)}</TableCell>
+                          <TableCell className={`text-sm tabular-nums text-right font-medium ${kpiData[i].netFiatFlow >= 0 ? "text-success" : "text-loss"}`}>
                             {formatAEDFull(kpiData[i].netFiatFlow)}
                           </TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">
-                            {formatAEDFull(row.clientDepositsVA)}
-                          </TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">
-                            {formatAEDFull(row.clientWithdrawalsVA)}
-                          </TableCell>
-                          <TableCell
-                            className={`text-sm tabular-nums text-right font-medium ${kpiData[i].netVAFlow >= 0 ? "text-success" : "text-loss"}`}
-                          >
+                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAEDFull(row.clientDepositsVA)}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAEDFull(row.clientWithdrawalsVA)}</TableCell>
+                          <TableCell className={`text-sm tabular-nums text-right font-medium ${kpiData[i].netVAFlow >= 0 ? "text-success" : "text-loss"}`}>
                             {formatAEDFull(kpiData[i].netVAFlow)}
                           </TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">
-                            {formatAEDFull(row.tradingVolume)}
-                          </TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAEDFull(row.tradingVolume)}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
