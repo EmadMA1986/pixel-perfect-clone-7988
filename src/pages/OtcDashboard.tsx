@@ -74,24 +74,33 @@ const OtcDashboard = () => {
                 <Wallet className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Ahmad's Capital Funding</p>
+                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Ahmad's Capital Position</p>
                 <p className="text-2xl font-bold font-serif text-foreground">{formatAED(partnerCapital.ahmad.funding)}</p>
+                <p className="text-[10px] text-muted-foreground">Capital Funding</p>
               </div>
             </div>
             <div className="text-center">
               <p className="text-xs text-muted-foreground">Withdrawals</p>
-              <p className="text-xl font-bold font-serif text-loss">{formatAED(partnerCapital.ahmad.withdrawal)}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground">Net Capital</p>
-              <p className="text-xl font-bold font-serif text-foreground">{formatAED(partnerCapital.ahmad.net)}</p>
+              <p className="text-lg font-bold font-serif text-loss">{formatAED(partnerCapital.ahmad.withdrawal)}</p>
             </div>
             <div className="text-center">
               <p className="text-xs text-muted-foreground">Scam Loss (50%)</p>
-              <p className="text-xl font-bold font-serif text-loss">{formatAED(partnerCapital.ahmad.scamLoss)}</p>
+              <p className="text-lg font-bold font-serif text-loss">{formatAED(partnerCapital.ahmad.scamLoss)}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">Expenses (50%)</p>
+              <p className="text-lg font-bold font-serif text-loss">{formatAED(partnerCapital.ahmad.expenses)}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">Capital Position</p>
+              <p className={`text-lg font-bold font-serif ${partnerCapital.ahmad.capitalPosition >= 0 ? "text-success" : "text-loss"}`}>{formatAED(partnerCapital.ahmad.capitalPosition)}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">Profit Share (50%)</p>
+              <p className="text-lg font-bold font-serif text-success">{formatAED(partnerCapital.ahmad.profitShare)}</p>
             </div>
             <div className="text-right">
-              <p className="text-xs text-muted-foreground">Net Position</p>
+              <p className="text-xs text-muted-foreground font-semibold">Net Position</p>
               <p className={`text-xl font-bold font-serif ${partnerCapital.ahmad.netPosition >= 0 ? "text-success" : "text-loss"}`}>{formatAED(partnerCapital.ahmad.netPosition)}</p>
             </div>
           </CardContent>
