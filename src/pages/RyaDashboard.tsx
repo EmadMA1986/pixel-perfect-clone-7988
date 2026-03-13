@@ -197,6 +197,66 @@ const RyaDashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-6">
+        {/* Capital Position */}
+        {!isClientView && (
+          <Card className="border-border/50 bg-gradient-to-r from-primary/10 to-gold-dark/5 backdrop-blur-sm">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <User className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Capital Position</p>
+                  <p className="text-[10px] text-muted-foreground">Calculated from AR + Brokers + Gold − Net Profit</p>
+                </div>
+              </div>
+
+              {/* Line 1: Current Assets Breakdown */}
+              <div className="flex flex-wrap items-center gap-6 mb-3 pb-3 border-b border-border/30">
+                <div>
+                  <p className="text-xs text-muted-foreground">Brokers (PY + ZHOU)</p>
+                  <p className="text-lg font-bold font-serif text-foreground">{formatCurrency(goldCapital.totalBrokers)}</p>
+                </div>
+                <span className="text-muted-foreground text-lg">+</span>
+                <div>
+                  <p className="text-xs text-muted-foreground">Accounts Receivable</p>
+                  <p className="text-lg font-bold font-serif text-foreground">{formatCurrency(goldCapital.totalAR_USD)}</p>
+                </div>
+                <span className="text-muted-foreground text-lg">+</span>
+                <div>
+                  <p className="text-xs text-muted-foreground">Gold Inventory</p>
+                  <p className="text-lg font-bold font-serif text-foreground">{formatCurrency(goldCapital.goldInventoryUSD)}</p>
+                </div>
+                <span className="text-muted-foreground text-lg">=</span>
+                <div>
+                  <p className="text-xs text-muted-foreground font-semibold">Total Position</p>
+                  <p className="text-lg font-bold font-serif text-success">{formatCurrency(goldCapital.totalCurrentPosition)}</p>
+                </div>
+              </div>
+
+              {/* Line 2: Capital = Net Profit (started from zero) */}
+              <div className="flex flex-wrap items-center gap-6">
+                <div>
+                  <p className="text-xs text-muted-foreground">Initial Capital</p>
+                  <p className="text-lg font-bold font-serif text-muted-foreground">$0.00</p>
+                  <p className="text-[10px] text-muted-foreground">Started from zero</p>
+                </div>
+                <span className="text-muted-foreground text-lg">+</span>
+                <div>
+                  <p className="text-xs text-muted-foreground">Net Profit</p>
+                  <p className="text-lg font-bold font-serif text-success">{formatCurrency(goldCapital.netProfit)}</p>
+                </div>
+                <span className="text-muted-foreground text-lg">=</span>
+                <div>
+                  <p className="text-xs text-muted-foreground font-semibold">Total Position</p>
+                  <p className="text-xl font-bold font-serif text-primary">{formatCurrency(goldCapital.totalCurrentPosition)}</p>
+                  <p className="text-[10px] text-muted-foreground">Current assets</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Filters Bar */}
         <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
           <CardContent className="p-4">
@@ -272,66 +332,6 @@ const RyaDashboard = () => {
             </div>
           </CardContent>
         </Card>
-
-        {/* Capital Position */}
-        {!isClientView && (
-          <Card className="border-border/50 bg-gradient-to-r from-primary/10 to-gold-dark/5 backdrop-blur-sm">
-            <CardContent className="p-5">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <User className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Capital Position</p>
-                  <p className="text-[10px] text-muted-foreground">Calculated from AR + Brokers + Gold − Net Profit</p>
-                </div>
-              </div>
-
-              {/* Line 1: Current Assets Breakdown */}
-              <div className="flex flex-wrap items-center gap-6 mb-3 pb-3 border-b border-border/30">
-                <div>
-                  <p className="text-xs text-muted-foreground">Brokers (PY + ZHOU)</p>
-                  <p className="text-lg font-bold font-serif text-foreground">{formatCurrency(goldCapital.totalBrokers)}</p>
-                </div>
-                <span className="text-muted-foreground text-lg">+</span>
-                <div>
-                  <p className="text-xs text-muted-foreground">Accounts Receivable</p>
-                  <p className="text-lg font-bold font-serif text-foreground">{formatCurrency(goldCapital.totalAR_USD)}</p>
-                </div>
-                <span className="text-muted-foreground text-lg">+</span>
-                <div>
-                  <p className="text-xs text-muted-foreground">Gold Inventory</p>
-                  <p className="text-lg font-bold font-serif text-foreground">{formatCurrency(goldCapital.goldInventoryUSD)}</p>
-                </div>
-                <span className="text-muted-foreground text-lg">=</span>
-                <div>
-                  <p className="text-xs text-muted-foreground font-semibold">Total Position</p>
-                  <p className="text-lg font-bold font-serif text-success">{formatCurrency(goldCapital.totalCurrentPosition)}</p>
-                </div>
-              </div>
-
-              {/* Line 2: Capital = Net Profit (started from zero) */}
-              <div className="flex flex-wrap items-center gap-6">
-                <div>
-                  <p className="text-xs text-muted-foreground">Initial Capital</p>
-                  <p className="text-lg font-bold font-serif text-muted-foreground">$0.00</p>
-                  <p className="text-[10px] text-muted-foreground">Started from zero</p>
-                </div>
-                <span className="text-muted-foreground text-lg">+</span>
-                <div>
-                  <p className="text-xs text-muted-foreground">Net Profit</p>
-                  <p className="text-lg font-bold font-serif text-success">{formatCurrency(goldCapital.netProfit)}</p>
-                </div>
-                <span className="text-muted-foreground text-lg">=</span>
-                <div>
-                  <p className="text-xs text-muted-foreground font-semibold">Total Position</p>
-                  <p className="text-xl font-bold font-serif text-primary">{formatCurrency(goldCapital.totalCurrentPosition)}</p>
-                  <p className="text-[10px] text-muted-foreground">Current assets</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Summary Cards */}
         {isClientView ? (
