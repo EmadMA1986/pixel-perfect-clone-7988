@@ -68,31 +68,56 @@ const MkAutosDashboard = () => {
                 <p className="text-[10px] text-muted-foreground">Partner Share: {ahmadCapital.sharePercentage}%</p>
               </div>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+
+            {/* Line 1: Share Capital */}
+            <div className="flex flex-wrap items-center gap-6 mb-3 pb-3 border-b border-border/30">
               <div>
                 <p className="text-xs text-muted-foreground">Share Capital</p>
                 <p className="text-lg font-bold font-serif text-foreground">{formatAED(ahmadCapital.shareCapital)}</p>
               </div>
+              <span className="text-muted-foreground text-lg">−</span>
+              <div>
+                <p className="text-xs text-muted-foreground">Loss Incurred</p>
+                <p className="text-lg font-bold font-serif text-loss">{formatAED(Math.abs(ahmadCapital.lossIncurred))}</p>
+              </div>
+              <span className="text-muted-foreground text-lg">=</span>
+              <div>
+                <p className="text-xs text-muted-foreground font-semibold">Net Share Position</p>
+                <p className="text-lg font-bold font-serif text-foreground">{formatAED(ahmadCapital.shareCapital + ahmadCapital.lossIncurred)}</p>
+              </div>
+            </div>
+
+            {/* Line 2: Cars Position */}
+            <div className="flex flex-wrap items-center gap-6">
               <div>
                 <p className="text-xs text-muted-foreground">Cars Investment</p>
                 <p className="text-lg font-bold font-serif text-foreground">{formatAED(ahmadCapital.totalCarsInvestment)}</p>
               </div>
+              <span className="text-muted-foreground text-lg">+</span>
               <div>
-                <p className="text-xs text-muted-foreground">Co. Retained Earnings</p>
-                <p className="text-lg font-bold font-serif text-loss">{formatAED(ahmadCapital.companyRetainedEarnings)}</p>
+                <p className="text-xs text-muted-foreground">Cars Profit</p>
+                <p className="text-lg font-bold font-serif text-success">{formatAED(ahmadCapital.totalCarsProfit)}</p>
               </div>
+              <span className="text-muted-foreground text-lg">−</span>
               <div>
-                <p className="text-xs text-muted-foreground">Ahmad's Share of Loss</p>
-                <p className="text-lg font-bold font-serif text-loss">{formatAED(ahmadCapital.ahmadShareOfLoss)}</p>
+                <p className="text-xs text-muted-foreground">Cash Withdrawal</p>
+                <p className="text-lg font-bold font-serif text-loss">{formatAED(ahmadCapital.cashWithdrawal)}</p>
               </div>
+              <span className="text-muted-foreground text-lg">−</span>
               <div>
-                <p className="text-xs text-muted-foreground">Position vs Cars</p>
-                <p className="text-lg font-bold font-serif text-success">{formatAED(ahmadCapital.positionAgainstCars)}</p>
-                <p className="text-[10px] text-muted-foreground">To collect from company</p>
+                <p className="text-xs text-muted-foreground">Cars Maintenance</p>
+                <p className="text-lg font-bold font-serif text-loss">{formatAED(ahmadCapital.carsMaintenance)}</p>
               </div>
+              <span className="text-muted-foreground text-lg">+</span>
               <div>
-                <p className="text-xs text-muted-foreground font-semibold">Net Position</p>
-                <p className="text-xl font-bold font-serif text-foreground">{formatAED(ahmadCapital.shareCapital + ahmadCapital.ahmadShareOfLoss)}</p>
+                <p className="text-xs text-muted-foreground">Loan</p>
+                <p className="text-lg font-bold font-serif text-foreground">{formatAED(ahmadCapital.loan)}</p>
+              </div>
+              <span className="text-muted-foreground text-lg">=</span>
+              <div>
+                <p className="text-xs text-muted-foreground font-semibold">To Collect</p>
+                <p className="text-xl font-bold font-serif text-success">{formatAED(ahmadCapital.positionAgainstCars)}</p>
+                <p className="text-[10px] text-muted-foreground">From company</p>
               </div>
             </div>
           </CardContent>

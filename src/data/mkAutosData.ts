@@ -103,10 +103,13 @@ export const vehicleLabels: Record<string, string> = {
 export const ahmadCapital = {
   sharePercentage: 22,
   shareCapital: 135000,
+  lossIncurred: -30300,
   totalCarsInvestment: 4325615,
-  companyRetainedEarnings: -137725,
-  ahmadShareOfLoss: -30300,
-  positionAgainstCars: 464421, // company owes Ahmad
+  totalCarsProfit: 1821752,
+  cashWithdrawal: 1134695,
+  carsMaintenance: 267635,
+  loan: 45000,
+  positionAgainstCars: 464421, // to collect from company
 };
 
 export const formatAED = (value: number) => {
