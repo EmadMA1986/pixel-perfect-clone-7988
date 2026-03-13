@@ -433,12 +433,12 @@ const MkxDashboard = () => {
             <TabsTrigger value="flows">Client Flows</TabsTrigger>
           </TabsList>
 
-          {/* Monthly P&L (summary) */}
+          {/* Monthly P&L (full year) */}
           <TabsContent value="monthly">
             <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg font-serif text-foreground">
-                  Monthly Profit & Loss (Aug 2025 – Jan 2026)
+                  Monthly Profit & Loss (Jan 2025 – Jan 2026)
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
@@ -446,35 +446,49 @@ const MkxDashboard = () => {
                   <Table>
                     <TableHeader>
                       <TableRow className="border-border/50 hover:bg-transparent">
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">Month</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Revenue</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Gas Fees</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider sticky left-0 bg-card z-10">Month</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Income</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Cost of Sales</TableHead>
                         <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Gross Profit</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Expenses</TableHead>
                         <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Other Income</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right font-bold">Net Profit</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Expenses</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right font-bold">Net Earnings</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {monthlyData.map((row) => (
-                        <TableRow key={row.month} className="border-border/30 hover:bg-secondary/30">
-                          <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">{row.month}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAEDFull(row.revenue)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAEDFull(row.gasFees)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-success">{formatAEDFull(row.grossProfit)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAEDFull(row.totalExpenses)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{row.otherIncome > 0 ? formatAEDFull(row.otherIncome) : "—"}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right font-medium text-loss">{formatAEDFull(row.netProfit)}</TableCell>
-                        </TableRow>
-                      ))}
+                      {plMonths.map((month, i) => {
+                        const income = plData.find(r => r.label === "Total Income");
+                        const cogs = plData.find(r => r.label === "Total Cost of Sales");
+                        const gp = plData.find(r => r.label === "Gross Profit");
+                        const otherInc = plData.find(r => r.label === "Total Other Income");
+                        const expenses = plData.find(r => r.label === "Total Expenses");
+                        const net = plData.find(r => r.label === "Net Earnings");
+                        const incV = income?.values[i] || 0;
+                        const cogsV = cogs?.values[i] || 0;
+                        const gpV = gp?.values[i] || 0;
+                        const otherV = otherInc?.values[i] || 0;
+                        const expV = expenses?.values[i] || 0;
+                        const netV = net?.values[i] || 0;
+                        return (
+                          <TableRow key={month} className="border-border/30 hover:bg-secondary/30">
+                            <TableCell className="text-sm font-medium text-foreground whitespace-nowrap sticky left-0 bg-card z-10">{month}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-foreground">{incV > 0 ? formatAEDFull(incV) : "—"}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{cogsV > 0 ? formatAEDFull(cogsV) : "—"}</TableCell>
+                            <TableCell className={`text-sm tabular-nums text-right ${gpV >= 0 ? "text-success" : "text-loss"}`}>{gpV !== 0 ? formatAEDFull(gpV) : "—"}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{otherV > 0 ? formatAEDFull(otherV) : "—"}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{expV > 0 ? formatAEDFull(expV) : "—"}</TableCell>
+                            <TableCell className={`text-sm tabular-nums text-right font-medium ${netV >= 0 ? "text-success" : "text-loss"}`}>{netV !== 0 ? formatAEDFull(netV) : "—"}</TableCell>
+                          </TableRow>
+                        );
+                      })}
                       <TableRow className="border-border/50 bg-secondary/30 font-semibold">
-                        <TableCell className="text-sm text-foreground">Total</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAEDFull(mkxSummary.totalRevenue)}</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAEDFull(monthlyData.reduce((s, m) => s + m.gasFees, 0))}</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-success">{formatAEDFull(mkxSummary.totalGrossProfit)}</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAEDFull(mkxSummary.totalExpenses)}</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAEDFull(monthlyData.reduce((s, m) => s + m.otherIncome, 0))}</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right font-bold text-loss">{formatAEDFull(mkxSummary.totalNetProfit)}</TableCell>
+                        <TableCell className="text-sm text-foreground sticky left-0 bg-secondary/30 z-10">Total</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAEDFull(mkxSummary.fullYearTotalIncome)}</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAEDFull(plData.find(r => r.label === "Total Cost of Sales")?.total || 0)}</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right text-success">{formatAEDFull(mkxSummary.fullYearGrossProfit)}</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAEDFull(plData.find(r => r.label === "Total Other Income")?.total || 0)}</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAEDFull(mkxSummary.fullYearTotalExpenses)}</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right font-bold text-loss">{formatAEDFull(mkxSummary.fullYearNetEarnings)}</TableCell>
                       </TableRow>
                     </TableBody>
                   </Table>
