@@ -23,6 +23,7 @@ import {
   goldInventory,
   customerBalances,
   supplierBalances,
+  goldCapital,
   AED_TO_USD_RATE,
   formatCurrency,
   formatNumber,
