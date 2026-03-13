@@ -234,16 +234,16 @@ const RyaDashboard = () => {
                 </div>
               </div>
 
-              {/* Line 2: Capital Derivation */}
+              {/* Line 2: Initial Investment = Net Profit - Total Position */}
               <div className="flex flex-wrap items-center gap-6">
-                <div>
-                  <p className="text-xs text-muted-foreground">Total Position</p>
-                  <p className="text-lg font-bold font-serif text-foreground">{formatCurrency(goldCapital.totalCurrentPosition)}</p>
-                </div>
-                <span className="text-muted-foreground text-lg">−</span>
                 <div>
                   <p className="text-xs text-muted-foreground">Net Profit</p>
                   <p className="text-lg font-bold font-serif text-success">{formatCurrency(goldCapital.netProfit)}</p>
+                </div>
+                <span className="text-muted-foreground text-lg">−</span>
+                <div>
+                  <p className="text-xs text-muted-foreground">Total Position</p>
+                  <p className="text-lg font-bold font-serif text-foreground">{formatCurrency(goldCapital.totalCurrentPosition)}</p>
                 </div>
                 <span className="text-muted-foreground text-lg">=</span>
                 <div>
