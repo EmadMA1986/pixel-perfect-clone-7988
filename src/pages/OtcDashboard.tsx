@@ -66,6 +66,37 @@ const OtcDashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-6">
+        {/* Ahmad's Capital Position */}
+        <Card className="border-border/50 bg-gradient-to-r from-blue-500/10 to-blue-700/5 backdrop-blur-sm">
+          <CardContent className="p-5 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Wallet className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Ahmad's Capital Funding</p>
+                <p className="text-2xl font-bold font-serif text-foreground">{formatAED(partnerCapital.ahmad.funding)}</p>
+              </div>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">Withdrawals</p>
+              <p className="text-xl font-bold font-serif text-loss">{formatAED(partnerCapital.ahmad.withdrawal)}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">Net Capital</p>
+              <p className="text-xl font-bold font-serif text-foreground">{formatAED(partnerCapital.ahmad.net)}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">Scam Loss (50%)</p>
+              <p className="text-xl font-bold font-serif text-loss">{formatAED(partnerCapital.ahmad.scamLoss)}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground">Net Position</p>
+              <p className={`text-xl font-bold font-serif ${partnerCapital.ahmad.netPosition >= 0 ? "text-success" : "text-loss"}`}>{formatAED(partnerCapital.ahmad.netPosition)}</p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <SummaryCard title="Net Profit (YTD)" value={formatAED(otcSummary.netProfitYTD)} subtitle={`${profitableMonths}/${monthlyPL.length} profitable months`} icon={TrendingUp} trend="up" />
