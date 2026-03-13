@@ -124,25 +124,44 @@ const MkxDashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-6">
+        {/* Ahmad Share Capital */}
+        <Card className="border-border/50 bg-gradient-to-r from-violet-500/10 to-violet-700/5 backdrop-blur-sm">
+          <CardContent className="p-5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Wallet className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Ahmad's Share Capital</p>
+                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(5324087.29)}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground">Full Year P&L (2025)</p>
+              <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(mkxSummary.fullYearNetEarnings)}</p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <SummaryCard
-            title="Total Revenue"
-            value={formatAED(mkxSummary.totalRevenue)}
-            subtitle={`Avg ${formatAED(mkxSummary.avgRevenue)}/mo`}
+            title="Full Year Income"
+            value={formatAED(mkxSummary.fullYearTotalIncome)}
+            subtitle="Jan 2025 – Jan 2026"
             icon={DollarSign}
           />
           <SummaryCard
-            title="Total Gross Profit"
-            value={formatAED(mkxSummary.totalGrossProfit)}
-            subtitle={`Avg ${formatAED(mkxSummary.avgGrossProfit)}/mo`}
+            title="Full Year Gross Profit"
+            value={formatAED(mkxSummary.fullYearGrossProfit)}
+            subtitle="After cost of sales"
             icon={TrendingUp}
             trend="up"
           />
           <SummaryCard
-            title="Total Net Profit"
-            value={formatAED(mkxSummary.totalNetProfit)}
-            subtitle={`Avg ${formatAED(mkxSummary.avgNetProfit)}/mo`}
+            title="Full Year Net P&L"
+            value={formatAED(mkxSummary.fullYearNetEarnings)}
+            subtitle="All 13 months"
             icon={TrendingDown}
             trend="down"
           />
