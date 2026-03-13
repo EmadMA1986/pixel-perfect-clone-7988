@@ -90,6 +90,14 @@ const OtcDashboard = () => {
               <p className="text-xs text-muted-foreground">Scam Loss (50%)</p>
               <p className="text-xl font-bold font-serif text-loss">{formatAED(partnerCapital.ahmad.scamLoss)}</p>
             </div>
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">Profit Share (50%)</p>
+              <p className="text-xl font-bold font-serif text-success">{formatAED(partnerCapital.ahmad.profitShare)}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">Expenses (50%)</p>
+              <p className="text-xl font-bold font-serif text-loss">{formatAED(partnerCapital.ahmad.expenses)}</p>
+            </div>
             <div className="text-right">
               <p className="text-xs text-muted-foreground">Net Position</p>
               <p className={`text-xl font-bold font-serif ${partnerCapital.ahmad.netPosition >= 0 ? "text-success" : "text-loss"}`}>{formatAED(partnerCapital.ahmad.netPosition)}</p>

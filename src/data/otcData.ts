@@ -112,7 +112,7 @@ export const scamLosses: CapitalTransaction[] = [
 
 export const partnerCapital = {
   maria: { funding: 2099837.41, withdrawal: 1275601.48, net: 824235.93, scamLoss: 475000, expenses: 278964.48, netPosition: 70271.45 },
-  ahmad: { funding: 2020187.41, withdrawal: 1504556.98, net: 515630.44, scamLoss: 475000, expenses: 278964.48, netPosition: -238334.05 },
+  ahmad: { funding: 2020187.41, withdrawal: 1504556.98, net: 515630.44, scamLoss: 475000, expenses: 278964.48, profitShare: 698979.59, netPosition: 460645.55 },
   totalFunding: 4120024.83,
   totalWithdrawal: 2780158.46,
   netCapital: 1339866.37,
