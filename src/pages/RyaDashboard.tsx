@@ -316,11 +316,6 @@ const RyaDashboard = () => {
                   <p className="text-xs text-muted-foreground">Total Position</p>
                   <p className="text-lg font-bold font-serif text-foreground">{formatCurrency(goldCapital.totalCurrentPosition)}</p>
                 </div>
-                <span className="text-muted-foreground text-lg">+</span>
-                <div>
-                  <p className="text-xs text-muted-foreground">Withdrawals</p>
-                  <p className="text-lg font-bold font-serif text-loss">{formatCurrency(goldCapital.totalWithdrawals)}</p>
-                </div>
                 <span className="text-muted-foreground text-lg">−</span>
                 <div>
                   <p className="text-xs text-muted-foreground">Net Profit</p>
