@@ -288,26 +288,34 @@ const OtcDashboard = () => {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 text-xs">
                       <div className="p-3 rounded-lg bg-secondary/30">
-                        <p className="text-muted-foreground mb-1">Total Funding</p>
+                        <p className="text-muted-foreground mb-1">Capital Funding</p>
                         <p className="tabular-nums font-bold text-foreground">{formatAED(p.funding)}</p>
                       </div>
                       <div className="p-3 rounded-lg bg-secondary/30">
-                        <p className="text-muted-foreground mb-1">Total Withdrawal</p>
+                        <p className="text-muted-foreground mb-1">Withdrawals</p>
                         <p className="tabular-nums font-bold text-loss">{formatAED(p.withdrawal)}</p>
                       </div>
                       <div className="p-3 rounded-lg bg-secondary/30">
-                        <p className="text-muted-foreground mb-1">Net Capital</p>
-                        <p className={`tabular-nums font-bold ${p.net >= 0 ? "text-success" : "text-loss"}`}>{formatAED(p.net)}</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-secondary/30">
-                        <p className="text-muted-foreground mb-1">Scam Loss</p>
+                        <p className="text-muted-foreground mb-1">Scam Loss (50%)</p>
                         <p className="tabular-nums font-bold text-loss">{formatAED(p.scamLoss)}</p>
                       </div>
                       <div className="p-3 rounded-lg bg-secondary/30">
-                        <p className="text-muted-foreground mb-1">Expenses Share</p>
-                        <p className="tabular-nums font-bold text-muted-foreground">{formatAED(p.expenses)}</p>
+                        <p className="text-muted-foreground mb-1">Expenses (50%)</p>
+                        <p className="tabular-nums font-bold text-loss">{formatAED(p.expenses)}</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-secondary/30">
+                        <p className="text-muted-foreground mb-1">Capital Position</p>
+                        <p className={`tabular-nums font-bold ${p.capitalPosition >= 0 ? "text-success" : "text-loss"}`}>{formatAED(p.capitalPosition)}</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-secondary/30">
+                        <p className="text-muted-foreground mb-1">Profit Share (50%)</p>
+                        <p className="tabular-nums font-bold text-success">{formatAED(p.profitShare)}</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
+                        <p className="text-muted-foreground mb-1 font-semibold">Net Position</p>
+                        <p className={`tabular-nums font-bold ${p.netPosition >= 0 ? "text-success" : "text-loss"}`}>{formatAED(p.netPosition)}</p>
                       </div>
                     </div>
                   </CardContent>
