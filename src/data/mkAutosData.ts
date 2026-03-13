@@ -106,7 +106,7 @@ export const ahmadCapital = {
   totalCarsInvestment: 4325615,
   companyRetainedEarnings: -137725,
   ahmadShareOfLoss: -30300,
-  positionAgainstCars: -464421, // owes the company
+  positionAgainstCars: 464421, // company owes Ahmad
 };
 
 export const formatAED = (value: number) => {
