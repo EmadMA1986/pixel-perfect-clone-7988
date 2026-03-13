@@ -37,6 +37,32 @@ export interface MkxKPI {
   assetValuationRatio: number;
 }
 
+export interface MkxPLMonth {
+  category: string;
+  jan25: number;
+  feb25: number;
+  mar25: number;
+  apr25: number;
+  may25: number;
+  jun25: number;
+  jul25: number;
+  aug25: number;
+  sep25: number;
+  oct25: number;
+  nov25: number;
+  dec25: number;
+  jan26: number;
+  total: number;
+}
+
+export interface MkxBalanceSheetItem {
+  label: string;
+  value: number;
+  indent?: number;
+  isTotal?: boolean;
+  isSectionHeader?: boolean;
+}
+
 export const monthlyData: MkxMonthlyData[] = [
   {
     month: "Aug-25",
@@ -65,7 +91,7 @@ export const monthlyData: MkxMonthlyData[] = [
     otherIncome: 0,
     netProfit: -311336.94,
     assetMarketValue: 1906310,
-    assetBookValue: 1940507,
+    assetBookValue: 1889350,
     clientLiabilitiesFiat: 6214,
     clientLiabilitiesVA: 969100,
     tradingVolume: 10496240,
@@ -83,7 +109,7 @@ export const monthlyData: MkxMonthlyData[] = [
     otherIncome: 31493,
     netProfit: -261374,
     assetMarketValue: 1930980,
-    assetBookValue: 1940507,
+    assetBookValue: 1889350,
     clientLiabilitiesFiat: 285829,
     clientLiabilitiesVA: 800158,
     tradingVolume: 3212233,
@@ -101,7 +127,7 @@ export const monthlyData: MkxMonthlyData[] = [
     otherIncome: 1800,
     netProfit: -328137.66,
     assetMarketValue: 1915700,
-    assetBookValue: 1940507,
+    assetBookValue: 1889350,
     clientLiabilitiesFiat: 159839,
     clientLiabilitiesVA: 629258,
     tradingVolume: 2547665,
@@ -119,7 +145,7 @@ export const monthlyData: MkxMonthlyData[] = [
     otherIncome: 0,
     netProfit: -326818,
     assetMarketValue: 1915700,
-    assetBookValue: 1940507,
+    assetBookValue: 1889350,
     clientLiabilitiesFiat: 480777,
     clientLiabilitiesVA: 739425,
     tradingVolume: 5796181,
@@ -127,6 +153,24 @@ export const monthlyData: MkxMonthlyData[] = [
     clientWithdrawalsFiat: 2457961,
     clientDepositsVA: 2777679,
     clientWithdrawalsVA: 3386590,
+  },
+  {
+    month: "Jan-26",
+    revenue: 233940.65,
+    gasFees: 4588.18,
+    grossProfit: 229352.47,
+    totalExpenses: 349032.55,
+    otherIncome: 0,
+    netProfit: -119680.08,
+    assetMarketValue: 2117779.50,
+    assetBookValue: 1889350,
+    clientLiabilitiesFiat: 94450.96,
+    clientLiabilitiesVA: 822366.54,
+    tradingVolume: 156283910,
+    clientDepositsFiat: 16079491,
+    clientWithdrawalsFiat: 140674913,
+    clientDepositsVA: 140794466,
+    clientWithdrawalsVA: 16032893,
   },
 ];
 
@@ -166,8 +210,8 @@ export const kpiData: MkxKPI[] = [
     breakEvenTradingVolume: 78051690,
     revenuePerTotalClientFlow: 0.00166,
     netProfitPerTradingVolume: -0.02966,
-    assetValuationDiff: -34197,
-    assetValuationRatio: -0.01762,
+    assetValuationDiff: 16960,
+    assetValuationRatio: 0.00898,
   },
   {
     month: "Oct-25",
@@ -185,8 +229,8 @@ export const kpiData: MkxKPI[] = [
     breakEvenTradingVolume: 35653831,
     revenuePerTotalClientFlow: 0.00426,
     netProfitPerTradingVolume: -0.08137,
-    assetValuationDiff: -9527,
-    assetValuationRatio: -0.00491,
+    assetValuationDiff: 41630,
+    assetValuationRatio: 0.02203,
   },
   {
     month: "Nov-25",
@@ -204,8 +248,8 @@ export const kpiData: MkxKPI[] = [
     breakEvenTradingVolume: 55724226,
     revenuePerTotalClientFlow: 0.00269,
     netProfitPerTradingVolume: -0.1288,
-    assetValuationDiff: -24807,
-    assetValuationRatio: -0.01278,
+    assetValuationDiff: 26350,
+    assetValuationRatio: 0.01395,
   },
   {
     month: "Dec-25",
@@ -223,9 +267,137 @@ export const kpiData: MkxKPI[] = [
     breakEvenTradingVolume: 65890012,
     revenuePerTotalClientFlow: 0.00259,
     netProfitPerTradingVolume: -0.05639,
-    assetValuationDiff: -24807,
-    assetValuationRatio: -0.01278,
+    assetValuationDiff: 26350,
+    assetValuationRatio: 0.01395,
   },
+  {
+    month: "Jan-26",
+    grossMarginPct: 98.04,
+    netMarginPct: -51.16,
+    assetCoverageRatio: 2.310,
+    liquidityBuffer: 1200962,
+    fiatDepositWithdrawalRatio: 0.114,
+    vaDepositWithdrawalRatio: 8.782,
+    netFiatFlow: -124595422,
+    netVAFlow: 124761573,
+    tradingVolumePerTotalDeposits: 0.996,
+    netFlowPerTradingVolume: 0.001,
+    revenuePerTradingVolume: 0.00150,
+    breakEvenTradingVolume: 233170984,
+    revenuePerTotalClientFlow: 0.00075,
+    netProfitPerTradingVolume: -0.00077,
+    assetValuationDiff: 228429.50,
+    assetValuationRatio: 0.12090,
+  },
+];
+
+// Full P&L by month (Jan 2025 - Jan 2026)
+export const plMonths = ["Jan-25","Feb-25","Mar-25","Apr-25","May-25","Jun-25","Jul-25","Aug-25","Sep-25","Oct-25","Nov-25","Dec-25","Jan-26"];
+
+export interface PLLineItem {
+  label: string;
+  values: number[]; // 13 months
+  total: number;
+  isHeader?: boolean;
+  isTotal?: boolean;
+  indent?: boolean;
+}
+
+export const plData: PLLineItem[] = [
+  { label: "Income", values: [], total: 0, isHeader: true },
+  { label: "Revenue – Conversion Fees", values: [0,0,0,0,0,136.48,5431.33,37060.52,46088.98,27404.92,12744.78,27156,229289.65], total: 385312.66, indent: true },
+  { label: "Revenue – Withdrawal Fees", values: [0,0,0,477,182.43,60,1051.52,88.81,1896.68,1351.07,2949.95,4024,4651], total: 16732.46, indent: true },
+  { label: "Total Income", values: [0,0,0,477,182.43,196.48,6482.85,37149.33,47985.66,28755.99,15694.73,31180,233940.65], total: 402045.12, isTotal: true },
+  { label: "Cost of Sales", values: [], total: 0, isHeader: true },
+  { label: "Cost of goods sold", values: [0,0,0,0,573.87,267.90,1788.08,2407.76,2497.94,2459.54,2346.80,3549.65,4588.18], total: 20479.72, indent: true },
+  { label: "Total Cost of Sales", values: [0,0,0,0,573.87,267.90,1788.08,2407.76,2497.94,2459.54,2346.80,3549.65,4588.18], total: 20479.72, isTotal: true },
+  { label: "Gross Profit", values: [0,0,0,477,-391.44,-71.42,4694.77,34741.57,45487.72,26296.45,13347.93,27630.35,229352.47], total: 381565.40, isTotal: true },
+  { label: "Other Income", values: [], total: 0, isHeader: true },
+  { label: "Other operating income", values: [0,0,0,0,0,0,0,0,0,0,1800,0,0], total: 1800, indent: true },
+  { label: "Paid up capital - Interest income", values: [0,0,0,0,0,0,0,0,0,31493.74,0,0,0], total: 31493.74, indent: true },
+  { label: "Total Other Income", values: [0,0,0,0,0,0,0,0,0,31493.74,1801,0,0], total: 33294.74, isTotal: true },
+  { label: "Expenses", values: [], total: 0, isHeader: true },
+  { label: "Audit Fees", values: [0,0,0,0,0,0,0,0,8716.25,0,8717.17,0,13990.46], total: 31423.88, indent: true },
+  { label: "Bank charges", values: [136.50,12.60,743.85,737.88,2000,2000,596.84,1885,1100,522,145,37475.50,440.33], total: 47795.50, indent: true },
+  { label: "Cleaning Expenses", values: [0,1750,3500,1750,1750,0,0,0,0,0,0,0,0], total: 8750, indent: true },
+  { label: "CMA maintenance fee", values: [0,0,0,0,0,0,2000,2000,2000,2000,2000,2000,2000], total: 14000, indent: true },
+  { label: "Compliance Expenses", values: [0,0,60312.17,28679.93,28679.93,15268.59,10962.22,6638.22,16174.97,16174.99,16174.97,16174.97,16174.97], total: 231415.93, indent: true },
+  { label: "Consulting Expenses", values: [0,0,64268.76,27543.75,0,0,0,0,21763.79,350,0,0,0], total: 113926.30, indent: true },
+  { label: "Custodial Service Fees", values: [0,0,12037.63,12037.63,12037.63,16373.23,16373.23,18795.06,16373.23,16373.23,16373.23,16373.23,16373.23], total: 169520.56, indent: true },
+  { label: "DED License expenses", values: [3064.94,2814.94,2814.94,2814.94,2852.41,2852.41,2852.41,2852.41,2852.41,2852.41,2852.41,2852.41,2852.41], total: 37181.45, indent: true },
+  { label: "Depreciation", values: [28928.78,28928.78,28928.78,28928.78,29418.51,29418.51,29478.03,29478.03,29478.03,29230.89,29483.28,29483.28,29483.28], total: 380666.96, indent: true },
+  { label: "Electricity & water", values: [930,703.05,609.63,536.19,743.48,845.24,476.51,536.88,534.56,554.12,495,517.98,441.74], total: 7924.38, indent: true },
+  { label: "Exhibition Expenses", values: [0,0,0,11064.60,3410,0,0,0,0,0,0,0,0], total: 14474.60, indent: true },
+  { label: "Gratuity - End of service", values: [0,0,0,0,0,7180,0,0,0,0,1684,0,0], total: 8864, indent: true },
+  { label: "Insurance - Medical", values: [1010,0,0,0,0,1274.52,215,0,0,0,0,0,0], total: 2499.52, indent: true },
+  { label: "Leave salary", values: [0,0,0,0,0,7100,10000,0,0,0,0,1583,0], total: 18683, indent: true },
+  { label: "Marketing & Domain Expenses", values: [2117,1470,0,570.38,7045,6806.43,11750,5056,7713.49,24490,25435,21500,7174.98], total: 121128.28, indent: true },
+  { label: "Medical expenses", values: [199.89,199.89,199.89,199.89,770.99,0,0,943.16,1396.50,5725.48,1403.48,1403.48,1403.48], total: 13846.13, indent: true },
+  { label: "Office expenses", values: [468.25,1044.50,900.61,552.79,2219.70,1497.37,943.93,1375.48,453,2600,803,851.59,4275.05], total: 17985.27, indent: true },
+  { label: "Parking Expenses", values: [1914.88,1939.88,1914.88,1919.64,1914.88,1914.88,1914.88,1914.88,1914.88,1914.88,1914.88,1914.88,1914.88], total: 24923.20, indent: true },
+  { label: "Payroll Expenses", values: [78150,104330,119000,113740,124589,131685,130550,120550,131550,130550,152550,152068,149550], total: 1638862, indent: true },
+  { label: "Platform expenses", values: [0,0,78430.26,53438.50,15909.45,25707.50,0,0,31900.08,245,250,0,5508.75], total: 211389.54, indent: true },
+  { label: "Realized Gain/Loss on Crypto", values: [0,0,0,0,0,0,0,2334.90,8019.13,-894.39,0,3612.47,0], total: 13072.11, indent: true },
+  { label: "Rent or lease payments", values: [41044.05,41044.05,41044.05,41044.05,41044.05,41044.05,41044.05,41044.05,41044.05,41057.73,41057.73,40175.65,41057.73], total: 532745.29, indent: true },
+  { label: "Liquidity provider fees", values: [0,0,0,0,0,0,949.05,5049.64,110.10,0,0,0,754], total: 6862.79, indent: true },
+  { label: "Software Expenses", values: [9232.45,8742.45,8742.45,0,4616.32,405.50,1290.24,1290.24,1290.24,2187.57,2922.39,2922.39,5851.44], total: 49493.68, indent: true },
+  { label: "Technology & Network", values: [21767.92,75,54430.34,62802.43,25771.62,24287.32,57366.52,19073.34,330.34,7163.36,13845.98,15548.38,17619.25], total: 320081.80, indent: true },
+  { label: "Transaction monitoring", values: [0,0,0,0,0,5366.66,5366.66,5366.66,5366.66,5366.66,5366.66,5366.66,5366.66], total: 42933.28, indent: true },
+  { label: "Travel expenses", values: [0,0,0,140,145,1050,4670,4355,350,4550,790,0,350], total: 16400, indent: true },
+  { label: "VARA License expenses", values: [0,12503.33,12503.33,16670.83,20838.33,20838.33,20838.33,20838.33,20838.33,20838.33,35629.91,20838.33,20838.33], total: 244014.04, indent: true },
+  { label: "Visa Expenses", values: [1920.36,2387.36,1594.36,1594.36,1672.13,1893.96,2065.30,2065.30,2065.30,2055.88,2055.88,2055.88,2293.11], total: 25719.18, indent: true },
+  { label: "Wi-Fi & Mobile", values: [5554.50,231,3562.99,5885.78,0,2902.87,3054.08,3137.14,3489.35,3129.39,3318.65,3296.57,3292.47], total: 40854.79, indent: true },
+  { label: "Other small expenses", values: [493.69,2385.19,1140.34,1079.07,2138.71,2425.43,2078.91,1497.00,2538.09,2268.25,2020.00,1597.98,2275.05], total: 23937.71, indent: true },
+  { label: "Total Expenses", values: [197934.21,210562.73,496681.06,412711.63,332826.14,368338.80,354788.19,297962.72,356824.69,319163.78,365286.62,378032.63,349032.55], total: 4440145.75, isTotal: true },
+  { label: "Net Earnings", values: [-197934.21,-210562.73,-496681.06,-412234.63,-333217.58,-368410.22,-350093.42,-263221.15,-311336.97,-261373.59,-350137.69,-350402.28,-119680.08], total: -4025285.61, isTotal: true },
+];
+
+// Balance Sheet as of Jan 31, 2026
+export const balanceSheet: MkxBalanceSheetItem[] = [
+  { label: "Assets", value: 0, isSectionHeader: true },
+  { label: "Current Assets", value: 0, isSectionHeader: true, indent: 1 },
+  { label: "Client Money Account - Zand Bank", value: 923517.19, indent: 2 },
+  { label: "Mashreq Account - AED", value: 82482.45, indent: 2 },
+  { label: "UTGL Card", value: 30.27, indent: 2 },
+  { label: "Zand Bank", value: 9420.80, indent: 2 },
+  { label: "Client VA assets stored in cold wallets", value: 146580.60, indent: 2 },
+  { label: "Prepaid Compliance expenses", value: 16174.99, indent: 2 },
+  { label: "Prepaid Custodial Service expenses", value: 65492.92, indent: 2 },
+  { label: "Prepaid DED License fee", value: 8557.31, indent: 2 },
+  { label: "Prepaid Employees Visa Expenses", value: 27420.01, indent: 2 },
+  { label: "Prepaid Exhibition expenses", value: 15567.04, indent: 2 },
+  { label: "Prepaid expenses - Medical Insurance", value: 9014.42, indent: 2 },
+  { label: "Prepaid Parking fee", value: 7140.32, indent: 2 },
+  { label: "Prepaid Rent Expenses", value: 222951.29, indent: 2 },
+  { label: "Prepaid Software Expenses", value: 19837.73, indent: 2 },
+  { label: "Prepaid Transaction monitoring expenses", value: 21466.72, indent: 2 },
+  { label: "Prepaid VARA license expenses", value: 20837.62, indent: 2 },
+  { label: "VA Asset Holdings", value: 1964514.22, indent: 2 },
+  { label: "Total Current Assets", value: 3561005.90, isTotal: true, indent: 1 },
+  { label: "Long-term Assets", value: 0, isSectionHeader: true, indent: 1 },
+  { label: "Machinery & Equipment (Net)", value: 26549.23, indent: 2 },
+  { label: "Office Renovation (Net)", value: 106948.55, indent: 2 },
+  { label: "PPE-Software (Net)", value: 21379.08, indent: 2 },
+  { label: "Paid Up Capital - Zand Bank", value: 739579, indent: 2 },
+  { label: "Rental Security Deposit", value: 53070, indent: 2 },
+  { label: "Total Long-term Assets", value: 947525.86, isTotal: true, indent: 1 },
+  { label: "Total Assets", value: 4508531.76, isTotal: true },
+  { label: "Liabilities & Shareholders' Equity", value: 0, isSectionHeader: true },
+  { label: "Current Liabilities", value: 0, isSectionHeader: true, indent: 1 },
+  { label: "Accounts Payable", value: 33694.08, indent: 2 },
+  { label: "Fiat - Due to Customers", value: 94450.96, indent: 2 },
+  { label: "Payroll Staff", value: 143234.01, indent: 2 },
+  { label: "VAT Control", value: -102581.42, indent: 2 },
+  { label: "Virtual Assets - Due to Customers", value: 822366.54, indent: 2 },
+  { label: "Total Current Liabilities", value: 991164.17, isTotal: true, indent: 1 },
+  { label: "Shareholders' Equity", value: 0, isSectionHeader: true, indent: 1 },
+  { label: "Net Income", value: -119680.08, indent: 2 },
+  { label: "Retained Earnings", value: -7261014.27, indent: 2 },
+  { label: "Share Capital - Mr. Ahmad", value: 5324087.29, indent: 2 },
+  { label: "Share Capital - Mrs. Maria", value: 5573974.65, indent: 2 },
+  { label: "Total Share Capital", value: 10898061.94, isTotal: true, indent: 2 },
+  { label: "Total Shareholders' Equity", value: 3517367.59, isTotal: true, indent: 1 },
+  { label: "Total Liabilities & Equity", value: 4508531.76, isTotal: true },
 ];
 
 // Summary / averages
@@ -243,6 +415,14 @@ export const mkxSummary = {
   latestAssetBookValue: monthlyData[monthlyData.length - 1].assetBookValue,
   latestAssetCoverage: kpiData[kpiData.length - 1].assetCoverageRatio,
   totalTradingVolume: monthlyData.reduce((s, m) => s + m.tradingVolume, 0),
+  // Full year P&L totals
+  fullYearNetEarnings: -4025285.61,
+  fullYearTotalIncome: 402045.12,
+  fullYearTotalExpenses: 4440145.75,
+  fullYearGrossProfit: 381565.40,
+  totalAssets: 4508531.76,
+  totalLiabilities: 991164.17,
+  totalEquity: 3517367.59,
 };
 
 export const formatAED = (value: number): string => {
