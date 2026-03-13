@@ -124,9 +124,9 @@ const MkxDashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-6">
-        {/* Ahmad Share Capital */}
+        {/* Ahmad's Capital Position */}
         <Card className="border-border/50 bg-gradient-to-r from-violet-500/10 to-violet-700/5 backdrop-blur-sm">
-          <CardContent className="p-5 flex items-center justify-between">
+          <CardContent className="p-5 flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Wallet className="h-5 w-5 text-primary" />
@@ -136,9 +136,17 @@ const MkxDashboard = () => {
                 <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(5324087.29)}</p>
               </div>
             </div>
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">Total Retained Earnings</p>
+              <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(-7380694)}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">Ahmad's Share (50%)</p>
+              <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(-3690347)}</p>
+            </div>
             <div className="text-right">
-              <p className="text-xs text-muted-foreground">Full Year P&L (2025)</p>
-              <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(mkxSummary.fullYearNetEarnings)}</p>
+              <p className="text-xs text-muted-foreground">Ahmad's Net Position</p>
+              <p className="text-xl font-bold font-serif text-foreground">{formatAEDFull(5324087.29 - 3690347)}</p>
             </div>
           </CardContent>
         </Card>
