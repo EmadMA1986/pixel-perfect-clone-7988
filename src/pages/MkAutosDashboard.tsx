@@ -120,12 +120,12 @@ const MkAutosDashboard = () => {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <SummaryCard title="Total Gross Profit" value={formatAED(mkAutosSummary.totalGrossProfit)} subtitle="All vehicles YTD" icon={TrendingUp} trend="up" />
-          <SummaryCard title="Cash Withdrawals" value={formatAED(mkAutosSummary.totalCashWithdrawals)} subtitle="Total withdrawn" icon={Wallet} />
-          <SummaryCard title="Cash Expenses" value={formatAED(mkAutosSummary.totalCashExpenses)} subtitle="Total expenses" icon={DollarSign} />
-          <SummaryCard title="Final Balance" value={formatAED(mkAutosSummary.finalBalance)} subtitle={`Incl. old bal ${formatAED(mkAutosSummary.oldBalance)}`} icon={DollarSign} trend="up" />
-          <SummaryCard title="Avg Monthly Income" value={formatAED(mkAutosSummary.avgMonthlyIncome)} subtitle="Per month" icon={BarChart3} />
-          <SummaryCard title="Overall ROI" value={`${mkAutosSummary.overallROI}%`} subtitle={`NBV ROI: ${mkAutosSummary.overallROINBV}%`} icon={Percent} />
+          <SummaryCard title="Initial Investment" value={formatAED(mkAutosSummary.totalInitialInvestment)} subtitle="Total cars cost" icon={Car} />
+          <SummaryCard title="Maintenance" value={formatAED(mkAutosSummary.totalMaintenanceExpenses)} subtitle="Total maintenance" icon={DollarSign} />
+          <SummaryCard title="Depreciation" value={formatAED(mkAutosSummary.totalDepreciation)} subtitle="Total depreciation" icon={TrendingUp} />
+          <SummaryCard title="Net Book Value" value={formatAED(mkAutosSummary.totalNBV)} subtitle="Present value" icon={Wallet} />
+          <SummaryCard title="ROI on Investment" value={`${mkAutosSummary.overallROI}%`} subtitle="On initial cost" icon={Percent} trend="up" />
+          <SummaryCard title="ROI on NBV" value={`${mkAutosSummary.overallROINBV}%`} subtitle="On net book value" icon={BarChart3} trend="up" />
         </div>
 
         {/* Charts Row */}
