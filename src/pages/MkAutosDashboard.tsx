@@ -56,19 +56,48 @@ const MkAutosDashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-6">
-        {/* Line 1: Ahmad's Car Investment */}
+        {/* Ahmad's Capital Position Bar */}
+        <Card className="border-border/50 bg-gradient-to-r from-emerald-500/10 to-emerald-700/5 backdrop-blur-sm">
+          <CardContent className="p-5 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Wallet className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Ahmad's Initial Investment</p>
+                <p className="text-2xl font-bold font-serif text-foreground">{formatAED(ahmadCapital.totalCarsInvestment)}</p>
+              </div>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">Total Profit</p>
+              <p className="text-xl font-bold font-serif text-success">{formatAED(ahmadCapital.totalCarsProfit)}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">Cash Withdrawal</p>
+              <p className="text-xl font-bold font-serif text-loss">{formatAED(ahmadCapital.cashWithdrawal)}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">ROI / ROI on NBV</p>
+              <p className="text-xl font-bold font-serif text-foreground">{mkAutosSummary.overallROI}% / {mkAutosSummary.overallROINBV}%</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground">Ahmad's Net Position</p>
+              <p className="text-xl font-bold font-serif text-success">{formatAED(ahmadCapital.positionAgainstCars)}</p>
+              <p className="text-[10px] text-muted-foreground">MK Autos owes Ahmad</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Line 1: Ahmad's Car Investment Details */}
         <div>
           <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground mb-2">Ahmad's Car Investment</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-10 gap-3">
-            <SummaryCard title="Initial Investment" value={formatAED(ahmadCapital.totalCarsInvestment)} subtitle="Total cost" icon={Car} />
-            <SummaryCard title="Total Profit" value={formatAED(ahmadCapital.totalCarsProfit)} subtitle="Total earned" icon={TrendingUp} trend="up" />
-            <SummaryCard title="ROI" value={`${((ahmadCapital.totalCarsProfit / ahmadCapital.totalCarsInvestment) * 100).toFixed(0)}%`} subtitle="Return on investment" icon={Percent} trend="up" />
-            <SummaryCard title="ROI on NBV" value={`${mkAutosSummary.overallROINBV}%`} subtitle="Return on net book value" icon={Percent} trend="up" />
-            <SummaryCard title="Cash Withdrawal" value={formatAED(ahmadCapital.cashWithdrawal)} subtitle="Withdrawn" icon={Wallet} />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             <SummaryCard title="Maintenance" value={formatAED(ahmadCapital.carsMaintenance)} subtitle="Cars upkeep" icon={DollarSign} />
+            <SummaryCard title="Depreciation" value={formatAED(mkAutosSummary.totalDepreciation)} subtitle="Total depreciation" icon={TrendingUp} trend="down" />
+            <SummaryCard title="NBV" value={formatAED(mkAutosSummary.totalNBV)} subtitle="Net book value" icon={Car} />
             <SummaryCard title="Loan" value={formatAED(ahmadCapital.loan)} subtitle="Ahmed Hamid" icon={Landmark} />
             <SummaryCard title="Share Capital" value={formatAED(ahmadCapital.shareCapital)} subtitle={`${ahmadCapital.sharePercentage}% share`} icon={User} />
-            <SummaryCard title="To Collect" value={formatAED(ahmadCapital.positionAgainstCars)} subtitle="From company" icon={BarChart3} trend="up" />
+            <SummaryCard title="Avg Monthly" value={formatAED(mkAutosSummary.avgMonthlyIncome)} subtitle="Monthly income" icon={BarChart3} />
           </div>
         </div>
 
