@@ -354,8 +354,7 @@ const RyaDashboard = () => {
             <SummaryCard title="Revenue" value={formatCurrency(totalRevenue)} subtitle={`${formatNumber(totalSalesQty, 2)}g sold · ${filteredSales.length} sales`} icon={DollarSign} />
             <SummaryCard title="Purchases" value={formatCurrency(totalPurchaseAmount)} subtitle={`${formatNumber(totalPurchaseQty, 0)}g bought · ${filteredPurchases.length} buys`} icon={Gem} />
             <SummaryCard title="Expenses" value={formatCurrency(totalExpenses)} subtitle={`${filteredExpenses.length} items`} icon={Wallet} />
-            <SummaryCard title="Discounts" value={formatCurrency(totalDiscounts)} subtitle={`${filteredDiscounts.length} items`} icon={DollarSign} />
-            <SummaryCard title="Discounts" value={formatCurrency(totalDiscounts)} subtitle={`${filteredDiscounts.length} items`} icon={DollarSign} />
+            <SummaryCard title="Discounts" value={formatCurrency(totalDiscounts)} icon={DollarSign} />
             <SummaryCard title="Accts Receivable" value={formatCurrency(goldCapital.totalAR_USD)} subtitle={`${formatCurrency(goldCapital.arMotiAED + goldCapital.arAlMasaAED, "AED")}`} icon={DollarSign} trend="up" />
             <SummaryCard title="Accts Payable" value={formatCurrency(0)} subtitle="All settled" icon={Wallet} />
             <SummaryCard title="Broker Balance" value={formatCurrency(goldCapital.totalBrokers)} subtitle={`PY $${formatNumber(goldCapital.brokerPY, 0)} · ZHOU $${formatNumber(goldCapital.brokerZHOU, 0)}`} icon={Building} />
