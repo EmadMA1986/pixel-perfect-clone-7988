@@ -349,13 +349,16 @@ const RyaDashboard = () => {
             </div>
           </>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            <SummaryCard title="Net Profit" value={formatCurrency(profitLoss.netProfit)} subtitle={`Operating margin ${((profitLoss.operatingProfit / profitLoss.sales) * 100).toFixed(1)}%`} icon={TrendingUp} trend="up" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-9 gap-3">
+            <SummaryCard title="Net Profit" value={formatCurrency(profitLoss.netProfit)} subtitle={`Margin ${((profitLoss.operatingProfit / profitLoss.sales) * 100).toFixed(1)}%`} icon={TrendingUp} trend="up" />
             <SummaryCard title="Revenue" value={formatCurrency(totalRevenue)} subtitle={`${filteredSales.length} sales`} icon={DollarSign} />
-            <SummaryCard title="Purchases" value={formatCurrency(totalPurchaseAmount)} subtitle={`${formatNumber(totalPurchaseQty, 0)}g from ${filteredPurchases.length} buys`} icon={Gem} />
+            <SummaryCard title="Purchases" value={formatCurrency(totalPurchaseAmount)} subtitle={`${formatNumber(totalPurchaseQty, 0)}g · ${filteredPurchases.length} buys`} icon={Gem} />
             <SummaryCard title="Gold Sold" value={`${formatNumber(totalSalesQty, 2)}g`} subtitle={`Avg $${totalSalesQty > 0 ? formatNumber(totalRevenue / totalSalesQty, 2) : 0}/g`} icon={Scale} />
             <SummaryCard title="Expenses" value={formatCurrency(totalExpenses)} subtitle={`${filteredExpenses.length} items`} icon={Wallet} />
             <SummaryCard title="Discounts" value={formatCurrency(totalDiscounts)} subtitle={`${filteredDiscounts.length} items`} icon={DollarSign} />
+            <SummaryCard title="Accts Receivable" value={formatCurrency(goldCapital.totalAR_USD)} subtitle={`${formatCurrency(goldCapital.arMotiAED + goldCapital.arAlMasaAED, "AED")}`} icon={DollarSign} trend="up" />
+            <SummaryCard title="Accts Payable" value={formatCurrency(0)} subtitle="All settled" icon={Wallet} />
+            <SummaryCard title="Broker Balance" value={formatCurrency(goldCapital.totalBrokers)} subtitle={`PY $${formatNumber(goldCapital.brokerPY, 0)} · ZHOU $${formatNumber(goldCapital.brokerZHOU, 0)}`} icon={Building} />
           </div>
         )}
 
