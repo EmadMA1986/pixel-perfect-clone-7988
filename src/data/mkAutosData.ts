@@ -114,6 +114,93 @@ export const ahmadCapital = {
   positionAgainstCars: 464421.18,
 };
 
+export interface BalanceSheetItem {
+  name: string;
+  amount: number;
+}
+
+export const balanceSheet = {
+  fixedAssets: {
+    total: 3012174.58,
+    items: [
+      { name: "Cadillac Escalade 2025", amount: 473297.06 },
+      { name: "Chevrolet Tahoe 2025", amount: 240804.76 },
+      { name: "Fitting & Decoration", amount: 43240.00 },
+      { name: "Ford Mustang Black", amount: 229605.00 },
+      { name: "Ford Mustang Blue", amount: 250505.00 },
+      { name: "GMC Yukon 2025", amount: 304761.90 },
+      { name: "Kia Carnival 2025", amount: 142350.00 },
+      { name: "Kia K3 2026", amount: 64047.50 },
+      { name: "Kia Pegas Grey", amount: 45900.00 },
+      { name: "Kia Pegas White", amount: 45900.00 },
+      { name: "Kia Picanto", amount: 35000.00 },
+      { name: "Kia Sonet 2026", amount: 64557.50 },
+      { name: "Mercedes CLE200", amount: 333333.33 },
+      { name: "Outlander Grey", amount: 82900.00 },
+      { name: "Outlander Silver", amount: 82900.00 },
+      { name: "Outlander White 07", amount: 82900.00 },
+      { name: "Outlander White 13", amount: 82900.00 },
+      { name: "Nissan Patrol 2026", amount: 285675.58 },
+      { name: "Nissan Xterra 2025", amount: 100250.24 },
+      { name: "Office Equipment", amount: 21346.71 },
+    ] as BalanceSheetItem[],
+  },
+  currentAssets: {
+    total: 1270634.55,
+    items: [
+      { name: "Accounts Receivables", amount: 288565.72 },
+      { name: "Cash-in-Hand", amount: 26277.50 },
+      { name: "Bank Accounts", amount: 136474.44 },
+      { name: "AR - Cases", amount: 160955.22 },
+      { name: "Amex Card Receipt", amount: 650.00 },
+      { name: "Cheque", amount: 10732.00 },
+      { name: "DEWA Deposit", amount: 2000.00 },
+      { name: "Magnati Receipt", amount: 22190.00 },
+      { name: "Payment Link Receipt", amount: 8574.00 },
+      { name: "Prepaid Insurance", amount: 121905.62 },
+      { name: "Prepaid Interest", amount: 319766.57 },
+      { name: "Prepaid Rent", amount: 86980.00 },
+      { name: "MK Garage (Sister Co.)", amount: 85563.48 },
+    ] as BalanceSheetItem[],
+  },
+  currentLiabilities: {
+    total: 443163.33,
+    items: [
+      { name: "Duties & Taxes", amount: -146772.29 },
+      { name: "Accounts Payable", amount: 156633.15 },
+      { name: "Employee Salary", amount: 197930.06 },
+      { name: "Traffic Fine Payable", amount: 148542.50 },
+      { name: "Rent Liability", amount: 68750.00 },
+      { name: "Stripe Payment Link", amount: 18079.91 },
+    ] as BalanceSheetItem[],
+  },
+  capitalAccount: 348293.27,
+  loans: {
+    total: 3629077.54,
+    items: [
+      { name: "ADIB Loan", amount: 971068.98 },
+      { name: "ADIB New Loan", amount: 842719.32 },
+      { name: "Investor Ahmad", amount: 419421.19 },
+      { name: "Investor Golden", amount: 130441.97 },
+      { name: "Investor Hiruy", amount: 32653.34 },
+      { name: "Investor Jamal", amount: 7114.85 },
+      { name: "Investor Mirza", amount: 20908.07 },
+      { name: "Investor Moez", amount: 7793.89 },
+      { name: "Investor Munir", amount: -1170.00 },
+      { name: "Investor Ricardo", amount: 20154.48 },
+      { name: "Emirates Islamic Loan", amount: 1120731.74 },
+      { name: "Ahmed Hamid Loan", amount: 45000.00 },
+      { name: "Moiz Loan", amount: 12239.71 },
+    ] as BalanceSheetItem[],
+  },
+  profitLoss: {
+    opening: -195152.09,
+    currentPeriod: 57427.08,
+    total: -137725.01,
+  },
+  grandTotal: 4282809.13,
+};
+
 export const formatAED = (value: number) => {
   const prefix = value < 0 ? "-AED " : "AED ";
   return `${prefix}${Math.abs(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
