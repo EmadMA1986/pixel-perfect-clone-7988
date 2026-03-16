@@ -292,6 +292,12 @@ const MkAutosDashboard = () => {
         </Tabs>
 
         {/* Balance Sheet Summary */}
+        <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-serif text-foreground">MK Autos Balance Sheet</CardTitle>
+            <p className="text-xs text-muted-foreground tracking-wider uppercase">As of Feb 2026</p>
+          </CardHeader>
+          <CardContent>
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
           {/* Fixed Assets */}
           <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
@@ -379,6 +385,8 @@ const MkAutosDashboard = () => {
             </CardContent>
           </Card>
         </div>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );
