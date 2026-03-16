@@ -73,14 +73,15 @@ const MkAutosDashboard = () => {
         {/* Line 2: MK Autos Balance Sheet Numbers */}
         <div>
           <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground mb-2">MK Autos — As at 28-Feb-26</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-8 gap-3">
             <SummaryCard title="Capital Account" value={formatAED(balanceSheet.capitalAccount)} subtitle="Ahmad + Jamal + Moez" icon={Users} />
             <SummaryCard title="Accounts Receivable" value={formatAED(288565.72)} subtitle="Outstanding" icon={DollarSign} />
             <SummaryCard title="Cash-in-Hand" value={formatAED(26277.50)} subtitle="Petty cash" icon={Wallet} />
             <SummaryCard title="Bank Accounts" value={formatAED(136474.44)} subtitle="Bank balance" icon={Landmark} />
             <SummaryCard title="Current Liabilities" value={formatAED(balanceSheet.currentLiabilities.total)} subtitle="Payables & dues" icon={TrendingUp} />
             <SummaryCard title="Profit & Loss" value={formatAED(Math.abs(balanceSheet.profitLoss.total))} subtitle={balanceSheet.profitLoss.total < 0 ? "Net loss" : "Net profit"} icon={BarChart3} trend={balanceSheet.profitLoss.total >= 0 ? "up" : "down"} />
-            <SummaryCard title="Loans Total" value={formatAED(balanceSheet.loans.total)} subtitle="All loans" icon={Building2} />
+            <SummaryCard title="Banks Loans" value={formatAED(971068.98 + 842719.32 + 1120731.74)} subtitle="ADIB + Emirates Islamic" icon={Building2} />
+            <SummaryCard title="Investors Balance" value={formatAED(419421.19 + 130441.97 + 32653.34 + 7114.85 + 20908.07 + 7793.89 + -1170 + 20154.48 + 45000 + 12239.71)} subtitle="All investors" icon={User} />
           </div>
         </div>
 
