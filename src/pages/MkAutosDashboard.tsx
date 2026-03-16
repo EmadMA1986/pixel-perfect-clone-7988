@@ -59,10 +59,11 @@ const MkAutosDashboard = () => {
         {/* Line 1: Ahmad's Car Investment */}
         <div>
           <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground mb-2">Ahmad's Car Investment</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-10 gap-3">
             <SummaryCard title="Initial Investment" value={formatAED(ahmadCapital.totalCarsInvestment)} subtitle="Total cost" icon={Car} />
             <SummaryCard title="Total Profit" value={formatAED(ahmadCapital.totalCarsProfit)} subtitle="Total earned" icon={TrendingUp} trend="up" />
             <SummaryCard title="ROI" value={`${((ahmadCapital.totalCarsProfit / ahmadCapital.totalCarsInvestment) * 100).toFixed(0)}%`} subtitle="Return on investment" icon={Percent} trend="up" />
+            <SummaryCard title="ROI on NBV" value={`${((ahmadCapital.totalCarsProfit / (ahmadCapital.totalCarsInvestment - 1862032.98)) * 100).toFixed(0)}%`} subtitle="Return on net book value" icon={Percent} trend="up" />
             <SummaryCard title="Cash Withdrawal" value={formatAED(ahmadCapital.cashWithdrawal)} subtitle="Withdrawn" icon={Wallet} />
             <SummaryCard title="Maintenance" value={formatAED(ahmadCapital.carsMaintenance)} subtitle="Cars upkeep" icon={DollarSign} />
             <SummaryCard title="Loan" value={formatAED(ahmadCapital.loan)} subtitle="Ahmed Hamid" icon={Landmark} />
