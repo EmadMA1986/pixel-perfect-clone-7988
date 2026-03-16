@@ -385,6 +385,8 @@ const MkAutosDashboard = () => {
             </CardContent>
           </Card>
         </div>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );
