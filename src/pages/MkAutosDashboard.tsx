@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { TrendingUp, DollarSign, Wallet, Car, ArrowLeft, BarChart3, Percent, User } from "lucide-react";
+import { TrendingUp, DollarSign, Wallet, Car, ArrowLeft, BarChart3, Percent, User, Building2, Landmark, Users } from "lucide-react";
 import SummaryCard from "@/components/SummaryCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -119,52 +119,18 @@ const MkAutosDashboard = () => {
         </Card>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           <SummaryCard title="Initial Investment" value={formatAED(mkAutosSummary.totalInitialInvestment)} subtitle="Total cars cost" icon={Car} />
-          <SummaryCard title="Maintenance" value={formatAED(mkAutosSummary.totalMaintenanceExpenses)} subtitle="Total maintenance" icon={DollarSign} />
-          <SummaryCard title="Depreciation" value={formatAED(mkAutosSummary.totalDepreciation)} subtitle="Total depreciation" icon={TrendingUp} />
           <SummaryCard title="Net Book Value" value={formatAED(mkAutosSummary.totalNBV)} subtitle="Present value" icon={Wallet} />
+          <SummaryCard title="Accounts Receivable" value={formatAED(288565.72)} subtitle="AR + Cases" icon={DollarSign} />
+          <SummaryCard title="Bank Balance" value={formatAED(136474.44)} subtitle="Bank accounts" icon={Landmark} />
+          <SummaryCard title="MK Garage (Sister Co.)" value={formatAED(85563.48)} subtitle="Inter-company" icon={Building2} />
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <SummaryCard title="ROI on Investment" value={`${mkAutosSummary.overallROI}%`} subtitle="On initial cost" icon={Percent} trend="up" />
           <SummaryCard title="ROI on NBV" value={`${mkAutosSummary.overallROINBV}%`} subtitle="On net book value" icon={BarChart3} trend="up" />
-        </div>
-
-        {/* Balance Sheet: Current Assets & Liabilities */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Current Assets */}
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-serif text-foreground">Current Assets</CardTitle>
-                <Badge variant="secondary" className="text-sm font-bold">{formatAED(balanceSheet.currentAssets.total)}</Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-1.5">
-              {balanceSheet.currentAssets.items.filter(i => i.amount !== 0).map((item) => (
-                <div key={item.name} className="flex items-center justify-between py-1.5 px-2 rounded-md text-sm hover:bg-secondary/30">
-                  <span className="text-muted-foreground">{item.name}</span>
-                  <span className="tabular-nums font-medium text-foreground">{formatAED(item.amount)}</span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Current Liabilities */}
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-serif text-foreground">Current Liabilities</CardTitle>
-                <Badge variant="secondary" className="text-sm font-bold">{formatAED(balanceSheet.currentLiabilities.total)}</Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-1.5">
-              {balanceSheet.currentLiabilities.items.map((item) => (
-                <div key={item.name} className="flex items-center justify-between py-1.5 px-2 rounded-md text-sm hover:bg-secondary/30">
-                  <span className="text-muted-foreground">{item.name}</span>
-                  <span className={`tabular-nums font-medium ${item.amount < 0 ? "text-success" : "text-foreground"}`}>{formatAED(item.amount)}</span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          <SummaryCard title="Maintenance" value={formatAED(mkAutosSummary.totalMaintenanceExpenses)} subtitle="Total maintenance" icon={DollarSign} />
+          <SummaryCard title="Depreciation" value={formatAED(mkAutosSummary.totalDepreciation)} subtitle="Total depreciation" icon={TrendingUp} />
         </div>
 
         {/* Charts Row */}
@@ -324,6 +290,95 @@ const MkAutosDashboard = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Balance Sheet Summary */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
+          {/* Fixed Assets */}
+          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+            <CardHeader className="py-3 px-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-serif text-foreground">Fixed Assets</CardTitle>
+                <Badge variant="secondary" className="text-xs font-bold">{formatAED(balanceSheet.fixedAssets.total)}</Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="px-4 pb-3 pt-0 max-h-64 overflow-y-auto">
+              {balanceSheet.fixedAssets.items.map((item) => (
+                <div key={item.name} className="flex items-center justify-between py-1 text-xs">
+                  <span className="text-muted-foreground truncate mr-2">{item.name}</span>
+                  <span className="tabular-nums font-medium text-foreground whitespace-nowrap">{formatAED(item.amount)}</span>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Current Assets */}
+          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+            <CardHeader className="py-3 px-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-serif text-foreground">Current Assets</CardTitle>
+                <Badge variant="secondary" className="text-xs font-bold">{formatAED(balanceSheet.currentAssets.total)}</Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="px-4 pb-3 pt-0 max-h-64 overflow-y-auto">
+              {balanceSheet.currentAssets.items.filter(i => i.amount !== 0).map((item) => (
+                <div key={item.name} className="flex items-center justify-between py-1 text-xs">
+                  <span className="text-muted-foreground truncate mr-2">{item.name}</span>
+                  <span className="tabular-nums font-medium text-foreground whitespace-nowrap">{formatAED(item.amount)}</span>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Current Liabilities */}
+          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+            <CardHeader className="py-3 px-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-serif text-foreground">Current Liabilities</CardTitle>
+                <Badge variant="secondary" className="text-xs font-bold">{formatAED(balanceSheet.currentLiabilities.total)}</Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="px-4 pb-3 pt-0 max-h-64 overflow-y-auto">
+              {balanceSheet.currentLiabilities.items.map((item) => (
+                <div key={item.name} className="flex items-center justify-between py-1 text-xs">
+                  <span className="text-muted-foreground truncate mr-2">{item.name}</span>
+                  <span className={`tabular-nums font-medium whitespace-nowrap ${item.amount < 0 ? "text-success" : "text-foreground"}`}>{formatAED(item.amount)}</span>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Loans & Capital */}
+          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+            <CardHeader className="py-3 px-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-serif text-foreground">Loans</CardTitle>
+                <Badge variant="secondary" className="text-xs font-bold">{formatAED(balanceSheet.loans.total)}</Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="px-4 pb-3 pt-0 max-h-64 overflow-y-auto">
+              {balanceSheet.loans.items.map((item) => (
+                <div key={item.name} className="flex items-center justify-between py-1 text-xs">
+                  <span className="text-muted-foreground truncate mr-2">{item.name}</span>
+                  <span className={`tabular-nums font-medium whitespace-nowrap ${item.amount < 0 ? "text-success" : "text-foreground"}`}>{formatAED(item.amount)}</span>
+                </div>
+              ))}
+              <div className="border-t border-border/30 mt-2 pt-2 space-y-1">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground font-medium">Capital Account</span>
+                  <span className="tabular-nums font-bold text-foreground">{formatAED(balanceSheet.capitalAccount)}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground font-medium">P&L (Current)</span>
+                  <span className={`tabular-nums font-bold ${balanceSheet.profitLoss.currentPeriod >= 0 ? "text-success" : "text-loss"}`}>{formatAED(balanceSheet.profitLoss.currentPeriod)}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground font-medium">P&L (Total)</span>
+                  <span className={`tabular-nums font-bold ${balanceSheet.profitLoss.total >= 0 ? "text-success" : "text-loss"}`}>{formatAED(balanceSheet.profitLoss.total)}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </main>
     </div>
   );
