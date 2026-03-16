@@ -63,7 +63,7 @@ const MkAutosDashboard = () => {
             <SummaryCard title="Initial Investment" value={formatAED(ahmadCapital.totalCarsInvestment)} subtitle="Total cost" icon={Car} />
             <SummaryCard title="Total Profit" value={formatAED(ahmadCapital.totalCarsProfit)} subtitle="Total earned" icon={TrendingUp} trend="up" />
             <SummaryCard title="ROI" value={`${((ahmadCapital.totalCarsProfit / ahmadCapital.totalCarsInvestment) * 100).toFixed(0)}%`} subtitle="Return on investment" icon={Percent} trend="up" />
-            <SummaryCard title="ROI on NBV" value={`${((ahmadCapital.totalCarsProfit / (ahmadCapital.totalCarsInvestment - 1862032.98)) * 100).toFixed(0)}%`} subtitle="Return on net book value" icon={Percent} trend="up" />
+            <SummaryCard title="ROI on NBV" value={`${mkAutosSummary.overallROINBV}%`} subtitle="Return on net book value" icon={Percent} trend="up" />
             <SummaryCard title="Cash Withdrawal" value={formatAED(ahmadCapital.cashWithdrawal)} subtitle="Withdrawn" icon={Wallet} />
             <SummaryCard title="Maintenance" value={formatAED(ahmadCapital.carsMaintenance)} subtitle="Cars upkeep" icon={DollarSign} />
             <SummaryCard title="Loan" value={formatAED(ahmadCapital.loan)} subtitle="Ahmed Hamid" icon={Landmark} />
