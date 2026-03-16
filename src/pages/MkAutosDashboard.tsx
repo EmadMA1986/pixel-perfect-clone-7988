@@ -95,7 +95,7 @@ const MkAutosDashboard = () => {
             <SummaryCard title="Maintenance" value={formatAED(ahmadCapital.carsMaintenance)} subtitle="Cars upkeep" icon={DollarSign} />
             <SummaryCard title="Depreciation" value={formatAED(mkAutosSummary.totalDepreciation)} subtitle="Total depreciation" icon={TrendingUp} trend="down" />
             <SummaryCard title="NBV" value={formatAED(mkAutosSummary.totalNBV)} subtitle="Net book value" icon={Car} />
-            <SummaryCard title="Loan" value={formatAED(ahmadCapital.loan)} subtitle="Ahmed Hamid" icon={Landmark} />
+            
             <SummaryCard title="Share Capital" value={formatAED(ahmadCapital.shareCapital)} subtitle={`${ahmadCapital.sharePercentage}% share`} icon={User} />
             <SummaryCard title="Avg Monthly" value={formatAED(mkAutosSummary.avgMonthlyIncome)} subtitle="Monthly income" icon={BarChart3} />
           </div>
