@@ -349,7 +349,7 @@ const RyaDashboard = () => {
             </div>
           </>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-9 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             <SummaryCard title="Net Profit" value={formatCurrency(profitLoss.netProfit)} subtitle={`Margin ${((profitLoss.operatingProfit / profitLoss.sales) * 100).toFixed(1)}%`} icon={TrendingUp} trend="up" />
             <SummaryCard title="Revenue" value={formatCurrency(totalRevenue)} subtitle={`${filteredSales.length} sales`} icon={DollarSign} />
             <SummaryCard title="Purchases" value={formatCurrency(totalPurchaseAmount)} subtitle={`${formatNumber(totalPurchaseQty, 0)}g · ${filteredPurchases.length} buys`} icon={Gem} />
@@ -359,6 +359,7 @@ const RyaDashboard = () => {
             <SummaryCard title="Accts Receivable" value={formatCurrency(goldCapital.totalAR_USD)} subtitle={`${formatCurrency(goldCapital.arMotiAED + goldCapital.arAlMasaAED, "AED")}`} icon={DollarSign} trend="up" />
             <SummaryCard title="Accts Payable" value={formatCurrency(0)} subtitle="All settled" icon={Wallet} />
             <SummaryCard title="Broker Balance" value={formatCurrency(goldCapital.totalBrokers)} subtitle={`PY $${formatNumber(goldCapital.brokerPY, 0)} · ZHOU $${formatNumber(goldCapital.brokerZHOU, 0)}`} icon={Building} />
+            <SummaryCard title="Gold Inventory" value={`${formatNumber(goldInventory.balanceGrams, 3)}g`} subtitle={`${formatCurrency(goldInventory.costOfRemainingUSD)} · $${formatNumber(goldInventory.costPerGram, 2)}/g`} icon={Gem} />
           </div>
         )}
 
