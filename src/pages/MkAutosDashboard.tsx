@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid } from "recharts";
-import { mkAutosSummary, vehicles, monthlyIncome, formatAED, ahmadCapital } from "@/data/mkAutosData";
+import { mkAutosSummary, vehicles, monthlyIncome, formatAED, ahmadCapital, balanceSheet } from "@/data/mkAutosData";
 
 const MkAutosDashboard = () => {
   const incomeChartData = useMemo(
