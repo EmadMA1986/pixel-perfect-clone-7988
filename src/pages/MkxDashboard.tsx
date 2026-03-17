@@ -201,6 +201,40 @@ const MkxDashboard = () => {
           </CardContent>
         </Card>
 
+        {/* Client Liabilities vs Assets */}
+        <Card className="border-border/50 bg-gradient-to-r from-amber-500/10 to-amber-700/5 backdrop-blur-sm">
+          <CardContent className="p-5">
+            <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 items-end">
+              <div>
+                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Fiat Client Liabilities</p>
+                <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(94451)}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Fiat Assets Held</p>
+                <p className="text-xl font-bold font-serif text-foreground">{formatAEDFull(923517)}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Fiat Surplus</p>
+                <p className="text-xl font-bold font-serif text-success">{formatAEDFull(923517 - 94451)}</p>
+                <p className="text-[10px] text-muted-foreground">Ratio: {(923517 / 94451).toFixed(2)}x</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">VA Client Liabilities</p>
+                <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(822367)}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">VA Assets Held</p>
+                <p className="text-xl font-bold font-serif text-foreground">{formatAEDFull(146581 + 1964514)}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">VA Surplus</p>
+                <p className="text-xl font-bold font-serif text-success">{formatAEDFull(146581 + 1964514 - 822367)}</p>
+                <p className="text-[10px] text-muted-foreground">Ratio: {((146581 + 1964514) / 822367).toFixed(2)}x</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <SummaryCard
