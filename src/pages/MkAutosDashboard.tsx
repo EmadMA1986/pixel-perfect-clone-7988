@@ -138,7 +138,9 @@ const MkAutosDashboard = () => {
                       <p className="text-2xl font-bold font-serif text-foreground">
                         {(balanceSheet.loans.total / balanceSheet.capitalAccount).toFixed(2)}x
                       </p>
-                      <span className="text-xs text-loss font-medium">Total leverage</span>
+                      <span className={`text-xs font-medium ${balanceSheet.loans.total / balanceSheet.capitalAccount > 5 ? "text-loss" : "text-success"}`}>
+                        {balanceSheet.loans.total / balanceSheet.capitalAccount > 10 ? "⚠ Very High Risk" : balanceSheet.loans.total / balanceSheet.capitalAccount > 5 ? "⚠ High Risk" : balanceSheet.loans.total / balanceSheet.capitalAccount > 2 ? "Moderate" : "Healthy"}
+                      </span>
                     </div>
                     <div className="flex gap-4 pt-1 border-t border-border/30">
                       <div>
