@@ -236,7 +236,7 @@ const MkxDashboard = () => {
         </Card>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <SummaryCard
             title="Full Year Income"
             value={formatAED(mkxSummary.fullYearTotalIncome)}
@@ -250,20 +250,23 @@ const MkxDashboard = () => {
             icon={TrendingUp}
             trend="up"
           />
-          <SummaryCard
-            title="Jan 2026 Current P&L"
-            value={formatAED(-119680)}
-            subtitle="Current month"
-            icon={TrendingDown}
-            trend="down"
-          />
-          <SummaryCard
-            title="Retained Earnings"
-            value={formatAED(-7261014)}
-            subtitle="Accumulated losses"
-            icon={TrendingDown}
-            trend="down"
-          />
+          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+            <CardContent className="p-4 space-y-1">
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Net P&L Breakdown</p>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-muted-foreground">Jan 2026 P&L</span>
+                <span className="text-sm font-semibold text-loss">{formatAEDFull(-119680)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-muted-foreground">Retained Earnings</span>
+                <span className="text-sm font-semibold text-loss">{formatAEDFull(-7261014)}</span>
+              </div>
+              <div className="border-t border-border/50 pt-1 flex justify-between items-center">
+                <span className="text-xs font-bold text-foreground">Total</span>
+                <span className="text-sm font-bold text-loss">{formatAEDFull(-119680 + -7261014)}</span>
+              </div>
+            </CardContent>
+          </Card>
           <SummaryCard
             title="Total Assets"
             value={formatAED(mkxSummary.totalAssets)}
