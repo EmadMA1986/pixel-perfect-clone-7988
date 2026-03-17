@@ -124,7 +124,7 @@ const MkAutosDashboard = () => {
             <SummaryCard
               title="Current Ratio"
               value={`${(536881 / balanceSheet.currentLiabilities.total).toFixed(2)}x`}
-              subtitle={536881 / balanceSheet.currentLiabilities.total >= 1 ? "Liquid" : "Watch liquidity"}
+              subtitle={536881 / balanceSheet.currentLiabilities.total >= 2 ? "✅ Healthy" : 536881 / balanceSheet.currentLiabilities.total >= 1 ? "⚠ Adequate" : "⚠ Risky — below 1x"}
               icon={BarChart3}
               trend={536881 / balanceSheet.currentLiabilities.total >= 1 ? "up" : "down"}
             />
