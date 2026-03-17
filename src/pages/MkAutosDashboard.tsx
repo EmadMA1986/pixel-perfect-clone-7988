@@ -120,7 +120,7 @@ const MkAutosDashboard = () => {
         {/* Financial Ratios */}
         <div>
           <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground mb-2">Financial Ratios</p>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <SummaryCard
               title="Current Ratio"
               value={`${(536881 / balanceSheet.currentLiabilities.total).toFixed(2)}x`}
@@ -128,20 +128,39 @@ const MkAutosDashboard = () => {
               icon={BarChart3}
               trend={536881 / balanceSheet.currentLiabilities.total >= 1 ? "up" : "down"}
             />
-            <SummaryCard
-              title="Bank Loans / Equity"
-              value={`${((971068.98 + 842719.32 + 1120731.74) / balanceSheet.capitalAccount).toFixed(2)}x`}
-              subtitle="Bank debt leverage"
-              icon={Percent}
-              trend={(971068.98 + 842719.32 + 1120731.74) / balanceSheet.capitalAccount > 5 ? "down" : "up"}
-            />
-            <SummaryCard
-              title="Investors / Equity"
-              value={`${((419421.19 + 130441.97 + 32653.34 + 7114.85 + 20908.07 + 7793.89 + -1170 + 20154.48 + 45000 + 12239.71) / balanceSheet.capitalAccount).toFixed(2)}x`}
-              subtitle="Investor debt leverage"
-              icon={Percent}
-              trend={(419421.19 + 130441.97 + 32653.34 + 7114.85 + 20908.07 + 7793.89 + -1170 + 20154.48 + 45000 + 12239.71) / balanceSheet.capitalAccount > 2 ? "down" : "up"}
-            />
+            <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
+              <CardContent className="p-5 relative">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2 w-full">
+                    <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Debt-to-Equity</p>
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-2xl font-bold font-serif text-foreground">
+                        {(balanceSheet.loans.total / balanceSheet.capitalAccount).toFixed(2)}x
+                      </p>
+                      <span className="text-xs text-loss font-medium">Total leverage</span>
+                    </div>
+                    <div className="flex gap-4 pt-1 border-t border-border/30">
+                      <div>
+                        <p className="text-[10px] text-muted-foreground">Bank Loans</p>
+                        <p className="text-sm font-semibold font-serif text-foreground">
+                          {((971068.98 + 842719.32 + 1120731.74) / balanceSheet.capitalAccount).toFixed(2)}x
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-muted-foreground">Investors</p>
+                        <p className="text-sm font-semibold font-serif text-foreground">
+                          {((419421.19 + 130441.97 + 32653.34 + 7114.85 + 20908.07 + 7793.89 + -1170 + 20154.48 + 45000 + 12239.71) / balanceSheet.capitalAccount).toFixed(2)}x
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                    <Percent className="h-5 w-5 text-primary" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
