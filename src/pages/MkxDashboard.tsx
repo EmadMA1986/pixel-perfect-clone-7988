@@ -251,9 +251,16 @@ const MkxDashboard = () => {
             trend="up"
           />
           <SummaryCard
-            title="Full Year Net P&L"
-            value={formatAED(mkxSummary.fullYearNetEarnings)}
-            subtitle="All 13 months"
+            title="Jan 2026 Current P&L"
+            value={formatAED(-119680)}
+            subtitle="Current month"
+            icon={TrendingDown}
+            trend="down"
+          />
+          <SummaryCard
+            title="Retained Earnings"
+            value={formatAED(-7261014)}
+            subtitle="Accumulated losses"
             icon={TrendingDown}
             trend="down"
           />
