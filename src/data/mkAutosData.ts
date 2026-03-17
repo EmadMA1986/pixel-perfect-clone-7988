@@ -174,7 +174,7 @@ export const balanceSheet = {
       { name: "Stripe Payment Link", amount: 18079.91 },
     ] as BalanceSheetItem[],
   },
-  capitalAccount: 348293.27,
+  capitalAccount: 300000,
   loans: {
     total: 3629077.54,
     items: [
