@@ -151,6 +151,38 @@ const MkxDashboard = () => {
           </CardContent>
         </Card>
 
+        {/* MKX Crypto Assets */}
+        <Card className="border-border/50 bg-gradient-to-r from-emerald-500/10 to-violet-500/5 backdrop-blur-sm">
+          <CardContent className="p-5">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center">
+                  <Shield className="h-5 w-5 text-success" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">MKX Assets in Fiat</p>
+                  <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(923517 - 94451)}</p>
+                  <p className="text-[10px] text-muted-foreground">Client Money (923,517) − Fiat Due to Customers (94,451)</p>
+                </div>
+              </div>
+              <div className="text-center">
+                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">MKX Assets in VA</p>
+                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(146581 + 1964514 - 822367)}</p>
+                <p className="text-[10px] text-muted-foreground">Cold Wallets + VA Holdings − VA Due to Customers</p>
+              </div>
+              <div className="text-center border-l border-r border-border/50 px-6">
+                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">January Gross Profit</p>
+                <p className="text-2xl font-bold font-serif text-success">{formatAEDFull(229352)}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Net MKX Assets</p>
+                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull((923517 - 94451) + (146581 + 1964514 - 822367) - 229352)}</p>
+                <p className="text-[10px] text-muted-foreground">Fiat + VA − Jan Profit</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <SummaryCard
