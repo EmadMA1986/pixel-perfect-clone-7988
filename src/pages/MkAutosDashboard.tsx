@@ -120,7 +120,7 @@ const MkAutosDashboard = () => {
         {/* Financial Ratios */}
         <div>
           <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground mb-2">Financial Ratios</p>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <SummaryCard
               title="Current Ratio"
               value={`${(536881 / balanceSheet.currentLiabilities.total).toFixed(2)}x`}
@@ -129,11 +129,18 @@ const MkAutosDashboard = () => {
               trend={536881 / balanceSheet.currentLiabilities.total >= 1 ? "up" : "down"}
             />
             <SummaryCard
-              title="Debt-to-Equity"
-              value={`${(balanceSheet.loans.total / balanceSheet.capitalAccount).toFixed(2)}x`}
-              subtitle={balanceSheet.loans.total / balanceSheet.capitalAccount > 5 ? "High leverage" : "Moderate leverage"}
+              title="Bank Loans / Equity"
+              value={`${((971068.98 + 842719.32 + 1120731.74) / balanceSheet.capitalAccount).toFixed(2)}x`}
+              subtitle="Bank debt leverage"
               icon={Percent}
-              trend={balanceSheet.loans.total / balanceSheet.capitalAccount > 5 ? "down" : "up"}
+              trend={(971068.98 + 842719.32 + 1120731.74) / balanceSheet.capitalAccount > 5 ? "down" : "up"}
+            />
+            <SummaryCard
+              title="Investors / Equity"
+              value={`${((419421.19 + 130441.97 + 32653.34 + 7114.85 + 20908.07 + 7793.89 + -1170 + 20154.48 + 45000 + 12239.71) / balanceSheet.capitalAccount).toFixed(2)}x`}
+              subtitle="Investor debt leverage"
+              icon={Percent}
+              trend={(419421.19 + 130441.97 + 32653.34 + 7114.85 + 20908.07 + 7793.89 + -1170 + 20154.48 + 45000 + 12239.71) / balanceSheet.capitalAccount > 2 ? "down" : "up"}
             />
           </div>
         </div>
