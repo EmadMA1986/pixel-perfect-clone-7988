@@ -183,7 +183,7 @@ const MkxDashboard = () => {
             <div className="mt-4 pt-4 border-t border-border/50 flex flex-wrap items-center gap-6">
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-primary" />
-                <p className="text-xs text-muted-foreground">Capital Injection:</p>
+                <p className="text-xs text-muted-foreground">Crypto Capital Injection:</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Ahmad</p>
