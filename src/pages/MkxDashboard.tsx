@@ -124,32 +124,65 @@ const MkxDashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-6">
-        {/* Ahmad's Capital Position */}
-        <Card className="border-border/50 bg-gradient-to-r from-violet-500/10 to-violet-700/5 backdrop-blur-sm">
-          <CardContent className="p-5 flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Wallet className="h-5 w-5 text-primary" />
+        {/* Partners' Capital Position */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Ahmad */}
+          <Card className="border-border/50 bg-gradient-to-r from-violet-500/10 to-violet-700/5 backdrop-blur-sm">
+            <CardContent className="p-5 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Wallet className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Ahmad's Share Capital</p>
+                  <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(5324087.29)}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Ahmad's Share Capital</p>
-                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(5324087.29)}</p>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <p className="text-xs text-muted-foreground">Total Retained Earnings</p>
+                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-7380694)}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-muted-foreground">Ahmad's Share (50%)</p>
+                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-3690347)}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground">Ahmad's Net Position</p>
+                  <p className="text-lg font-bold font-serif text-foreground">{formatAEDFull(5324087.29 - 3690347)}</p>
+                </div>
               </div>
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground">Total Retained Earnings</p>
-              <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(-7380694)}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground">Ahmad's Share (50%)</p>
-              <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(-3690347)}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-xs text-muted-foreground">Ahmad's Net Position</p>
-              <p className="text-xl font-bold font-serif text-foreground">{formatAEDFull(5324087.29 - 3690347)}</p>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+          {/* Maria */}
+          <Card className="border-border/50 bg-gradient-to-r from-pink-500/10 to-pink-700/5 backdrop-blur-sm">
+            <CardContent className="p-5 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Wallet className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Maria's Share Capital</p>
+                  <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(5573975)}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <p className="text-xs text-muted-foreground">Total Retained Earnings</p>
+                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-7380694)}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-muted-foreground">Maria's Share (50%)</p>
+                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-3690347)}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground">Maria's Net Position</p>
+                  <p className="text-lg font-bold font-serif text-foreground">{formatAEDFull(5573975 - 3690347)}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* MKX Crypto Assets */}
         <Card className="border-border/50 bg-gradient-to-r from-emerald-500/10 to-violet-500/5 backdrop-blur-sm">
