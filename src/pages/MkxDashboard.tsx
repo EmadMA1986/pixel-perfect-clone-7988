@@ -180,6 +180,24 @@ const MkxDashboard = () => {
                 <p className="text-[10px] text-muted-foreground">Fiat + VA − Jan Profit</p>
               </div>
             </div>
+            <div className="mt-4 pt-4 border-t border-border/50 flex flex-wrap items-center gap-6">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-primary" />
+                <p className="text-xs text-muted-foreground">Capital Injection:</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Ahmad</p>
+                <p className="text-sm font-bold font-serif text-foreground">{formatAEDFull(1688442)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Maria</p>
+                <p className="text-sm font-bold font-serif text-foreground">{formatAEDFull(200000)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Total</p>
+                <p className="text-sm font-bold font-serif text-foreground">{formatAEDFull(1688442 + 200000)}</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
