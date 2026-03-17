@@ -117,15 +117,16 @@ const MkAutosDashboard = () => {
         </div>
 
         {/* Financial Ratios */}
+        {/* Financial Ratios */}
         <div>
           <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground mb-2">Financial Ratios</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <SummaryCard
               title="Current Ratio"
-              value={`${(balanceSheet.currentAssets.total / balanceSheet.currentLiabilities.total).toFixed(2)}x`}
-              subtitle={balanceSheet.currentAssets.total / balanceSheet.currentLiabilities.total >= 1.5 ? "Healthy liquidity" : "Watch liquidity"}
+              value={`${(536881 / balanceSheet.currentLiabilities.total).toFixed(2)}x`}
+              subtitle={536881 / balanceSheet.currentLiabilities.total >= 1 ? "Liquid" : "Watch liquidity"}
               icon={BarChart3}
-              trend={balanceSheet.currentAssets.total / balanceSheet.currentLiabilities.total >= 1.5 ? "up" : "down"}
+              trend={536881 / balanceSheet.currentLiabilities.total >= 1 ? "up" : "down"}
             />
             <SummaryCard
               title="Debt-to-Equity"
@@ -133,20 +134,6 @@ const MkAutosDashboard = () => {
               subtitle={balanceSheet.loans.total / balanceSheet.capitalAccount > 5 ? "High leverage" : "Moderate leverage"}
               icon={Percent}
               trend={balanceSheet.loans.total / balanceSheet.capitalAccount > 5 ? "down" : "up"}
-            />
-            <SummaryCard
-              title="Asset Turnover"
-              value={`${(mkAutosSummary.totalGrossProfit / (balanceSheet.fixedAssets.total + balanceSheet.currentAssets.total)).toFixed(2)}x`}
-              subtitle="Revenue / Total Assets"
-              icon={TrendingUp}
-              trend="neutral"
-            />
-            <SummaryCard
-              title="Net Profit Margin"
-              value={`${((balanceSheet.profitLoss.currentPeriod / mkAutosSummary.totalGrossProfit) * 100).toFixed(1)}%`}
-              subtitle={balanceSheet.profitLoss.currentPeriod >= 0 ? "Profitable" : "Loss-making"}
-              icon={Percent}
-              trend={balanceSheet.profitLoss.currentPeriod >= 0 ? "up" : "down"}
             />
           </div>
         </div>
