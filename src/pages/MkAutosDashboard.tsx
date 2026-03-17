@@ -116,6 +116,41 @@ const MkAutosDashboard = () => {
           </div>
         </div>
 
+        {/* Financial Ratios */}
+        <div>
+          <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground mb-2">Financial Ratios</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <SummaryCard
+              title="Current Ratio"
+              value={`${(balanceSheet.currentAssets.total / balanceSheet.currentLiabilities.total).toFixed(2)}x`}
+              subtitle={balanceSheet.currentAssets.total / balanceSheet.currentLiabilities.total >= 1.5 ? "Healthy liquidity" : "Watch liquidity"}
+              icon={BarChart3}
+              trend={balanceSheet.currentAssets.total / balanceSheet.currentLiabilities.total >= 1.5 ? "up" : "down"}
+            />
+            <SummaryCard
+              title="Debt-to-Equity"
+              value={`${(balanceSheet.loans.total / balanceSheet.capitalAccount).toFixed(2)}x`}
+              subtitle={balanceSheet.loans.total / balanceSheet.capitalAccount > 5 ? "High leverage" : "Moderate leverage"}
+              icon={Percent}
+              trend={balanceSheet.loans.total / balanceSheet.capitalAccount > 5 ? "down" : "up"}
+            />
+            <SummaryCard
+              title="Asset Turnover"
+              value={`${(mkAutosSummary.totalGrossProfit / (balanceSheet.fixedAssets.total + balanceSheet.currentAssets.total)).toFixed(2)}x`}
+              subtitle="Revenue / Total Assets"
+              icon={TrendingUp}
+              trend="neutral"
+            />
+            <SummaryCard
+              title="Net Profit Margin"
+              value={`${((balanceSheet.profitLoss.currentPeriod / mkAutosSummary.totalGrossProfit) * 100).toFixed(1)}%`}
+              subtitle={balanceSheet.profitLoss.currentPeriod >= 0 ? "Profitable" : "Loss-making"}
+              icon={Percent}
+              trend={balanceSheet.profitLoss.currentPeriod >= 0 ? "up" : "down"}
+            />
+          </div>
+        </div>
+
         {/* Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Monthly Income Trend */}
