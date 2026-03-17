@@ -236,7 +236,7 @@ const MkxDashboard = () => {
         </Card>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
           <SummaryCard
             title="Full Year Income"
             value={formatAED(mkxSummary.fullYearTotalIncome)}
@@ -251,9 +251,16 @@ const MkxDashboard = () => {
             trend="up"
           />
           <SummaryCard
-            title="Full Year Net P&L"
-            value={formatAED(mkxSummary.fullYearNetEarnings)}
-            subtitle="All 13 months"
+            title="Jan 2026 Current P&L"
+            value={formatAED(-119680)}
+            subtitle="Current month"
+            icon={TrendingDown}
+            trend="down"
+          />
+          <SummaryCard
+            title="Retained Earnings"
+            value={formatAED(-7261014)}
+            subtitle="Accumulated losses"
             icon={TrendingDown}
             trend="down"
           />
