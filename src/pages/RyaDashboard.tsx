@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Gem, TrendingUp, DollarSign, Wallet, Scale, Filter, CalendarIcon, Building, Car, Activity, User } from "lucide-react";
+import { Gem, TrendingUp, DollarSign, Wallet, Scale, Filter, CalendarIcon, Building, Car, Activity, User, FileDown } from "lucide-react";
+import { generateRyaPdf } from "@/utils/generateRyaPdf";
 import { format, isValid } from "date-fns";
 import SummaryCard from "@/components/SummaryCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
