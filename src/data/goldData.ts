@@ -139,22 +139,22 @@ export const salesDiscounts: ExpenseItem[] = [
 
 export const profitLoss = {
   sales: 6047470.68,
-  salesDiscount: 19887.65,
+  salesDiscount: 19911.22,
   costOfSales: 5049011.58,
-  meltingLoss: 5101.65,
+  meltingLoss: 19689.85,
   hedgeExpenses: 223206,
-  grossProfit: 750263.80,
+  grossProfit: 735652.03,
   transport: 39388.01,
   labor: 4442.07,
   hotel: 1343.49,
   bonus: 10172.46,
   taxBonus: 780.67,
-  otherExp: 92.94,
-  totalAdminExpenses: 56219.64,
-  operatingProfit: 694044.16,
+  otherExp: 1917.26,
+  totalAdminExpenses: 58043.97,
+  operatingProfit: 677608.07,
   fxGain: 771.42,
   fxLoss: 1128.97,
-  netProfit: 693686.61,
+  netProfit: 677250.52,
 };
 
 export const brokerBalances = {
