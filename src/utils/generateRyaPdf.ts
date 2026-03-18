@@ -113,7 +113,7 @@ export const generateRyaPdf = () => {
   // Assets
   sectionHeader("Assets");
   row("Broker ZHOU (USD)", fmt(goldCapital.brokerZHOU), true);
-  row("Broker ZHOU (AED → USD)", fmt(goldCapital.brokerZHOUAED / AED_TO_USD_RATE), true);
+  row(`Broker ZHOU (AED ${formatCurrency(goldCapital.brokerZHOUAED, "AED").replace("AED ", "")} @3.673 = USD)`, fmt(goldCapital.brokerZHOUAED / AED_TO_USD_RATE), true);
   row("Broker PY", fmt(goldCapital.brokerPY), true);
   row("Gold Inventory", fmt(goldCapital.goldInventoryUSD), true);
   row("AR — Moti", fmt(goldCapital.arMotiAED / AED_TO_USD_RATE), true);
