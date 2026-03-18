@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Gem, TrendingUp, DollarSign, Wallet, Scale, Filter, CalendarIcon, Building, Car, Activity, User } from "lucide-react";
+import { Gem, TrendingUp, DollarSign, Wallet, Scale, Filter, CalendarIcon, Building, Car, Activity, User, FileDown } from "lucide-react";
+import { generateRyaPdf } from "@/utils/generateRyaPdf";
 import { format, isValid } from "date-fns";
 import SummaryCard from "@/components/SummaryCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -191,6 +192,10 @@ const RyaDashboard = () => {
                 MKX
               </Button>
             </Link>
+            <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={generateRyaPdf}>
+              <FileDown className="h-3.5 w-3.5" />
+              Export PDF
+            </Button>
             <p className="text-xs text-muted-foreground hidden sm:block">Last updated: Mar 18, 2026</p>
           </div>
         </div>
