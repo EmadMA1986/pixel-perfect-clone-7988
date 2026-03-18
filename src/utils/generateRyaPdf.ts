@@ -461,6 +461,118 @@ export const generateRyaPdf = () => {
   row("Total Grams Purchased (Pure)", `${formatNumber(totalPurchaseQty, 0)}g`, true);
   row("Total Transactions", `${sales.length} sales · ${goldPurchases.length} purchases`, true);
 
+  // =============================================
+  // EXECUTIVE ANALYSIS & RISK ASSESSMENT
+  // =============================================
+  doc.addPage();
+  y = 15;
+  pageTitle("Executive Analysis");
+
+  const writeParagraph = (text: string, fontSize = 9) => {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(fontSize);
+    doc.setTextColor(50);
+    const lines = doc.splitTextToSize(text, contentW - 6);
+    lines.forEach((line: string) => {
+      checkPage(5);
+      doc.text(line, margin + 3, y);
+      y += 4.5;
+    });
+    y += 3;
+  };
+
+  const bulletPoint = (title: string, text: string) => {
+    checkPage(12);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(139, 109, 48);
+    doc.text(`• ${title}`, margin + 3, y);
+    y += 5;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(60);
+    const lines = doc.splitTextToSize(text, contentW - 14);
+    lines.forEach((line: string) => {
+      checkPage(5);
+      doc.text(line, margin + 10, y);
+      y += 4.2;
+    });
+    y += 3;
+  };
+
+  // Overview
+  sectionHeader("Performance Overview");
+  writeParagraph(
+    `RYA Gold Trading generated a net profit of ${fmt(profitLoss.netProfit)} on total revenue of ${fmt(profitLoss.sales)} during the reporting period (October 2025 – March 2026), achieving an 11.2% net profit margin. Starting from an estimated initial investment of ${fmt(Math.abs(goldCapital.initialCapital))}, the operation delivered a return on capital exceeding 12x — a remarkable result for a commodity trading venture.`
+  );
+  writeParagraph(
+    `A total of ${formatNumber(totalSalesQty, 2)}g of gold was sold across ${sales.length} transactions to 4 customers, with ${formatNumber(totalPurchaseQty, 0)}g purchased from 6 suppliers over ${goldPurchases.length} buy transactions. All gold inventory has been fully consumed as of March 18, 2026, and all capital now resides in broker accounts and minor receivables.`
+  );
+
+  // Strengths
+  sectionHeader("Key Strengths");
+  bulletPoint("Exceptional Capital Efficiency",
+    `Asset turnover of ${assetTurnover.toFixed(2)}x demonstrates rapid capital recycling. The business converted a small initial investment into over $6M in revenue through multiple inventory rotations, maximizing the use of deployed capital.`
+  );
+  bulletPoint("Strong Profitability Across All Metrics",
+    `Gross margin of ${grossMargin.toFixed(2)}%, operating margin of ${operatingMargin.toFixed(2)}%, and net margin of ${netMargin.toFixed(2)}% all indicate healthy spreads between buying and selling rates. The average markup of ${markup.toFixed(2)}% on gold trades was consistently maintained.`
+  );
+  bulletPoint("Clean Balance Sheet",
+    `Zero liabilities with all suppliers fully settled. Only a minor receivable of AED 12,775 (from AL MASA) remains outstanding. This debt-free position provides maximum flexibility for the next trading cycle.`
+  );
+  bulletPoint("Lean Cost Structure",
+    `Administrative expenses represent less than 1% of revenue (${expenseRatio.toFixed(2)}%), demonstrating an extremely lean operating model. Even including hedge expenses and melting losses, total deductions from gross profit remain well-controlled.`
+  );
+
+  // Risk Factors
+  checkPage(30);
+  sectionHeader("Risk Factors & Considerations");
+  bulletPoint("Customer Concentration",
+    `Moti accounts for approximately 60%+ of total revenue. While this relationship has been profitable (contributing the largest share of profits), over-reliance on a single buyer creates vulnerability. The diversification into UNIP HK and GOLDEN customers is a positive development that should be expanded.`
+  );
+  bulletPoint("Hedging Costs",
+    `Hedge expenses of ${fmt(profitLoss.hedgeExpenses)} represent ${hedgeToSales.toFixed(2)}% of sales. While necessary to manage gold price and FX volatility, this is a significant cost center. Optimizing hedging strategy could improve margins by 1-2 percentage points.`
+  );
+  bulletPoint("Melting Loss Exposure",
+    `Total melting loss of ${formatNumber(goldInventory.totalMeltingLossGrams, 3)}g (${fmt(profitLoss.meltingLoss)} in value) reflects inherent physical gold processing risk. Sourcing higher-purity gold or negotiating melting loss adjustments with suppliers could reduce this leakage.`
+  );
+  bulletPoint("FX Risk",
+    `Operations span multiple currencies (USD, AED, BRL). While net FX impact was modest (gain ${fmt(profitLoss.fxGain)} vs loss ${fmt(profitLoss.fxLoss)}), larger positions could amplify FX exposure. The fixed AED/USD peg (3.673) mitigates AED risk, but BRL volatility remains a factor on the purchasing side.`
+  );
+
+  // Recommendations
+  checkPage(30);
+  sectionHeader("Recommendations");
+  bulletPoint("Diversify Customer Base",
+    "Target 2-3 additional buyers to reduce Moti dependency below 40% of revenue. UNIP HK has shown strong volume — deepening this relationship and seeking similar counterparties would strengthen the business."
+  );
+  bulletPoint("Optimize Hedge Strategy",
+    "Review hedge expense efficiency. At $223K on $6M revenue, explore whether partial hedging or dynamic hedging could reduce costs while maintaining adequate price protection."
+  );
+  bulletPoint("Scale Operations",
+    `With proven profitability and a clean balance sheet (${fmt(goldCapital.totalCurrentPosition)} in liquid assets), the operation is well-positioned to increase trading volumes. The existing infrastructure and relationships can support 2-3x current throughput.`
+  );
+  bulletPoint("Supplier Consolidation",
+    "ELIZEU and LOUCS provided the largest volumes at competitive rates. Strengthening these relationships with volume commitments could secure better pricing and priority access to supply."
+  );
+
+  // Conclusion
+  checkPage(20);
+  y += 3;
+  doc.setFillColor(139, 109, 48);
+  doc.rect(margin, y - 5, contentW, 12, "F");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(255);
+  doc.text("Conclusion", margin + 3, y);
+  y += 6;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.text("RYA Gold Trading has delivered outstanding results with disciplined execution, lean operations,", margin + 3, y);
+  y += 4;
+  doc.text("and effective risk management. The business is well-capitalized and positioned for growth.", margin + 3, y);
+  y += 10;
+
   //
   // FOOTER ON ALL PAGES
   // =============================================
