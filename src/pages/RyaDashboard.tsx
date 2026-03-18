@@ -355,10 +355,10 @@ const RyaDashboard = () => {
             <SummaryCard title="Purchases" value={formatCurrency(totalPurchaseAmount)} subtitle={`${formatNumber(totalPurchaseQty, 0)}g bought · ${filteredPurchases.length} buys`} icon={Gem} />
             <SummaryCard title="Expenses" value={formatCurrency(totalExpenses)} subtitle={`${filteredExpenses.length} items`} icon={Wallet} />
             <SummaryCard title="Discounts" value={formatCurrency(totalDiscounts)} icon={DollarSign} />
-            <SummaryCard title="Accts Receivable" value={formatCurrency(goldCapital.totalAR_USD)} subtitle={`${formatCurrency(goldCapital.arMotiAED + goldCapital.arAlMasaAED, "AED")}`} icon={DollarSign} trend="up" />
+            <SummaryCard title="Accts Receivable" value={formatCurrency(goldCapital.totalAR_USD)} subtitle={`AED ${formatNumber(goldCapital.arMotiAED + goldCapital.arAlMasaAED, 2)}`} icon={DollarSign} trend="up" />
             <SummaryCard title="Accts Payable" value={formatCurrency(0)} subtitle="All settled" icon={Wallet} />
-            <SummaryCard title="Broker Balance" value={formatCurrency(goldCapital.totalBrokers)} subtitle={`PY $${formatNumber(goldCapital.brokerPY, 0)} · ZHOU $${formatNumber(goldCapital.brokerZHOU, 0)}`} icon={Building} />
-            <SummaryCard title="Gold Inventory" value={`${formatNumber(goldInventory.balanceGrams, 3)}g`} subtitle={`${formatCurrency(goldInventory.costOfRemainingUSD)} · $${formatNumber(goldInventory.costPerGram, 2)}/g`} icon={Gem} />
+            <SummaryCard title="Broker Balance" value={formatCurrency(goldCapital.totalBrokers)} subtitle={`PY $${formatNumber(goldCapital.brokerPY, 0)} · ZHOU $${formatNumber(goldCapital.brokerZHOU, 0)} + AED ${formatNumber(goldCapital.brokerZHOUAED, 0)}`} icon={Building} />
+            <SummaryCard title="Gold Inventory" value={goldInventory.balanceGrams > 0 ? `${formatNumber(goldInventory.balanceGrams, 3)}g` : "0g"} subtitle={goldInventory.balanceGrams > 0 ? `${formatCurrency(goldInventory.costOfRemainingUSD)}` : "Fully consumed"} icon={Gem} />
           </div>
         )}
 
