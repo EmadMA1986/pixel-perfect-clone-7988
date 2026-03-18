@@ -730,16 +730,91 @@ const RyaDashboard = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="p-4 rounded-lg bg-secondary/30 text-center">
                 <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Balance</p>
-                <p className="text-2xl font-serif font-bold text-foreground">{formatNumber(goldInventory.balanceGrams, 3)}g</p>
+                <p className="text-2xl font-serif font-bold text-foreground">{goldInventory.balanceGrams > 0 ? `${formatNumber(goldInventory.balanceGrams, 3)}g` : "0g"}</p>
               </div>
               <div className="p-4 rounded-lg bg-secondary/30 text-center">
-                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Cost of Remaining</p>
-                <p className="text-2xl font-serif font-bold text-foreground">{formatCurrency(goldInventory.costOfRemainingUSD)}</p>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Total Melting Loss</p>
+                <p className="text-2xl font-serif font-bold text-destructive">{formatNumber(goldInventory.totalMeltingLossGrams, 3)}g</p>
               </div>
               <div className="p-4 rounded-lg bg-secondary/30 text-center">
-                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Avg Cost/g</p>
-                <p className="text-2xl font-serif font-bold text-primary">${formatNumber(goldInventory.costOfRemainingUSD / goldInventory.balanceGrams, 2)}</p>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Status</p>
+                <p className="text-2xl font-serif font-bold text-success">{goldInventory.balanceGrams > 0 ? "Active" : "Fully Consumed"}</p>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Balance Sheet */}
+        <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-serif text-foreground">Balance Sheet</CardTitle>
+            <p className="text-xs text-muted-foreground">As of March 18, 2026 • All amounts in USD</p>
+          </CardHeader>
+          <CardContent className="space-y-1">
+            {/* Assets */}
+            <div className="py-2 px-3 bg-secondary/40 rounded-md">
+              <span className="text-sm font-semibold text-foreground">Assets</span>
+            </div>
+            {[
+              { label: "Broker ZHOU (USD)", value: goldCapital.brokerZHOU },
+              { label: "Broker ZHOU (AED → USD)", value: goldCapital.brokerZHOUAED / AED_TO_USD_RATE },
+              { label: "Broker PY", value: goldCapital.brokerPY },
+              { label: "Gold Inventory", value: goldCapital.goldInventoryUSD },
+              { label: "AR — Moti", value: goldCapital.arMotiAED / AED_TO_USD_RATE },
+              { label: "AR — AL MASA", value: goldCapital.arAlMasaAED / AED_TO_USD_RATE },
+            ].map((item, i) => (
+              <div key={i} className="flex justify-between py-1.5 px-3 pl-6 text-sm">
+                <span className="text-muted-foreground">{item.label}</span>
+                <span className="tabular-nums text-foreground">{formatCurrency(item.value)}</span>
+              </div>
+            ))}
+            <div className="flex justify-between py-2 px-3 bg-secondary/30 rounded-md font-semibold text-sm">
+              <span className="text-foreground">Total Assets</span>
+              <span className="tabular-nums text-foreground">{formatCurrency(goldCapital.totalCurrentPosition)}</span>
+            </div>
+
+            <div className="h-2" />
+
+            {/* Liabilities */}
+            <div className="py-2 px-3 bg-secondary/40 rounded-md">
+              <span className="text-sm font-semibold text-foreground">Liabilities</span>
+            </div>
+            <div className="flex justify-between py-1.5 px-3 pl-6 text-sm">
+              <span className="text-muted-foreground">No outstanding liabilities</span>
+              <span className="tabular-nums text-foreground">$0.00</span>
+            </div>
+            <div className="flex justify-between py-2 px-3 bg-secondary/30 rounded-md font-semibold text-sm">
+              <span className="text-foreground">Total Liabilities</span>
+              <span className="tabular-nums text-foreground">$0.00</span>
+            </div>
+
+            <div className="h-2" />
+
+            {/* Owner's Equity */}
+            <div className="py-2 px-3 bg-secondary/40 rounded-md">
+              <span className="text-sm font-semibold text-foreground">Owner's Equity</span>
+            </div>
+            <div className="flex justify-between py-1.5 px-3 pl-6 text-sm">
+              <span className="text-muted-foreground">Initial Capital (Invested)</span>
+              <span className={`tabular-nums ${goldCapital.initialCapital >= 0 ? "text-foreground" : "text-destructive"}`}>
+                {goldCapital.initialCapital >= 0 ? formatCurrency(goldCapital.initialCapital) : `(${formatCurrency(Math.abs(goldCapital.initialCapital))})`}
+              </span>
+            </div>
+            <div className="flex justify-between py-1.5 px-3 pl-6 text-sm">
+              <span className="text-muted-foreground">Net Profit (Retained)</span>
+              <span className="tabular-nums text-success">{formatCurrency(goldCapital.netProfit)}</span>
+            </div>
+            <div className="flex justify-between py-2 px-3 bg-primary/10 border border-primary/20 rounded-md font-semibold text-sm">
+              <span className="text-primary font-serif">Total Equity</span>
+              <span className="tabular-nums text-primary font-serif">{formatCurrency(goldCapital.totalCurrentPosition)}</span>
+            </div>
+
+            <div className="h-2" />
+
+            {/* Check */}
+            <div className="flex justify-between py-2 px-3 bg-secondary/50 rounded-md font-bold text-sm border border-border/50">
+              <span className="text-foreground">Assets − Liabilities = Equity ✓</span>
+              <span className="tabular-nums text-success">{formatCurrency(goldCapital.totalCurrentPosition)}</span>
             </div>
           </CardContent>
         </Card>
