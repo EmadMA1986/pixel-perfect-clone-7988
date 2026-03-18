@@ -134,6 +134,7 @@ export const salesDiscounts: ExpenseItem[] = [
   { transId: "260209-133856", date: "1/31/26", category: "Sales Discount", amount: 1945.39 },
   { transId: "260219-141901", date: "2/17/26", category: "Sales Discount", amount: 2785.08 },
   { transId: "260309-132227", date: "2/26/26", category: "Sales Discount", amount: 1735.76 },
+  { transId: "260318-133512", date: "3/18/26", category: "Sales Discount", amount: 23.57 },
 ];
 
 export const profitLoss = {
