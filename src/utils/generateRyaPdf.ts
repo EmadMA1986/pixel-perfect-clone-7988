@@ -198,9 +198,10 @@ export const generateRyaPdf = () => {
   goldHighlight("Net Profit", fmt(profitLoss.netProfit));
 
   // =============================================
-  // BALANCE SHEET
+  // BALANCE SHEET (own page to keep it all together)
   // =============================================
-  y += 5;
+  doc.addPage();
+  y = 15;
   pageTitle("Balance Sheet");
 
   sectionHeader("Assets");
