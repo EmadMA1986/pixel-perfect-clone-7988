@@ -191,7 +191,7 @@ const RyaDashboard = () => {
                 MKX
               </Button>
             </Link>
-            <p className="text-xs text-muted-foreground hidden sm:block">Last updated: Mar 11, 2026</p>
+            <p className="text-xs text-muted-foreground hidden sm:block">Last updated: Mar 18, 2026</p>
           </div>
         </div>
       </header>
