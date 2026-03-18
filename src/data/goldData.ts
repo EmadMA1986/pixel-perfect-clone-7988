@@ -158,8 +158,8 @@ export const profitLoss = {
 };
 
 export const brokerBalances = {
-  brokerPY: { usd: 1824.32, aed: 0 },
-  brokerZHOU: { usd: 487959.95, aed: 0 },
+  brokerPY: { usd: 0, aed: 0 },
+  brokerZHOU: { usd: 487959.95, aed: 479270.00 },
 };
 
 export const AED_TO_USD_RATE = 3.673;
