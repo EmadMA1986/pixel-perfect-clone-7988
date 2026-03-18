@@ -201,11 +201,12 @@ export const goldInventory = {
 // Capital position calculated from current balances
 export const goldCapital = {
   // Current Assets
-  brokerPY: 1824.32,
+  brokerPY: 0,
   brokerZHOU: 487959.95,
-  goldInventoryUSD: 14588.20, // 95.848g × $152.201
-  arMotiAED: 479356.58,
-  arAlMasaAED: -12775.12, // credit balance (we owe them)
+  brokerZHOUAED: 479270.00,
+  goldInventoryUSD: 0,
+  arMotiAED: 0,
+  arAlMasaAED: 12775.12, // AL MASA owes us (debit balance)
   arUnipHK: 0,
   arGolden: 0,
   // Computed
@@ -213,13 +214,13 @@ export const goldCapital = {
     return (this.arMotiAED + this.arAlMasaAED) / AED_TO_USD_RATE;
   },
   get totalBrokers() {
-    return this.brokerPY + this.brokerZHOU;
+    return this.brokerPY + this.brokerZHOU + this.brokerZHOUAED / AED_TO_USD_RATE;
   },
   get totalCurrentPosition() {
     return this.totalBrokers + this.goldInventoryUSD + this.totalAR_USD;
   },
   // Net Profit from P&L
-  netProfit: 693686.61,
+  netProfit: 677250.52,
   // Initial Capital = Current Position - Net Profit
   get initialCapital() {
     return this.totalCurrentPosition - this.netProfit;
