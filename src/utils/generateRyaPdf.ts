@@ -407,6 +407,60 @@ export const generateRyaPdf = () => {
   row("Broker PY", fmt(goldCapital.brokerPY), true);
 
   // =============================================
+  // FINANCIAL RATIOS
+  // =============================================
+  y += 5;
+  checkPage(80);
+  pageTitle("Financial Ratios");
+
+  const grossMargin = (profitLoss.grossProfit / profitLoss.sales) * 100;
+  const operatingMargin = (profitLoss.operatingProfit / profitLoss.sales) * 100;
+  const netMargin = (profitLoss.netProfit / profitLoss.sales) * 100;
+  const costToRevenue = (profitLoss.costOfSales / profitLoss.sales) * 100;
+  const expenseRatio = (profitLoss.totalAdminExpenses / profitLoss.sales) * 100;
+  const totalAssets = goldCapital.totalCurrentPosition;
+  const roa = (profitLoss.netProfit / totalAssets) * 100;
+  const roe = (profitLoss.netProfit / totalAssets) * 100; // equity = assets (no liabilities)
+  const avgSaleSize = totalRevenue / sales.length;
+  const avgProfitPerSale = totalProfit / sales.length;
+  const avgPurchaseSize = totalPurchaseAmt / goldPurchases.length;
+  const avgSellRate = totalRevenue / totalSalesQty;
+  const avgBuyRate = totalPurchaseAmt / totalPurchaseQty;
+  const markup = ((avgSellRate - avgBuyRate) / avgBuyRate) * 100;
+  const assetTurnover = profitLoss.sales / totalAssets;
+  const discountToSales = (totalDisc / profitLoss.sales) * 100;
+  const hedgeToSales = (profitLoss.hedgeExpenses / profitLoss.sales) * 100;
+  const meltLossToSales = (profitLoss.meltingLoss / profitLoss.sales) * 100;
+
+  sectionHeader("Profitability Ratios");
+  row("Gross Profit Margin", `${grossMargin.toFixed(2)}%`, true);
+  row("Operating Profit Margin", `${operatingMargin.toFixed(2)}%`, true);
+  row("Net Profit Margin", `${netMargin.toFixed(2)}%`, true);
+  row("Return on Assets (ROA)", `${roa.toFixed(2)}%`, true);
+  row("Return on Equity (ROE)", `${roe.toFixed(2)}%`, true);
+  y += 3;
+
+  sectionHeader("Efficiency Ratios");
+  row("Cost of Sales / Revenue", `${costToRevenue.toFixed(2)}%`, true);
+  row("Admin Expenses / Revenue", `${expenseRatio.toFixed(2)}%`, true);
+  row("Asset Turnover", `${assetTurnover.toFixed(2)}x`, true);
+  row("Discount / Sales", `${discountToSales.toFixed(3)}%`, true);
+  row("Hedge Expenses / Sales", `${hedgeToSales.toFixed(2)}%`, true);
+  row("Melting Loss / Sales", `${meltLossToSales.toFixed(3)}%`, true);
+  y += 3;
+
+  sectionHeader("Trading Metrics");
+  row("Avg Selling Rate", `$${formatNumber(avgSellRate, 3)}/g`, true);
+  row("Avg Buying Rate", `$${formatNumber(avgBuyRate, 3)}/g`, true);
+  row("Avg Markup", `${markup.toFixed(2)}%`, true);
+  row("Avg Sale Size", fmt(avgSaleSize), true);
+  row("Avg Profit per Sale", fmt(avgProfitPerSale), true);
+  row("Avg Purchase Size", fmt(avgPurchaseSize), true);
+  row("Total Grams Traded (Sold)", `${formatNumber(totalSalesQty, 2)}g`, true);
+  row("Total Grams Purchased (Pure)", `${formatNumber(totalPurchaseQty, 0)}g`, true);
+  row("Total Transactions", `${sales.length} sales · ${goldPurchases.length} purchases`, true);
+
+  //
   // FOOTER ON ALL PAGES
   // =============================================
   const totalPages = doc.getNumberOfPages();
