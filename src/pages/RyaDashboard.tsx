@@ -192,6 +192,10 @@ const RyaDashboard = () => {
                 MKX
               </Button>
             </Link>
+            <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={generateRyaPdf}>
+              <FileDown className="h-3.5 w-3.5" />
+              Export PDF
+            </Button>
             <p className="text-xs text-muted-foreground hidden sm:block">Last updated: Mar 18, 2026</p>
           </div>
         </div>
