@@ -633,8 +633,8 @@ const RyaDashboard = () => {
                   </div>
                 ))}
                 <div className="flex items-center justify-between py-3 px-4 rounded-lg bg-primary/10 border border-primary/20">
-                  <span className="text-sm font-serif font-semibold text-primary">Total</span>
-                  <p className="text-sm tabular-nums font-bold text-primary">{formatCurrency(brokerBalances.brokerPY.usd + brokerBalances.brokerZHOU.usd)}</p>
+                  <span className="text-sm font-serif font-semibold text-primary">Total (USD equiv)</span>
+                  <p className="text-sm tabular-nums font-bold text-primary">{formatCurrency(goldCapital.totalBrokers)}</p>
                 </div>
               </CardContent>
             </Card>
