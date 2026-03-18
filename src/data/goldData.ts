@@ -115,6 +115,8 @@ export const expenses: ExpenseItem[] = [
   { transId: "260209-125207", date: "1/19/26", category: "Labor", amount: 343.50 },
   { transId: "260309-132352", date: "2/26/26", category: "Hedge Expenses", amount: 50000 },
   { transId: "260310-140715", date: "3/9/26", category: "Melting Loss", amount: 5101.65 },
+  { transId: "260318-132749", date: "3/17/26", category: "Melting Loss", amount: 14588.20 },
+  { transId: "260318-133812", date: "3/18/26", category: "Other Exp", amount: 1824.32 },
 ];
 
 // Sales discounts tracked separately
@@ -132,31 +134,32 @@ export const salesDiscounts: ExpenseItem[] = [
   { transId: "260209-133856", date: "1/31/26", category: "Sales Discount", amount: 1945.39 },
   { transId: "260219-141901", date: "2/17/26", category: "Sales Discount", amount: 2785.08 },
   { transId: "260309-132227", date: "2/26/26", category: "Sales Discount", amount: 1735.76 },
+  { transId: "260318-133512", date: "3/18/26", category: "Sales Discount", amount: 23.57 },
 ];
 
 export const profitLoss = {
   sales: 6047470.68,
-  salesDiscount: 19887.65,
+  salesDiscount: 19911.22,
   costOfSales: 5049011.58,
-  meltingLoss: 5101.65,
+  meltingLoss: 19689.85,
   hedgeExpenses: 223206,
-  grossProfit: 750263.80,
+  grossProfit: 735652.03,
   transport: 39388.01,
   labor: 4442.07,
   hotel: 1343.49,
   bonus: 10172.46,
   taxBonus: 780.67,
-  otherExp: 92.94,
-  totalAdminExpenses: 56219.64,
-  operatingProfit: 694044.16,
+  otherExp: 1917.26,
+  totalAdminExpenses: 58043.97,
+  operatingProfit: 677608.07,
   fxGain: 771.42,
   fxLoss: 1128.97,
-  netProfit: 693686.61,
+  netProfit: 677250.52,
 };
 
 export const brokerBalances = {
-  brokerPY: { usd: 1824.32, aed: 0 },
-  brokerZHOU: { usd: 487959.95, aed: 0 },
+  brokerPY: { usd: 0, aed: 0 },
+  brokerZHOU: { usd: 487959.95, aed: 479270.00 },
 };
 
 export const AED_TO_USD_RATE = 3.673;
@@ -171,8 +174,8 @@ export interface LedgerBalance {
 }
 
 export const customerBalances: LedgerBalance[] = [
-  { name: "Moti", role: "customer", balanceUSD: 0, balanceAED: 479356.58, balanceUSDEquiv: 479356.58 / AED_TO_USD_RATE, totalUSD: 479356.58 / AED_TO_USD_RATE },
-  { name: "AL MASA", role: "customer", balanceUSD: 0, balanceAED: -12775.12, balanceUSDEquiv: -12775.12 / AED_TO_USD_RATE, totalUSD: -12775.12 / AED_TO_USD_RATE },
+  { name: "Moti", role: "customer", balanceUSD: 0, balanceAED: 0, balanceUSDEquiv: 0, totalUSD: 0 },
+  { name: "AL MASA", role: "customer", balanceUSD: 0, balanceAED: 12775.12, balanceUSDEquiv: 12775.12 / AED_TO_USD_RATE, totalUSD: 12775.12 / AED_TO_USD_RATE },
   { name: "GOLDEN", role: "customer", balanceUSD: 0, balanceAED: 0, balanceUSDEquiv: 0, totalUSD: 0 },
   { name: "UNIP HK", role: "customer", balanceUSD: 0, balanceAED: 0, balanceUSDEquiv: 0, totalUSD: 0 },
 ];
@@ -186,25 +189,24 @@ export const supplierBalances: LedgerBalance[] = [
   { name: "CAMS", role: "supplier", balanceUSD: 0, balanceAED: 0, balanceUSDEquiv: 0, totalUSD: 0 },
 ];
 
-// From Page 3: final balance 95.848g after melting loss on 3/9/26
-// From Page 9: remaining lots - 260126-160434 (2836.016g), 260126-160539 (2000g), 260206-184307 (300g)
-// FIFO: 40,456.81g purchased, 40,360.96g consumed (sold + melting), 95.848g remains
-// Remaining 95.848g is from the newest lot: CAMS (300g @ $152.201/g)
+// From Page 3: final balance 0g after melting loss on 3/17/26 consumed remaining 95.848g
+// All inventory fully consumed (sold + melting losses)
 export const goldInventory = {
-  balanceGrams: 95.848,
-  totalMeltingLossGrams: 137.95,
-  costPerGram: 152.201,
-  costOfRemainingUSD: 95.848 * 152.201, // $14,588.16 (FIFO)
+  balanceGrams: 0,
+  totalMeltingLossGrams: 233.798, // 97.85 previous + 95.848 final + 40.168 on 3/9/26
+  costPerGram: 0,
+  costOfRemainingUSD: 0,
 };
 
 // Capital position calculated from current balances
 export const goldCapital = {
   // Current Assets
-  brokerPY: 1824.32,
+  brokerPY: 0,
   brokerZHOU: 487959.95,
-  goldInventoryUSD: 14588.20, // 95.848g × $152.201
-  arMotiAED: 479356.58,
-  arAlMasaAED: -12775.12, // credit balance (we owe them)
+  brokerZHOUAED: 479270.00,
+  goldInventoryUSD: 0,
+  arMotiAED: 0,
+  arAlMasaAED: 12775.12, // AL MASA owes us (debit balance)
   arUnipHK: 0,
   arGolden: 0,
   // Computed
@@ -212,13 +214,13 @@ export const goldCapital = {
     return (this.arMotiAED + this.arAlMasaAED) / AED_TO_USD_RATE;
   },
   get totalBrokers() {
-    return this.brokerPY + this.brokerZHOU;
+    return this.brokerPY + this.brokerZHOU + this.brokerZHOUAED / AED_TO_USD_RATE;
   },
   get totalCurrentPosition() {
     return this.totalBrokers + this.goldInventoryUSD + this.totalAR_USD;
   },
   // Net Profit from P&L
-  netProfit: 693686.61,
+  netProfit: 677250.52,
   // Initial Capital = Current Position - Net Profit
   get initialCapital() {
     return this.totalCurrentPosition - this.netProfit;
