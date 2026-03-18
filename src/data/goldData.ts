@@ -115,6 +115,8 @@ export const expenses: ExpenseItem[] = [
   { transId: "260209-125207", date: "1/19/26", category: "Labor", amount: 343.50 },
   { transId: "260309-132352", date: "2/26/26", category: "Hedge Expenses", amount: 50000 },
   { transId: "260310-140715", date: "3/9/26", category: "Melting Loss", amount: 5101.65 },
+  { transId: "260318-132749", date: "3/17/26", category: "Melting Loss", amount: 14588.20 },
+  { transId: "260318-133812", date: "3/18/26", category: "Other Exp", amount: 1824.32 },
 ];
 
 // Sales discounts tracked separately
