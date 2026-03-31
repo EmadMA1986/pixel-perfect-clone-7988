@@ -287,8 +287,8 @@ const MkxDashboard = () => {
             <CardContent className="p-4 space-y-1">
               <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Net P&L Breakdown</p>
               <div className="flex justify-between items-center">
-                <span className="text-xs text-muted-foreground">Jan 2026 P&L</span>
-                <span className="text-sm font-semibold text-loss">{formatAEDFull(-119680)}</span>
+                <span className="text-xs text-muted-foreground">YTD 2026 P&L</span>
+                <span className="text-sm font-semibold text-loss">{formatAEDFull(-698389)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs text-muted-foreground">Retained Earnings</span>
@@ -296,7 +296,7 @@ const MkxDashboard = () => {
               </div>
               <div className="border-t border-border/50 pt-1 flex justify-between items-center">
                 <span className="text-xs font-bold text-foreground">Total</span>
-                <span className="text-sm font-bold text-loss">{formatAEDFull(-119680 + -7261014)}</span>
+                <span className="text-sm font-bold text-loss">{formatAEDFull(-698389 + -7261014)}</span>
               </div>
             </CardContent>
           </Card>
