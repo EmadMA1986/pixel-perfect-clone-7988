@@ -200,7 +200,7 @@ const MkxDashboard = () => {
               </div>
               <div className="text-center">
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">MKX Assets in VA</p>
-                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(128144 + 1860474 - 1619190)}</p>
+                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(128144 + 1856037 - 1619190)}</p>
                 <p className="text-[10px] text-muted-foreground">Cold Wallets + VA Holdings − VA Due to Customers</p>
               </div>
               <div className="text-center border-l border-r border-border/50 px-6">
@@ -209,7 +209,7 @@ const MkxDashboard = () => {
               </div>
               <div className="text-right">
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Net MKX Assets</p>
-                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull((1911111 - 429338) + (128144 + 1860474 - 1619190) - 58654)}</p>
+                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull((1911111 - 429338) + (128144 + 1856037 - 1619190) - 58654)}</p>
                 <p className="text-[10px] text-muted-foreground">Fiat + VA − Feb Profit</p>
               </div>
             </div>
@@ -257,12 +257,12 @@ const MkxDashboard = () => {
               </div>
               <div>
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">VA Assets Held</p>
-                <p className="text-xl font-bold font-serif text-foreground">{formatAEDFull(128144 + 1860474)}</p>
+                <p className="text-xl font-bold font-serif text-foreground">{formatAEDFull(128144 + 1856037)}</p>
               </div>
               <div>
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">VA Surplus</p>
-                <p className="text-xl font-bold font-serif text-success">{formatAEDFull(128144 + 1860474 - 1619190)}</p>
-                <p className="text-[10px] text-muted-foreground">Ratio: {((128144 + 1860474) / 1619190).toFixed(2)}x</p>
+                <p className="text-xl font-bold font-serif text-success">{formatAEDFull(128144 + 1856037 - 1619190)}</p>
+                <p className="text-[10px] text-muted-foreground">Ratio: {((128144 + 1856037) / 1619190).toFixed(2)}x</p>
               </div>
             </div>
           </CardContent>
