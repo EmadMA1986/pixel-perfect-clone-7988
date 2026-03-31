@@ -135,21 +135,21 @@ const MkxDashboard = () => {
                 </div>
                 <div>
                   <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Ahmad's Share Capital</p>
-                  <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(5324087.29)}</p>
+                  <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(5329871.48)}</p>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-2">
                 <div>
                   <p className="text-xs text-muted-foreground">Total Retained Earnings</p>
-                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-7380694)}</p>
+                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-7959404)}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-xs text-muted-foreground">Ahmad's Share (50%)</p>
-                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-3690347)}</p>
+                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-3979702)}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">Ahmad's Net Position</p>
-                  <p className="text-lg font-bold font-serif text-foreground">{formatAEDFull(5324087.29 - 3690347)}</p>
+                  <p className="text-lg font-bold font-serif text-foreground">{formatAEDFull(5329871.48 - 3979702)}</p>
                 </div>
               </div>
             </CardContent>
@@ -169,15 +169,15 @@ const MkxDashboard = () => {
               <div className="grid grid-cols-3 gap-2">
                 <div>
                   <p className="text-xs text-muted-foreground">Total Retained Earnings</p>
-                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-7380694)}</p>
+                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-7959404)}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-xs text-muted-foreground">Maria's Share (50%)</p>
-                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-3690347)}</p>
+                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-3979702)}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">Maria's Net Position</p>
-                  <p className="text-lg font-bold font-serif text-foreground">{formatAEDFull(5573975 - 3690347)}</p>
+                  <p className="text-lg font-bold font-serif text-foreground">{formatAEDFull(5573975 - 3979702)}</p>
                 </div>
               </div>
             </CardContent>
@@ -194,23 +194,23 @@ const MkxDashboard = () => {
                 </div>
                 <div>
                   <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">MKX Assets in Fiat</p>
-                  <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(923517 - 94451)}</p>
-                  <p className="text-[10px] text-muted-foreground">Client Money (923,517) − Fiat Due to Customers (94,451)</p>
+                  <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(1911111 - 429338)}</p>
+                  <p className="text-[10px] text-muted-foreground">Client Money (1,911,111) − Fiat Due to Customers (429,338)</p>
                 </div>
               </div>
               <div className="text-center">
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">MKX Assets in VA</p>
-                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(146581 + 1964514 - 822367)}</p>
+                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(128144 + 1860474 - 1619190)}</p>
                 <p className="text-[10px] text-muted-foreground">Cold Wallets + VA Holdings − VA Due to Customers</p>
               </div>
               <div className="text-center border-l border-r border-border/50 px-6">
-                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">January Gross Profit</p>
-                <p className="text-2xl font-bold font-serif text-success">{formatAEDFull(229352)}</p>
+                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">February Gross Profit</p>
+                <p className="text-2xl font-bold font-serif text-success">{formatAEDFull(58654)}</p>
               </div>
               <div className="text-right">
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Net MKX Assets</p>
-                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull((923517 - 94451) + (146581 + 1964514 - 822367) - 229352)}</p>
-                <p className="text-[10px] text-muted-foreground">Fiat + VA − Jan Profit</p>
+                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull((1911111 - 429338) + (128144 + 1860474 - 1619190) - 58654)}</p>
+                <p className="text-[10px] text-muted-foreground">Fiat + VA − Feb Profit</p>
               </div>
             </div>
             <div className="mt-4 pt-4 border-t border-border/50 flex flex-wrap items-center gap-6">
@@ -240,29 +240,29 @@ const MkxDashboard = () => {
             <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 items-end">
               <div>
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Fiat Client Liabilities</p>
-                <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(94451)}</p>
+                <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(429338)}</p>
               </div>
               <div>
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Fiat Assets Held</p>
-                <p className="text-xl font-bold font-serif text-foreground">{formatAEDFull(923517)}</p>
+                <p className="text-xl font-bold font-serif text-foreground">{formatAEDFull(1911111)}</p>
               </div>
               <div>
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Fiat Surplus</p>
-                <p className="text-xl font-bold font-serif text-success">{formatAEDFull(923517 - 94451)}</p>
-                <p className="text-[10px] text-muted-foreground">Ratio: {(923517 / 94451).toFixed(2)}x</p>
+                <p className="text-xl font-bold font-serif text-success">{formatAEDFull(1911111 - 429338)}</p>
+                <p className="text-[10px] text-muted-foreground">Ratio: {(1911111 / 429338).toFixed(2)}x</p>
               </div>
               <div>
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">VA Client Liabilities</p>
-                <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(822367)}</p>
+                <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(1619190)}</p>
               </div>
               <div>
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">VA Assets Held</p>
-                <p className="text-xl font-bold font-serif text-foreground">{formatAEDFull(146581 + 1964514)}</p>
+                <p className="text-xl font-bold font-serif text-foreground">{formatAEDFull(128144 + 1860474)}</p>
               </div>
               <div>
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">VA Surplus</p>
-                <p className="text-xl font-bold font-serif text-success">{formatAEDFull(146581 + 1964514 - 822367)}</p>
-                <p className="text-[10px] text-muted-foreground">Ratio: {((146581 + 1964514) / 822367).toFixed(2)}x</p>
+                <p className="text-xl font-bold font-serif text-success">{formatAEDFull(128144 + 1860474 - 1619190)}</p>
+                <p className="text-[10px] text-muted-foreground">Ratio: {((128144 + 1860474) / 1619190).toFixed(2)}x</p>
               </div>
             </div>
           </CardContent>
@@ -287,8 +287,8 @@ const MkxDashboard = () => {
             <CardContent className="p-4 space-y-1">
               <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Net P&L Breakdown</p>
               <div className="flex justify-between items-center">
-                <span className="text-xs text-muted-foreground">Jan 2026 P&L</span>
-                <span className="text-sm font-semibold text-loss">{formatAEDFull(-119680)}</span>
+                <span className="text-xs text-muted-foreground">YTD 2026 P&L</span>
+                <span className="text-sm font-semibold text-loss">{formatAEDFull(-698389)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs text-muted-foreground">Retained Earnings</span>
@@ -296,14 +296,14 @@ const MkxDashboard = () => {
               </div>
               <div className="border-t border-border/50 pt-1 flex justify-between items-center">
                 <span className="text-xs font-bold text-foreground">Total</span>
-                <span className="text-sm font-bold text-loss">{formatAEDFull(-119680 + -7261014)}</span>
+                <span className="text-sm font-bold text-loss">{formatAEDFull(-698389 + -7261014)}</span>
               </div>
             </CardContent>
           </Card>
           <SummaryCard
             title="Total Assets"
             value={formatAED(mkxSummary.totalAssets)}
-            subtitle="As of Jan 2026"
+            subtitle="As of Feb 2026"
             icon={Building2}
           />
           <SummaryCard
@@ -565,7 +565,7 @@ const MkxDashboard = () => {
             <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg font-serif text-foreground">
-                  Monthly Profit & Loss (Jan 2025 – Jan 2026)
+                  Monthly Profit & Loss (Jan 2025 – Feb 2026)
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
@@ -635,7 +635,7 @@ const MkxDashboard = () => {
                       Profit & Loss Statement
                     </CardTitle>
                     <p className="text-xs text-muted-foreground mt-1">
-                      MKX Virtual Assets Broker & Dealer Services L.L.C — Jan 2025 to Jan 2026
+                      MKX Virtual Assets Broker & Dealer Services L.L.C — Jan 2025 to Feb 2026
                     </p>
                   </div>
                 </div>
@@ -657,7 +657,7 @@ const MkxDashboard = () => {
                         if (row.isHeader) {
                           return (
                             <TableRow key={idx} className="border-border/50 bg-secondary/20 hover:bg-secondary/30">
-                              <TableCell colSpan={15} className="text-sm font-bold text-foreground py-2 sticky left-0 bg-secondary/20">
+                              <TableCell colSpan={16} className="text-sm font-bold text-foreground py-2 sticky left-0 bg-secondary/20">
                                 {row.label}
                               </TableCell>
                             </TableRow>
@@ -709,7 +709,7 @@ const MkxDashboard = () => {
                       Balance Sheet
                     </CardTitle>
                     <p className="text-xs text-muted-foreground mt-1">
-                      As of January 31, 2026
+                      As of February 28, 2026
                     </p>
                   </div>
                 </div>
