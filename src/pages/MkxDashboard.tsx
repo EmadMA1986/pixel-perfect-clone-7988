@@ -135,21 +135,21 @@ const MkxDashboard = () => {
                 </div>
                 <div>
                   <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Ahmad's Share Capital</p>
-                  <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(5324087.29)}</p>
+                  <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(5329871.48)}</p>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-2">
                 <div>
                   <p className="text-xs text-muted-foreground">Total Retained Earnings</p>
-                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-7380694)}</p>
+                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-7959404)}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-xs text-muted-foreground">Ahmad's Share (50%)</p>
-                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-3690347)}</p>
+                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-3979702)}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">Ahmad's Net Position</p>
-                  <p className="text-lg font-bold font-serif text-foreground">{formatAEDFull(5324087.29 - 3690347)}</p>
+                  <p className="text-lg font-bold font-serif text-foreground">{formatAEDFull(5329871.48 - 3979702)}</p>
                 </div>
               </div>
             </CardContent>
@@ -169,15 +169,15 @@ const MkxDashboard = () => {
               <div className="grid grid-cols-3 gap-2">
                 <div>
                   <p className="text-xs text-muted-foreground">Total Retained Earnings</p>
-                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-7380694)}</p>
+                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-7959404)}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-xs text-muted-foreground">Maria's Share (50%)</p>
-                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-3690347)}</p>
+                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-3979702)}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">Maria's Net Position</p>
-                  <p className="text-lg font-bold font-serif text-foreground">{formatAEDFull(5573975 - 3690347)}</p>
+                  <p className="text-lg font-bold font-serif text-foreground">{formatAEDFull(5573975 - 3979702)}</p>
                 </div>
               </div>
             </CardContent>
