@@ -180,7 +180,7 @@ export const monthlyData: MkxMonthlyData[] = [
     totalExpenses: 637363.66,
     otherIncome: 0,
     netProfit: -578709.41,
-    assetMarketValue: 1988618,
+    assetMarketValue: 1846764,
     assetBookValue: 1889350,
     clientLiabilitiesFiat: 429337.63,
     clientLiabilitiesVA: 1619190.23,
