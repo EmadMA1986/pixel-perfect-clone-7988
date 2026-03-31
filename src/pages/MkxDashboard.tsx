@@ -285,18 +285,21 @@ const MkxDashboard = () => {
           />
           <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
             <CardContent className="p-4 space-y-1">
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Net P&L Breakdown</p>
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-muted-foreground">YTD 2026 P&L</span>
-                <span className="text-sm font-semibold text-loss">{formatAEDFull(-698389)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-muted-foreground">Retained Earnings</span>
-                <span className="text-sm font-semibold text-loss">{formatAEDFull(-7261014)}</span>
-              </div>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Cumulative Net Loss Breakdown</p>
+              {[
+                { year: "2023", value: -783860.87 },
+                { year: "2024", value: -2571547.87 },
+                { year: "2025", value: -3905605.53 },
+                { year: "2026 YTD", value: -698389.49 },
+              ].map((item) => (
+                <div key={item.year} className="flex justify-between items-center">
+                  <span className="text-xs text-muted-foreground">{item.year}</span>
+                  <span className="text-sm font-semibold text-loss">{formatAEDFull(item.value)}</span>
+                </div>
+              ))}
               <div className="border-t border-border/50 pt-1 flex justify-between items-center">
-                <span className="text-xs font-bold text-foreground">Total</span>
-                <span className="text-sm font-bold text-loss">{formatAEDFull(-698389 + -7261014)}</span>
+                <span className="text-xs font-bold text-foreground">Total Retained Loss</span>
+                <span className="text-sm font-bold text-loss">{formatAEDFull(-783860.87 + -2571547.87 + -3905605.53 + -698389.49)}</span>
               </div>
             </CardContent>
           </Card>
