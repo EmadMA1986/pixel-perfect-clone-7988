@@ -303,7 +303,7 @@ const MkxDashboard = () => {
           <SummaryCard
             title="Total Assets"
             value={formatAED(mkxSummary.totalAssets)}
-            subtitle="As of Jan 2026"
+            subtitle="As of Feb 2026"
             icon={Building2}
           />
           <SummaryCard
