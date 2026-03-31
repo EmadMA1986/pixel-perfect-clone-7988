@@ -565,7 +565,7 @@ const MkxDashboard = () => {
             <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg font-serif text-foreground">
-                  Monthly Profit & Loss (Jan 2025 – Jan 2026)
+                  Monthly Profit & Loss (Jan 2025 – Feb 2026)
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
