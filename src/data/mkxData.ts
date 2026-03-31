@@ -310,7 +310,7 @@ export const kpiData: MkxKPI[] = [
 ];
 
 // Full P&L by month (Jan 2025 - Jan 2026)
-export const plMonths = ["Jan-25","Feb-25","Mar-25","Apr-25","May-25","Jun-25","Jul-25","Aug-25","Sep-25","Oct-25","Nov-25","Dec-25","Jan-26"];
+export const plMonths = ["Jan-25","Feb-25","Mar-25","Apr-25","May-25","Jun-25","Jul-25","Aug-25","Sep-25","Oct-25","Nov-25","Dec-25","Jan-26","Feb-26"];
 
 export interface PLLineItem {
   label: string;
