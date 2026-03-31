@@ -709,7 +709,7 @@ const MkxDashboard = () => {
                       Balance Sheet
                     </CardTitle>
                     <p className="text-xs text-muted-foreground mt-1">
-                      As of January 31, 2026
+                      As of February 28, 2026
                     </p>
                   </div>
                 </div>
