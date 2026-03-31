@@ -194,23 +194,23 @@ const MkxDashboard = () => {
                 </div>
                 <div>
                   <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">MKX Assets in Fiat</p>
-                  <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(923517 - 94451)}</p>
-                  <p className="text-[10px] text-muted-foreground">Client Money (923,517) − Fiat Due to Customers (94,451)</p>
+                  <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(1911111 - 429338)}</p>
+                  <p className="text-[10px] text-muted-foreground">Client Money (1,911,111) − Fiat Due to Customers (429,338)</p>
                 </div>
               </div>
               <div className="text-center">
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">MKX Assets in VA</p>
-                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(146581 + 1964514 - 822367)}</p>
+                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(128144 + 1860474 - 1619190)}</p>
                 <p className="text-[10px] text-muted-foreground">Cold Wallets + VA Holdings − VA Due to Customers</p>
               </div>
               <div className="text-center border-l border-r border-border/50 px-6">
-                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">January Gross Profit</p>
-                <p className="text-2xl font-bold font-serif text-success">{formatAEDFull(229352)}</p>
+                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">February Gross Profit</p>
+                <p className="text-2xl font-bold font-serif text-success">{formatAEDFull(58654)}</p>
               </div>
               <div className="text-right">
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Net MKX Assets</p>
-                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull((923517 - 94451) + (146581 + 1964514 - 822367) - 229352)}</p>
-                <p className="text-[10px] text-muted-foreground">Fiat + VA − Jan Profit</p>
+                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull((1911111 - 429338) + (128144 + 1860474 - 1619190) - 58654)}</p>
+                <p className="text-[10px] text-muted-foreground">Fiat + VA − Feb Profit</p>
               </div>
             </div>
             <div className="mt-4 pt-4 border-t border-border/50 flex flex-wrap items-center gap-6">
@@ -240,29 +240,29 @@ const MkxDashboard = () => {
             <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 items-end">
               <div>
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Fiat Client Liabilities</p>
-                <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(94451)}</p>
+                <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(429338)}</p>
               </div>
               <div>
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Fiat Assets Held</p>
-                <p className="text-xl font-bold font-serif text-foreground">{formatAEDFull(923517)}</p>
+                <p className="text-xl font-bold font-serif text-foreground">{formatAEDFull(1911111)}</p>
               </div>
               <div>
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Fiat Surplus</p>
-                <p className="text-xl font-bold font-serif text-success">{formatAEDFull(923517 - 94451)}</p>
-                <p className="text-[10px] text-muted-foreground">Ratio: {(923517 / 94451).toFixed(2)}x</p>
+                <p className="text-xl font-bold font-serif text-success">{formatAEDFull(1911111 - 429338)}</p>
+                <p className="text-[10px] text-muted-foreground">Ratio: {(1911111 / 429338).toFixed(2)}x</p>
               </div>
               <div>
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">VA Client Liabilities</p>
-                <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(822367)}</p>
+                <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(1619190)}</p>
               </div>
               <div>
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">VA Assets Held</p>
-                <p className="text-xl font-bold font-serif text-foreground">{formatAEDFull(146581 + 1964514)}</p>
+                <p className="text-xl font-bold font-serif text-foreground">{formatAEDFull(128144 + 1860474)}</p>
               </div>
               <div>
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">VA Surplus</p>
-                <p className="text-xl font-bold font-serif text-success">{formatAEDFull(146581 + 1964514 - 822367)}</p>
-                <p className="text-[10px] text-muted-foreground">Ratio: {((146581 + 1964514) / 822367).toFixed(2)}x</p>
+                <p className="text-xl font-bold font-serif text-success">{formatAEDFull(128144 + 1860474 - 1619190)}</p>
+                <p className="text-[10px] text-muted-foreground">Ratio: {((128144 + 1860474) / 1619190).toFixed(2)}x</p>
               </div>
             </div>
           </CardContent>
