@@ -209,7 +209,7 @@ const MkxDashboard = () => {
               </div>
               <div className="text-right">
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Net MKX Assets</p>
-                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull((1911111 - 429338) + (128144 + 1860474 - 1619190) - 58654)}</p>
+                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull((1911111 - 429338) + (128144 + 1856037 - 1619190) - 58654)}</p>
                 <p className="text-[10px] text-muted-foreground">Fiat + VA − Feb Profit</p>
               </div>
             </div>
