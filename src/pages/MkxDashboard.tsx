@@ -635,7 +635,7 @@ const MkxDashboard = () => {
                       Profit & Loss Statement
                     </CardTitle>
                     <p className="text-xs text-muted-foreground mt-1">
-                      MKX Virtual Assets Broker & Dealer Services L.L.C — Jan 2025 to Jan 2026
+                      MKX Virtual Assets Broker & Dealer Services L.L.C — Jan 2025 to Feb 2026
                     </p>
                   </div>
                 </div>
