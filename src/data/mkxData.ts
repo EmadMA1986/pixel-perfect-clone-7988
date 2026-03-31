@@ -456,7 +456,7 @@ export const mkxSummary = {
   fullYearTotalIncome: 466758.71,
   fullYearTotalExpenses: 5077509.41,
   fullYearGrossProfit: 440219.65,
-  totalAssets: 5343313.06,
+  totalAssets: 5338876.56,
   totalLiabilities: 2398870.69,
   totalEquity: 2944442.37,
 };
