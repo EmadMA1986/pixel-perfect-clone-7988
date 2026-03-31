@@ -200,7 +200,7 @@ const MkxDashboard = () => {
               </div>
               <div className="text-center">
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">MKX Assets in VA</p>
-                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(128144 + 1860474 - 1619190)}</p>
+                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(128144 + 1856037 - 1619190)}</p>
                 <p className="text-[10px] text-muted-foreground">Cold Wallets + VA Holdings − VA Due to Customers</p>
               </div>
               <div className="text-center border-l border-r border-border/50 px-6">
