@@ -657,7 +657,7 @@ const MkxDashboard = () => {
                         if (row.isHeader) {
                           return (
                             <TableRow key={idx} className="border-border/50 bg-secondary/20 hover:bg-secondary/30">
-                              <TableCell colSpan={15} className="text-sm font-bold text-foreground py-2 sticky left-0 bg-secondary/20">
+                              <TableCell colSpan={16} className="text-sm font-bold text-foreground py-2 sticky left-0 bg-secondary/20">
                                 {row.label}
                               </TableCell>
                             </TableRow>
