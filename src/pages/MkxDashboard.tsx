@@ -331,9 +331,9 @@ const MkxDashboard = () => {
             </CardContent>
           </Card>
           <SummaryCard
-            title="Total Assets"
-            value={formatAED(mkxSummary.totalAssets)}
-            subtitle="As of Feb 2026"
+            title="Current Assets"
+            value={formatAED(1856037 + 128144 + 92628 + 96287 + 1911111)}
+            subtitle="VA + Cold + Zand + Mashreq + CMA"
             icon={Building2}
           />
           <SummaryCard
