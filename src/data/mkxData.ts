@@ -184,11 +184,11 @@ export const monthlyData: MkxMonthlyData[] = [
     assetBookValue: 1889350,
     clientLiabilitiesFiat: 429337.63,
     clientLiabilitiesVA: 1619190.23,
-    tradingVolume: 0,
-    clientDepositsFiat: 0,
-    clientWithdrawalsFiat: 0,
-    clientDepositsVA: 0,
-    clientWithdrawalsVA: 0,
+    tradingVolume: 35197972,
+    clientDepositsFiat: 18372446,
+    clientWithdrawalsFiat: 16072109,
+    clientDepositsVA: 20440245,
+    clientWithdrawalsVA: 21459776,
   },
 ];
 
