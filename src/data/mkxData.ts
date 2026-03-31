@@ -307,6 +307,25 @@ export const kpiData: MkxKPI[] = [
     assetValuationDiff: 228429.50,
     assetValuationRatio: 0.12090,
   },
+  {
+    month: "Feb-26",
+    grossMarginPct: 9.36,
+    netMarginPct: -894.27,
+    assetCoverageRatio: 0.9015,
+    liquidityBuffer: -201764,
+    fiatDepositWithdrawalRatio: 1.14313,
+    vaDepositWithdrawalRatio: 0.95249,
+    netFiatFlow: 2300337,
+    netVAFlow: -1019531,
+    tradingVolumePerTotalDeposits: 0.90687,
+    netFlowPerTradingVolume: 0.03639,
+    revenuePerTradingVolume: 0.00184,
+    breakEvenTradingVolume: 346667362.47,
+    revenuePerTotalClientFlow: 0.00085,
+    netProfitPerTradingVolume: -0.01644,
+    assetValuationDiff: -42586,
+    assetValuationRatio: -0.02254,
+  },
 ];
 
 // Full P&L by month (Jan 2025 - Jan 2026)
