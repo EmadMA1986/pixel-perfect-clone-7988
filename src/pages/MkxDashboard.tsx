@@ -274,7 +274,7 @@ const MkxDashboard = () => {
             <CardContent className="p-4 space-y-1">
               <div className="flex items-center gap-2 mb-1">
                 <DollarSign className="h-4 w-4 text-primary" />
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Income Breakdown</p>
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Revenue (Convert + Withdrawal)</p>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs text-muted-foreground">2025 (Jan–Dec)</span>
