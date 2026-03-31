@@ -172,6 +172,24 @@ export const monthlyData: MkxMonthlyData[] = [
     clientDepositsVA: 140794466,
     clientWithdrawalsVA: 16032893,
   },
+  {
+    month: "Feb-26",
+    revenue: 64713.59,
+    gasFees: 6059.34,
+    grossProfit: 58654.25,
+    totalExpenses: 637363.66,
+    otherIncome: 0,
+    netProfit: -578709.41,
+    assetMarketValue: 1988618,
+    assetBookValue: 1889350,
+    clientLiabilitiesFiat: 429337.63,
+    clientLiabilitiesVA: 1619190.23,
+    tradingVolume: 0,
+    clientDepositsFiat: 0,
+    clientWithdrawalsFiat: 0,
+    clientDepositsVA: 0,
+    clientWithdrawalsVA: 0,
+  },
 ];
 
 export const kpiData: MkxKPI[] = [
