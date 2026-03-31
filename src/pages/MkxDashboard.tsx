@@ -869,13 +869,13 @@ const MkxDashboard = () => {
                           <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">{row.month}</TableCell>
                           <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAEDFull(row.clientDepositsFiat)}</TableCell>
                           <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAEDFull(row.clientWithdrawalsFiat)}</TableCell>
-                          <TableCell className={`text-sm tabular-nums text-right font-medium ${kpiData[i].netFiatFlow >= 0 ? "text-success" : "text-loss"}`}>
-                            {formatAEDFull(kpiData[i].netFiatFlow)}
+                          <TableCell className={`text-sm tabular-nums text-right font-medium ${(kpiData[i]?.netFiatFlow ?? (row.clientDepositsFiat - row.clientWithdrawalsFiat)) >= 0 ? "text-success" : "text-loss"}`}>
+                            {formatAEDFull(kpiData[i]?.netFiatFlow ?? (row.clientDepositsFiat - row.clientWithdrawalsFiat))}
                           </TableCell>
                           <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAEDFull(row.clientDepositsVA)}</TableCell>
                           <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAEDFull(row.clientWithdrawalsVA)}</TableCell>
-                          <TableCell className={`text-sm tabular-nums text-right font-medium ${kpiData[i].netVAFlow >= 0 ? "text-success" : "text-loss"}`}>
-                            {formatAEDFull(kpiData[i].netVAFlow)}
+                          <TableCell className={`text-sm tabular-nums text-right font-medium ${(kpiData[i]?.netVAFlow ?? (row.clientDepositsVA - row.clientWithdrawalsVA)) >= 0 ? "text-success" : "text-loss"}`}>
+                            {formatAEDFull(kpiData[i]?.netVAFlow ?? (row.clientDepositsVA - row.clientWithdrawalsVA))}
                           </TableCell>
                           <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAEDFull(row.tradingVolume)}</TableCell>
                         </TableRow>
