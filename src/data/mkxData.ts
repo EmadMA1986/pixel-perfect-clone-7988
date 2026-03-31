@@ -433,7 +433,7 @@ export const balanceSheet: MkxBalanceSheetItem[] = [
   { label: "Share Capital - Mrs. Maria", value: 5573974.65, indent: 2 },
   { label: "Total Share Capital", value: 10903846.13, isTotal: true, indent: 2 },
   { label: "Total Shareholders' Equity", value: 2944442.37, isTotal: true, indent: 1 },
-  { label: "Total Liabilities & Equity", value: 5343313.06, isTotal: true },
+  { label: "Total Liabilities & Equity", value: 5338876.56, isTotal: true },
 ];
 
 // Summary / averages
