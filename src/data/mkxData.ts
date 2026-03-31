@@ -417,7 +417,7 @@ export const balanceSheet: MkxBalanceSheetItem[] = [
   { label: "Paid Up Capital - Zand Bank", value: 739579, indent: 2 },
   { label: "Rental Security Deposit", value: 53070, indent: 2 },
   { label: "Total Long-term Assets", value: 918042.22, isTotal: true, indent: 1 },
-  { label: "Total Assets", value: 5343313.06, isTotal: true },
+  { label: "Total Assets", value: 5338876.56, isTotal: true },
   { label: "Liabilities & Shareholders' Equity", value: 0, isSectionHeader: true },
   { label: "Current Liabilities", value: 0, isSectionHeader: true, indent: 1 },
   { label: "Accounts Payable", value: 78439.89, indent: 2 },
