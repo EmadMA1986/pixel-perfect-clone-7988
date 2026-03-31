@@ -270,12 +270,26 @@ const MkxDashboard = () => {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <SummaryCard
-            title="Full Year Income"
-            value={formatAED(mkxSummary.fullYearTotalIncome)}
-            subtitle="Jan 2025 – Jan 2026"
-            icon={DollarSign}
-          />
+          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+            <CardContent className="p-4 space-y-1">
+              <div className="flex items-center gap-2 mb-1">
+                <DollarSign className="h-4 w-4 text-primary" />
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Income Breakdown</p>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-muted-foreground">2025 (Jan–Dec)</span>
+                <span className="text-sm font-semibold text-foreground">{formatAEDFull(168104.47)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-muted-foreground">2026 YTD (Jan–Feb)</span>
+                <span className="text-sm font-semibold text-foreground">{formatAEDFull(298654.24)}</span>
+              </div>
+              <div className="border-t border-border/50 pt-1 flex justify-between items-center">
+                <span className="text-xs font-bold text-foreground">Total</span>
+                <span className="text-sm font-bold text-foreground">{formatAEDFull(466758.71)}</span>
+              </div>
+            </CardContent>
+          </Card>
           <SummaryCard
             title="Full Year Gross Profit"
             value={formatAED(mkxSummary.fullYearGrossProfit)}
