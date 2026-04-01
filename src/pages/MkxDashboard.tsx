@@ -336,6 +336,30 @@ const MkxDashboard = () => {
             subtitle="VA + Cold + Zand + Mashreq + CMA"
             icon={Building2}
           />
+          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+            <CardContent className="p-4 space-y-1">
+              <div className="flex items-center gap-2 mb-1">
+                <FileText className="h-4 w-4 text-loss" />
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Current Liabilities</p>
+              </div>
+              {[
+                { label: "Accounts Payable", value: 98440 },
+                { label: "Fiat Due to Customers", value: 429338 },
+                { label: "Payroll Staff Payable", value: 363864 },
+                { label: "VAT Control", value: -111961 },
+                { label: "VA Due to Customers", value: 1619190 },
+              ].map((item) => (
+                <div key={item.label} className="flex justify-between items-center">
+                  <span className="text-xs text-muted-foreground">{item.label}</span>
+                  <span className="text-sm font-semibold text-foreground">{formatAEDFull(item.value)}</span>
+                </div>
+              ))}
+              <div className="border-t border-border/50 pt-1 flex justify-between items-center">
+                <span className="text-xs font-bold text-foreground">Total</span>
+                <span className="text-sm font-bold text-loss">{formatAEDFull(2398871)}</span>
+              </div>
+            </CardContent>
+          </Card>
           <SummaryCard
             title="Asset Coverage"
             value={`${mkxSummary.latestAssetCoverage.toFixed(2)}x`}
