@@ -192,6 +192,12 @@ const RyaDashboard = () => {
                 MKX
               </Button>
             </Link>
+            <Link to="/garage">
+              <Button variant="outline" size="sm" className="text-xs gap-1.5">
+                <Wrench className="h-3.5 w-3.5" />
+                MK Garage
+              </Button>
+            </Link>
             <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={generateRyaPdf}>
               <FileDown className="h-3.5 w-3.5" />
               Export PDF
