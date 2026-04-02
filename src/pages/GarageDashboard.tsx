@@ -369,6 +369,50 @@ const GarageDashboard = () => {
           </Card>
         </div>
 
+        {/* Financial Ratios */}
+        {(() => {
+          const totalCostOfSales = monthlyPL.reduce((s, m) => s + m.costOfSales, 0);
+          const totalIndirectExp = monthlyPL.reduce((s, m) => s + m.indirectExpenses, 0);
+          const totalEquity = balanceSheet.capital.total;
+          const totalAssets = balanceSheet.totalAssets;
+          const grossMargin = (totalGrossProfit / totalRevenue) * 100;
+          const netMargin = (totalNetProfit / totalRevenue) * 100;
+          const roe = (totalNetProfit / totalEquity) * 100;
+          const roa = (totalNetProfit / totalAssets) * 100;
+          const costToRevenueRatio = ((totalCostOfSales + totalIndirectExp) / totalRevenue) * 100;
+          const operatingExpRatio = (totalIndirectExp / totalRevenue) * 100;
+          const currentRatio = balanceSheet.currentAssets.total / balanceSheet.currentLiabilities.total;
+
+          const ratioItems = [
+            { label: "Gross Profit Margin", value: `${grossMargin.toFixed(1)}%`, desc: "Gross Profit / Revenue", healthy: grossMargin > 30 },
+            { label: "Net Profit Margin", value: `${netMargin.toFixed(1)}%`, desc: "Net Profit / Revenue", healthy: netMargin > 0 },
+            { label: "Return on Equity (ROE)", value: `${roe.toFixed(1)}%`, desc: "Net Profit / Total Equity", healthy: roe > 0 },
+            { label: "Return on Assets (ROA)", value: `${roa.toFixed(1)}%`, desc: "Net Profit / Total Assets", healthy: roa > 0 },
+            { label: "Cost-to-Revenue Ratio", value: `${costToRevenueRatio.toFixed(1)}%`, desc: "(COGS + Expenses) / Revenue", healthy: costToRevenueRatio < 100 },
+            { label: "Operating Expense Ratio", value: `${operatingExpRatio.toFixed(1)}%`, desc: "Indirect Exp / Revenue", healthy: operatingExpRatio < 40 },
+            { label: "Current Ratio", value: `${currentRatio.toFixed(2)}x`, desc: "Current Assets / Current Liabilities", healthy: currentRatio >= 1 },
+          ];
+
+          return (
+            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">ROI & Profitability Ratios</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {ratioItems.map((r) => (
+                    <div key={r.label} className="p-3 rounded-lg bg-muted/30 border border-border/30 space-y-1">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{r.label}</p>
+                      <p className={`text-xl font-bold font-serif ${r.healthy ? "text-success" : "text-loss"}`}>{r.value}</p>
+                      <p className="text-[10px] text-muted-foreground">{r.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
+
         {/* Monthly P&L Table */}
         <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
           <CardHeader className="pb-2">
