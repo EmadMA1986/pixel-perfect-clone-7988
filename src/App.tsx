@@ -7,6 +7,7 @@ import RyaDashboard from "./pages/RyaDashboard";
 import OtcDashboard from "./pages/OtcDashboard";
 import MkAutosDashboard from "./pages/MkAutosDashboard";
 import MkxDashboard from "./pages/MkxDashboard";
+import GarageDashboard from "./pages/GarageDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
