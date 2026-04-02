@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Gem, TrendingUp, DollarSign, Wallet, Scale, Filter, CalendarIcon, Building, Car, Activity, User, FileDown } from "lucide-react";
+import { Gem, TrendingUp, DollarSign, Wallet, Scale, Filter, CalendarIcon, Building, Car, Activity, User, FileDown, Wrench } from "lucide-react";
 import { generateRyaPdf } from "@/utils/generateRyaPdf";
 import { format, isValid } from "date-fns";
 import SummaryCard from "@/components/SummaryCard";
@@ -190,6 +190,12 @@ const RyaDashboard = () => {
               <Button variant="outline" size="sm" className="text-xs gap-1.5">
                 <Activity className="h-3.5 w-3.5" />
                 MKX
+              </Button>
+            </Link>
+            <Link to="/garage">
+              <Button variant="outline" size="sm" className="text-xs gap-1.5">
+                <Wrench className="h-3.5 w-3.5" />
+                MK Garage
               </Button>
             </Link>
             <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={generateRyaPdf}>
