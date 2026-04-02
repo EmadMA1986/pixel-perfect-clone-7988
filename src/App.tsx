@@ -23,6 +23,7 @@ const App = () => (
           <Route path="/otc" element={<OtcDashboard />} />
           <Route path="/mk-autos" element={<MkAutosDashboard />} />
           <Route path="/mkx" element={<MkxDashboard />} />
+          <Route path="/garage" element={<GarageDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
