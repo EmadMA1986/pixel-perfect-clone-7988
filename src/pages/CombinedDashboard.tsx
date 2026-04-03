@@ -64,9 +64,9 @@ const CombinedDashboard = () => {
   const garageROI = (garageProfitShare / garageInvestment) * 100;
 
   // Combined totals
-  const totalInvestment = otcInvestment + mkAutosInvestment + mkxShareCapital + garageInvestment;
-  const totalProfit = otcProfitShare + mkAutosProfit + mkxTotalPL + garageProfitShare;
-  const totalNetPosition = otcNetPosition + mkAutosPosition + mkxNetPosition + garageNetPosition;
+  const totalInvestment = otcInvestment + mkAutosShareInvestment + mkAutosCarsInvestment + mkxShareCapital + garageInvestment;
+  const totalProfit = otcProfitShare + mkAutosShareProfit + mkAutosCarsProfit + mkxTotalPL + garageProfitShare;
+  const totalNetPosition = otcNetPosition + mkAutosSharePosition + mkAutosCarsPosition + mkxNetPosition + garageNetPosition;
   const overallROI = (totalProfit / totalInvestment) * 100;
 
   const companies = [
