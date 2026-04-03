@@ -31,11 +31,18 @@ const CombinedDashboard = () => {
   const otcNetPosition = partnerCapital.ahmad.netPosition; // 1,130,579
   const otcROI = (otcProfitShare / otcInvestment) * 100;
 
-  // 2. MK Autos (22%)
-  const mkAutosInvestment = mkAutosAhmad.totalCarsInvestment * (mkAutosAhmad.sharePercentage / 100); // 22% of 4.3M
-  const mkAutosProfit = mkAutosAhmad.totalCarsProfit * (mkAutosAhmad.sharePercentage / 100);
-  const mkAutosPosition = mkAutosAhmad.positionAgainstCars * (mkAutosAhmad.sharePercentage / 100);
-  const mkAutosROI = (mkAutosProfit / mkAutosInvestment) * 100;
+  // 2a. MK Autos - Company Share (22% of capital AED 300K)
+  const mkAutosShareInvestment = mkAutosAhmad.shareCapital; // 135,000
+  const mkAutosCompanyPL = mkAutosBS.profitLoss.total; // -137,725
+  const mkAutosShareProfit = mkAutosCompanyPL * (mkAutosAhmad.sharePercentage / 100);
+  const mkAutosSharePosition = mkAutosShareInvestment + mkAutosShareProfit;
+  const mkAutosShareROI = (mkAutosShareProfit / mkAutosShareInvestment) * 100;
+
+  // 2b. MK Autos - Cars Investment (owns the cars, gets rental profit)
+  const mkAutosCarsInvestment = mkAutosAhmad.totalCarsInvestment; // 4,325,615
+  const mkAutosCarsProfit = mkAutosAhmad.totalCarsProfit; // 1,821,752
+  const mkAutosCarsPosition = mkAutosAhmad.positionAgainstCars; // 464,421
+  const mkAutosCarsROI = (mkAutosCarsProfit / mkAutosCarsInvestment) * 100;
 
   // 3. MKX Crypto (50%)
   const mkxShareCapital = 5329871.48;
