@@ -226,6 +226,7 @@ const CombinedDashboard = () => {
                       <div>
                         <p className="text-sm font-semibold text-foreground">{c.name}</p>
                         <p className="text-xs text-muted-foreground">{c.share} ownership</p>
+                        {(c as any).subtitle && <p className="text-[10px] text-muted-foreground/70">{(c as any).subtitle}</p>}
                       </div>
                     </div>
                     <ArrowRight className="h-4 w-4 text-muted-foreground" />
