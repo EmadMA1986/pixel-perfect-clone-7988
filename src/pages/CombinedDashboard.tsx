@@ -140,11 +140,11 @@ const CombinedDashboard = () => {
             </div>
           </div>
           <nav className="flex items-center gap-1">
-            <NavLink to="/" icon={BarChart3} label="RYA Gold" />
-            <NavLink to="/otc" icon={DollarSign} label="OTC" />
-            <NavLink to="/mk-autos" icon={Car} label="MK Autos" />
-            <NavLink to="/mkx" icon={Bitcoin} label="MKX" />
-            <NavLink to="/garage" icon={Wrench} label="MK Garage" />
+            <Link to="/"><Button variant="outline" size="sm" className="text-xs gap-1.5"><Gem className="h-3.5 w-3.5" />RYA Gold</Button></Link>
+            <Link to="/otc"><Button variant="outline" size="sm" className="text-xs gap-1.5"><DollarSign className="h-3.5 w-3.5" />OTC</Button></Link>
+            <Link to="/mk-autos"><Button variant="outline" size="sm" className="text-xs gap-1.5"><Car className="h-3.5 w-3.5" />MK Autos</Button></Link>
+            <Link to="/mkx"><Button variant="outline" size="sm" className="text-xs gap-1.5"><Bitcoin className="h-3.5 w-3.5" />MKX</Button></Link>
+            <Link to="/garage"><Button variant="outline" size="sm" className="text-xs gap-1.5"><Wrench className="h-3.5 w-3.5" />MK Garage</Button></Link>
           </nav>
         </div>
       </header>
