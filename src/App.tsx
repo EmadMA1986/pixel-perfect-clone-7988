@@ -8,6 +8,7 @@ import OtcDashboard from "./pages/OtcDashboard";
 import MkAutosDashboard from "./pages/MkAutosDashboard";
 import MkxDashboard from "./pages/MkxDashboard";
 import GarageDashboard from "./pages/GarageDashboard";
+import CombinedDashboard from "./pages/CombinedDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/mk-autos" element={<MkAutosDashboard />} />
           <Route path="/mkx" element={<MkxDashboard />} />
           <Route path="/garage" element={<GarageDashboard />} />
+          <Route path="/portfolio" element={<CombinedDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
