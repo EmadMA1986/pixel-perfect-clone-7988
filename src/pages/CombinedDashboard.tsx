@@ -31,11 +31,18 @@ const CombinedDashboard = () => {
   const otcNetPosition = partnerCapital.ahmad.netPosition; // 1,130,579
   const otcROI = (otcProfitShare / otcInvestment) * 100;
 
-  // 2. MK Autos (22%)
-  const mkAutosInvestment = mkAutosAhmad.totalCarsInvestment * (mkAutosAhmad.sharePercentage / 100); // 22% of 4.3M
-  const mkAutosProfit = mkAutosAhmad.totalCarsProfit * (mkAutosAhmad.sharePercentage / 100);
-  const mkAutosPosition = mkAutosAhmad.positionAgainstCars * (mkAutosAhmad.sharePercentage / 100);
-  const mkAutosROI = (mkAutosProfit / mkAutosInvestment) * 100;
+  // 2a. MK Autos - Company Share (22% of capital AED 300K)
+  const mkAutosShareInvestment = mkAutosAhmad.shareCapital; // 135,000
+  const mkAutosCompanyPL = mkAutosBS.profitLoss.total; // -137,725
+  const mkAutosShareProfit = mkAutosCompanyPL * (mkAutosAhmad.sharePercentage / 100);
+  const mkAutosSharePosition = mkAutosShareInvestment + mkAutosShareProfit;
+  const mkAutosShareROI = (mkAutosShareProfit / mkAutosShareInvestment) * 100;
+
+  // 2b. MK Autos - Cars Investment (owns the cars, gets rental profit)
+  const mkAutosCarsInvestment = mkAutosAhmad.totalCarsInvestment; // 4,325,615
+  const mkAutosCarsProfit = mkAutosAhmad.totalCarsProfit; // 1,821,752
+  const mkAutosCarsPosition = mkAutosAhmad.positionAgainstCars; // 464,421
+  const mkAutosCarsROI = (mkAutosCarsProfit / mkAutosCarsInvestment) * 100;
 
   // 3. MKX Crypto (50%)
   const mkxShareCapital = 5329871.48;
@@ -57,9 +64,9 @@ const CombinedDashboard = () => {
   const garageROI = (garageProfitShare / garageInvestment) * 100;
 
   // Combined totals
-  const totalInvestment = otcInvestment + mkAutosInvestment + mkxShareCapital + garageInvestment;
-  const totalProfit = otcProfitShare + mkAutosProfit + mkxTotalPL + garageProfitShare;
-  const totalNetPosition = otcNetPosition + mkAutosPosition + mkxNetPosition + garageNetPosition;
+  const totalInvestment = otcInvestment + mkAutosShareInvestment + mkAutosCarsInvestment + mkxShareCapital + garageInvestment;
+  const totalProfit = otcProfitShare + mkAutosShareProfit + mkAutosCarsProfit + mkxTotalPL + garageProfitShare;
+  const totalNetPosition = otcNetPosition + mkAutosSharePosition + mkAutosCarsPosition + mkxNetPosition + garageNetPosition;
   const overallROI = (totalProfit / totalInvestment) * 100;
 
   const companies = [
@@ -75,15 +82,28 @@ const CombinedDashboard = () => {
       color: "hsl(var(--chart-1))",
     },
     {
-      name: "MK Autos",
-      icon: Car,
+      name: "MK Autos (Company)",
+      icon: Building2,
       route: "/mk-autos",
       share: "22%",
-      investment: mkAutosInvestment,
-      profit: mkAutosProfit,
-      netPosition: mkAutosPosition,
-      roi: mkAutosROI,
+      investment: mkAutosShareInvestment,
+      profit: mkAutosShareProfit,
+      netPosition: mkAutosSharePosition,
+      roi: mkAutosShareROI,
       color: "hsl(var(--chart-2))",
+      subtitle: "Share Capital & P&L",
+    },
+    {
+      name: "MK Autos (Cars)",
+      icon: Car,
+      route: "/mk-autos",
+      share: "100%",
+      investment: mkAutosCarsInvestment,
+      profit: mkAutosCarsProfit,
+      netPosition: mkAutosCarsPosition,
+      roi: mkAutosCarsROI,
+      color: "hsl(var(--chart-5))",
+      subtitle: "Fleet rental income",
     },
     {
       name: "MKX Crypto",
@@ -187,7 +207,7 @@ const CombinedDashboard = () => {
         </div>
 
         {/* Company Cards with ROI */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {companies.map((c) => {
             const Icon = c.icon;
             return (
@@ -206,6 +226,7 @@ const CombinedDashboard = () => {
                       <div>
                         <p className="text-sm font-semibold text-foreground">{c.name}</p>
                         <p className="text-xs text-muted-foreground">{c.share} ownership</p>
+                        {(c as any).subtitle && <p className="text-[10px] text-muted-foreground/70">{(c as any).subtitle}</p>}
                       </div>
                     </div>
                     <ArrowRight className="h-4 w-4 text-muted-foreground" />
