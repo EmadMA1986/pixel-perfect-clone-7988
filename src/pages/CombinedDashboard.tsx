@@ -185,7 +185,14 @@ const CombinedDashboard = () => {
             <CardContent className="p-5 relative">
               <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Total Profit/Loss</p>
               <p className={`text-2xl font-bold font-serif ${totalProfit >= 0 ? "text-success" : "text-loss"}`}>{formatAEDShort(totalProfit)}</p>
-              <p className="text-xs text-muted-foreground">Ahmad's share of P&L</p>
+              <div className="mt-2 space-y-0.5">
+                {companies.map((c) => (
+                  <div key={c.name} className="flex justify-between text-[10px]">
+                    <span className="text-muted-foreground truncate mr-2">{c.name.replace(" (Company)", "").replace(" (Cars)", " Cars")}</span>
+                    <span className={`font-medium ${c.profit >= 0 ? "text-success" : "text-loss"}`}>({Math.abs(c.profit).toLocaleString("en-US", { maximumFractionDigits: 0 })})</span>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
@@ -239,7 +246,7 @@ const CombinedDashboard = () => {
                     </div>
                     <div className={`flex justify-between items-center text-xs rounded-md px-2 py-1.5 -mx-2 ${c.profit >= 0 ? "bg-emerald-500/10" : "bg-red-500/10"}`}>
                       <span className={`font-semibold ${c.profit >= 0 ? "text-success" : "text-loss"}`}>Profit/Loss</span>
-                      <span className={`text-sm font-bold ${c.profit >= 0 ? "text-success" : "text-loss"}`}>{formatAED(c.profit)}</span>
+                      <span className={`text-sm font-bold ${c.profit >= 0 ? "text-success" : "text-loss"}`}>{formatAEDShort(c.profit)}</span>
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-muted-foreground">Net Position</span>
