@@ -103,7 +103,7 @@ export const vehicleLabels: Record<string, string> = {
 };
 
 export const ahmadCapital = {
-  sharePercentage: 22,
+  sharePercentage: 45,
   shareCapital: 135000,
   lossIncurred: -30300,
   totalCarsInvestment: 4325615,
