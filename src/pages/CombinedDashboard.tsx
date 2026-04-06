@@ -85,7 +85,7 @@ const CombinedDashboard = () => {
       name: "MK Autos (Company)",
       icon: Building2,
       route: "/mk-autos",
-      share: "22%",
+      share: `${mkAutosAhmad.sharePercentage}%`,
       investment: mkAutosShareInvestment,
       profit: mkAutosShareProfit,
       netPosition: mkAutosSharePosition,
