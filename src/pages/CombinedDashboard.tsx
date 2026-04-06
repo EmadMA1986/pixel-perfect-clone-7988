@@ -237,9 +237,9 @@ const CombinedDashboard = () => {
                       <span className="text-muted-foreground">Investment</span>
                       <span className="font-medium text-foreground">{formatAEDShort(c.investment)}</span>
                     </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">Profit/Loss</span>
-                      <span className={`font-medium ${c.profit >= 0 ? "text-success" : "text-loss"}`}>{formatAEDShort(c.profit)}</span>
+                    <div className={`flex justify-between items-center text-xs rounded-md px-2 py-1.5 -mx-2 ${c.profit >= 0 ? "bg-emerald-500/10" : "bg-red-500/10"}`}>
+                      <span className={`font-semibold ${c.profit >= 0 ? "text-success" : "text-loss"}`}>Profit/Loss</span>
+                      <span className={`text-sm font-bold ${c.profit >= 0 ? "text-success" : "text-loss"}`}>{formatAEDShort(c.profit)}</span>
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-muted-foreground">Net Position</span>
