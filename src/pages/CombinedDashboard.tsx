@@ -80,6 +80,7 @@ const CombinedDashboard = () => {
       netPosition: otcNetPosition,
       roi: otcROI,
       color: "hsl(var(--chart-1))",
+      updatedTo: "Mar 2026",
     },
     {
       name: "MK Autos (Company)",
@@ -92,6 +93,7 @@ const CombinedDashboard = () => {
       roi: mkAutosShareROI,
       color: "hsl(var(--chart-2))",
       subtitle: "Share Capital & P&L",
+      updatedTo: "Feb 2026",
     },
     {
       name: "MK Autos (Cars)",
@@ -104,6 +106,7 @@ const CombinedDashboard = () => {
       roi: mkAutosCarsROI,
       color: "hsl(var(--chart-5))",
       subtitle: "Fleet rental income",
+      updatedTo: "Feb 2026",
     },
     {
       name: "MKX Crypto",
@@ -115,6 +118,7 @@ const CombinedDashboard = () => {
       netPosition: mkxNetPosition,
       roi: mkxROI,
       color: "hsl(var(--chart-3))",
+      updatedTo: "Feb 2026",
     },
     {
       name: "MK Garage",
@@ -126,6 +130,7 @@ const CombinedDashboard = () => {
       netPosition: garageNetPosition,
       roi: garageROI,
       color: "hsl(var(--chart-4))",
+      updatedTo: "Feb 2026",
     },
   ];
 
