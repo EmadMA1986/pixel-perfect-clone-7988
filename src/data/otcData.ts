@@ -114,15 +114,15 @@ export const scamLosses: CapitalTransaction[] = [
 ];
 
 export const partnerCapital = {
-  maria: { funding: 2099837.41, withdrawal: 1275601.48, net: 824235.93, scamLoss: 475000, expenses: 278964.48, capitalPosition: 70271.45, profitShare: 1368912.78, netPosition: 1439184.23 },
-  ahmad: { funding: 2020187.41, withdrawal: 1504556.98, net: 515630.44, scamLoss: 475000, expenses: 278964.48, capitalPosition: -238334.05, profitShare: 1368912.78, netPosition: 1130578.73 },
+  maria: { funding: 2099837.41, withdrawal: 1275601.48, net: 824235.93, scamLoss: 475000, expenses: 324578.88, capitalPosition: 24657.05, profitShare: 752710.00, netPosition: 1576945.93 },
+  ahmad: { funding: 2020187.41, withdrawal: 1504556.98, net: 515630.44, scamLoss: 475000, expenses: 324578.88, capitalPosition: -283948.44, profitShare: 752710.00, netPosition: 1268340.44 },
   totalFunding: 4120024.83,
   totalWithdrawal: 2780158.46,
   netCapital: 1339866.37,
   scamLoss: 950000,
   equityAfterScam: 389866.37,
-  totalExpenses: 557928.97,
-  equityPosition: -168062.60,
+  totalExpenses: 649157.76,
+  equityPosition: -259291.39,
 };
 
 export const formatAED = (value: number) => {
