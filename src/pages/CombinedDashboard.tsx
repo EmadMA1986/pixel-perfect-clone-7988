@@ -26,7 +26,7 @@ const CombinedDashboard = () => {
   // === Ahmad's positions across all 4 companies ===
 
   // 1. OTC Trading (50/50 with Maria)
-  const otcInvestment = partnerCapital.ahmad.funding; // 2,020,187
+  const otcInvestment = partnerCapital.ahmad.net; // 515,630 (funding - withdrawals)
   const otcProfitShare = partnerCapital.ahmad.profitShare; // 1,368,913
   const otcNetPosition = partnerCapital.ahmad.netPosition; // 1,130,579
   const otcROI = (otcProfitShare / otcInvestment) * 100;
