@@ -31,14 +31,16 @@ export interface CapitalEntry {
 }
 
 export const otcSummary = {
-  grossProfitYTD: 2905889.42,
-  cashExpensesYTD: 557930.24,
+  grossProfitYTD: 3104579.96,
+  cashExpensesYTD: 649159.24,
   scamYTD: 950000.00,
-  netProfitYTD: 1397959.18,
+  netProfitYTD: 1505420.72,
   initialCapital: 4120024.83,
   capitalWithdrawal: 2780158.46,
   netCapital: 1339866.37,
-  cashPosition: 2737825.55,
+  cashPosition: 2844091.67,
+  totalCash: 3968613.46,
+  ar: -1124521.79,
   currency: "AED",
 };
 
@@ -58,15 +60,16 @@ export const monthlyPL: MonthlyPL[] = [
   { month: "Dec 2025", grossProfit: 278765.58, cashExpenses: 28400, scam: 0, netProfit: 250365.58 },
   { month: "Jan 2026", grossProfit: 186557.93, cashExpenses: 50104.24, scam: 0, netProfit: 136453.69 },
   { month: "Feb 2026", grossProfit: 212187.14, cashExpenses: 49296, scam: 0, netProfit: 162891.14 },
+  { month: "Mar 2026", grossProfit: 198690.54, cashExpenses: 91229, scam: 0, netProfit: 107461.54 },
 ];
 
 export const expenseBreakdown = [
-  { category: "General Exp", amount: 187311.62 },
-  { category: "Car Exp", amount: 21704.18 },
-  { category: "Salaries", amount: 253000 },
-  { category: "TRX", amount: -14849.56 },
-  { category: "DFZ Rent", amount: 103000 },
-  { category: "Gatepass", amount: 7764 },
+  { category: "General Exp", amount: 185574.62 },
+  { category: "Car Exp", amount: 23470.18 },
+  { category: "Salaries", amount: 321800 },
+  { category: "TRX", amount: -14569.56 },
+  { category: "DFZ Rent", amount: 124000 },
+  { category: "Gatepass", amount: 8884 },
   { category: "Scam Loss", amount: 950000 },
 ];
 
