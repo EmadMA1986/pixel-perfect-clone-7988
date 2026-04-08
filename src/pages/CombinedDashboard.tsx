@@ -106,7 +106,7 @@ const CombinedDashboard = () => {
       roi: mkAutosCarsROI,
       color: "hsl(var(--chart-5))",
       subtitle: "Fleet rental income",
-      updatedTo: "Feb 2026",
+      updatedTo: "Mar 2026",
     },
     {
       name: "MKX Crypto",
