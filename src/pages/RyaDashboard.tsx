@@ -761,6 +761,62 @@ const RyaDashboard = () => {
           </CardContent>
         </Card>
 
+        {/* Financial Ratios */}
+        {!isClientView && (
+          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-serif text-foreground">Financial Ratios</CardTitle>
+              <p className="text-xs text-muted-foreground">Key performance indicators</p>
+            </CardHeader>
+            <CardContent>
+              {(() => {
+                const grossMargin = ((profitLoss.grossProfit / profitLoss.sales) * 100);
+                const netMargin = ((profitLoss.netProfit / profitLoss.sales) * 100);
+                const operatingMargin = ((profitLoss.operatingProfit / profitLoss.sales) * 100);
+                const expenseRatio = ((profitLoss.totalAdminExpenses / profitLoss.sales) * 100);
+                const costOfSalesRatio = ((profitLoss.costOfSales / profitLoss.sales) * 100);
+                const hedgeRatio = ((profitLoss.hedgeExpenses / profitLoss.sales) * 100);
+                const discountRatio = ((profitLoss.salesDiscount / profitLoss.sales) * 100);
+                const avgSaleValue = totalRevenue / (filteredSales.length || 1);
+                const avgPurchaseValue = totalPurchaseAmount / (filteredPurchases.length || 1);
+                const totalGramsSold = filteredSales.reduce((s, p) => s + p.qtyGrams, 0);
+                const totalGramsBought = filteredPurchases.reduce((s, p) => s + p.qtyPure, 0);
+                const inventoryTurnover = totalGramsBought > 0 ? totalGramsSold / totalGramsBought : 0;
+                const profitPerGram = totalGramsSold > 0 ? totalProfit / totalGramsSold : 0;
+                const returnOnCapital = goldCapital.initialCapital !== 0 ? ((profitLoss.netProfit / Math.abs(goldCapital.initialCapital)) * 100) : 0;
+
+                const ratios = [
+                  { label: "Gross Profit Margin", value: `${grossMargin.toFixed(1)}%`, health: grossMargin > 10 ? "success" : grossMargin > 5 ? "warning" : "loss" },
+                  { label: "Net Profit Margin", value: `${netMargin.toFixed(1)}%`, health: netMargin > 8 ? "success" : netMargin > 3 ? "warning" : "loss" },
+                  { label: "Operating Margin", value: `${operatingMargin.toFixed(1)}%`, health: operatingMargin > 8 ? "success" : operatingMargin > 3 ? "warning" : "loss" },
+                  { label: "Cost of Sales Ratio", value: `${costOfSalesRatio.toFixed(1)}%`, health: costOfSalesRatio < 85 ? "success" : costOfSalesRatio < 92 ? "warning" : "loss" },
+                  { label: "Hedge Expense Ratio", value: `${hedgeRatio.toFixed(1)}%`, health: hedgeRatio < 3 ? "success" : hedgeRatio < 5 ? "warning" : "loss" },
+                  { label: "Admin Expense Ratio", value: `${expenseRatio.toFixed(1)}%`, health: expenseRatio < 2 ? "success" : expenseRatio < 5 ? "warning" : "loss" },
+                  { label: "Discount Rate", value: `${discountRatio.toFixed(2)}%`, health: discountRatio < 0.5 ? "success" : discountRatio < 1 ? "warning" : "loss" },
+                  { label: "Return on Capital", value: `${returnOnCapital.toFixed(0)}%`, health: returnOnCapital > 50 ? "success" : returnOnCapital > 20 ? "warning" : "loss" },
+                  { label: "Inventory Turnover", value: `${inventoryTurnover.toFixed(2)}x`, health: inventoryTurnover > 0.9 ? "success" : inventoryTurnover > 0.5 ? "warning" : "loss" },
+                  { label: "Profit per Gram", value: formatCurrency(profitPerGram), health: profitPerGram > 15 ? "success" : profitPerGram > 5 ? "warning" : "loss" },
+                  { label: "Avg Sale Value", value: formatCurrency(avgSaleValue), health: "neutral" as const },
+                  { label: "Avg Purchase Value", value: formatCurrency(avgPurchaseValue), health: "neutral" as const },
+                ];
+
+                return (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {ratios.map((r, i) => (
+                      <div key={i} className="p-3 rounded-lg bg-secondary/30 border border-border/30">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{r.label}</p>
+                        <p className={`text-lg font-bold font-serif ${
+                          r.health === "success" ? "text-success" : r.health === "warning" ? "text-primary" : r.health === "loss" ? "text-destructive" : "text-foreground"
+                        }`}>{r.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Balance Sheet */}
         <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
           <CardHeader className="pb-3">
