@@ -40,9 +40,9 @@ const CombinedDashboard = () => {
 
   // 2b. MK Autos - Cars Investment (NBV = Initial Investment - Accumulated Depreciation)
   const mkAutosCarsInvestment = mkAutosSummary.totalNBV; // 2,209,377.52
-  const mkAutosCarsProfit = mkAutosAhmad.totalCarsProfit; // 1,821,752
-  const mkAutosCarsPosition = mkAutosAhmad.positionAgainstCars; // 464,421
-  const mkAutosCarsROI = (mkAutosCarsProfit / mkAutosCarsInvestment) * 100;
+  const mkAutosCarsProfit = mkAutosSummary.netProfit; // 1,579,855.55
+  const mkAutosCarsPosition = mkAutosAhmad.positionAgainstCars; // 490,160.18
+  const mkAutosCarsROI = mkAutosSummary.overallROI;
 
   // 3. MKX Crypto (50%)
   const mkxShareCapital = 5329871.48;
@@ -106,7 +106,7 @@ const CombinedDashboard = () => {
       roi: mkAutosCarsROI,
       color: "hsl(var(--chart-5))",
       subtitle: "Fleet rental income",
-      updatedTo: "Feb 2026",
+      updatedTo: "Mar 2026",
     },
     {
       name: "MKX Crypto",
