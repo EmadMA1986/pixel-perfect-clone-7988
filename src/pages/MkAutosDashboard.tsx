@@ -239,24 +239,38 @@ const MkAutosDashboard = () => {
                         <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Maintenance</TableHead>
                         <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Depreciation</TableHead>
                         <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">NBV</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Total Profit</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">ROI %</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Income</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Net Profit</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Real Profit</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Cash ROI</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Real ROI</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Sale Value</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Final ROI</TableHead>
                         <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Avg/Month</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {vehicles.filter((v) => v.initialInvestment > 0).map((v) => (
+                      {vehicles.map((v) => (
                         <TableRow key={v.name} className="border-border/30 hover:bg-secondary/30">
                           <TableCell className="text-sm font-medium text-foreground">{v.name}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(v.initialInvestment)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAED(v.maintenanceExpenses)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAED(v.totalDepreciation)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(v.nbv)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right font-medium text-success">{formatAED(v.totalProfit)}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-foreground">{v.initialInvestment ? formatAED(v.initialInvestment) : "-"}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{v.maintenanceExpenses ? formatAED(v.maintenanceExpenses) : "-"}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{v.totalDepreciation ? formatAED(v.totalDepreciation) : "-"}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-foreground">{v.nbv ? formatAED(v.nbv) : "-"}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right font-medium text-success">{v.totalProfit ? formatAED(v.totalProfit) : "-"}</TableCell>
+                          <TableCell className={`text-sm tabular-nums text-right font-medium ${v.netProfit >= 0 ? "text-success" : "text-destructive"}`}>{formatAED(v.netProfit)}</TableCell>
+                          <TableCell className={`text-sm tabular-nums text-right ${v.realProfit >= 0 ? "text-success" : "text-destructive"}`}>{formatAED(v.realProfit)}</TableCell>
                           <TableCell className="text-sm tabular-nums text-right">
-                            <Badge variant="secondary" className="text-xs">{v.roiOnInvestment}%</Badge>
+                            {v.roiOnInvestment ? <Badge variant="secondary" className="text-xs">{v.roiOnInvestment}%</Badge> : "-"}
                           </TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(v.avgMonthlyProfit)}</TableCell>
+                          <TableCell className={`text-sm tabular-nums text-right ${v.realROI >= 0 ? "text-success" : "text-destructive"}`}>
+                            {v.realROI ? `${v.realROI}%` : "-"}
+                          </TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-foreground">{v.saleValue ? formatAED(v.saleValue) : "-"}</TableCell>
+                          <TableCell className={`text-sm tabular-nums text-right ${v.finalROI >= 0 ? "text-success" : "text-destructive"}`}>
+                            {v.finalROI ? `${v.finalROI}%` : "-"}
+                          </TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-foreground">{v.avgMonthlyProfit ? formatAED(v.avgMonthlyProfit) : "-"}</TableCell>
                         </TableRow>
                       ))}
                       <TableRow className="border-border/50 bg-secondary/30 font-semibold">
@@ -266,9 +280,14 @@ const MkAutosDashboard = () => {
                         <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAED(mkAutosSummary.totalDepreciation)}</TableCell>
                         <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(mkAutosSummary.totalNBV)}</TableCell>
                         <TableCell className="text-sm tabular-nums text-right font-bold text-success">{formatAED(mkAutosSummary.totalGrossProfit)}</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right font-bold text-success">{formatAED(mkAutosSummary.netProfit)}</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right text-destructive">{formatAED(-355470.15)}</TableCell>
                         <TableCell className="text-sm tabular-nums text-right">
                           <Badge variant="secondary" className="text-xs">{mkAutosSummary.overallROI}%</Badge>
                         </TableCell>
+                        <TableCell className="text-sm tabular-nums text-right text-destructive">{mkAutosSummary.realROI}%</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(mkAutosSummary.totalSaleValue)}</TableCell>
+                        <TableCell className={`text-sm tabular-nums text-right ${mkAutosSummary.finalROI >= 0 ? "text-success" : "text-destructive"}`}>{mkAutosSummary.finalROI}%</TableCell>
                         <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(mkAutosSummary.avgMonthlyIncome)}</TableCell>
                       </TableRow>
                     </TableBody>
