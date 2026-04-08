@@ -69,7 +69,7 @@ const MkAutosDashboard = () => {
               </div>
             </div>
             <div className="text-center">
-              <p className="text-xs text-muted-foreground">Total Profit</p>
+              <p className="text-xs text-muted-foreground">Net Profit</p>
               <p className="text-xl font-bold font-serif text-success">{formatAED(ahmadCapital.totalCarsProfit)}</p>
             </div>
             <div className="text-center">
