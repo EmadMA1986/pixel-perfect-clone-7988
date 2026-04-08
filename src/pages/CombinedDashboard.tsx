@@ -38,8 +38,8 @@ const CombinedDashboard = () => {
   const mkAutosSharePosition = mkAutosShareInvestment + mkAutosShareProfit;
   const mkAutosShareROI = (mkAutosShareProfit / mkAutosShareInvestment) * 100;
 
-  // 2b. MK Autos - Cars Investment (owns the cars, gets rental profit)
-  const mkAutosCarsInvestment = mkAutosAhmad.totalCarsInvestment; // 4,325,615
+  // 2b. MK Autos - Cars Investment (NBV = Initial Investment - Accumulated Depreciation)
+  const mkAutosCarsInvestment = mkAutosSummary.totalNBV; // 2,209,377.52
   const mkAutosCarsProfit = mkAutosAhmad.totalCarsProfit; // 1,821,752
   const mkAutosCarsPosition = mkAutosAhmad.positionAgainstCars; // 464,421
   const mkAutosCarsROI = (mkAutosCarsProfit / mkAutosCarsInvestment) * 100;
@@ -190,14 +190,7 @@ const CombinedDashboard = () => {
             <CardContent className="p-5 relative">
               <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Total Profit/Loss</p>
               <p className={`text-2xl font-bold font-serif ${totalProfit >= 0 ? "text-success" : "text-loss"}`}>{formatAEDShort(totalProfit)}</p>
-              <div className="mt-2 space-y-0.5">
-                {companies.map((c) => (
-                  <div key={c.name} className="flex justify-between text-[10px]">
-                    <span className="text-muted-foreground truncate mr-2">{c.name.replace(" (Company)", "").replace(" (Cars)", " Cars")}</span>
-                    <span className={`font-medium ${c.profit >= 0 ? "text-success" : "text-loss"}`}>({Math.abs(c.profit).toLocaleString("en-US", { maximumFractionDigits: 0 })})</span>
-                  </div>
-                ))}
-              </div>
+              <p className="text-xs text-muted-foreground">Across all companies</p>
             </CardContent>
           </Card>
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
