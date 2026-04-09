@@ -85,7 +85,7 @@ const CombinedDashboard = () => {
     {
       name: "MK Autos (Company)",
       icon: Building2,
-      route: "/mk-autos",
+      route: "/mk-autos-company",
       share: `${mkAutosAhmad.sharePercentage}%`,
       investment: mkAutosShareInvestment,
       profit: mkAutosShareProfit,
@@ -167,7 +167,8 @@ const CombinedDashboard = () => {
           <nav className="flex items-center gap-1">
             <Link to="/"><Button variant="outline" size="sm" className="text-xs gap-1.5"><Gem className="h-3.5 w-3.5" />RYA Gold</Button></Link>
             <Link to="/otc"><Button variant="outline" size="sm" className="text-xs gap-1.5"><DollarSign className="h-3.5 w-3.5" />OTC</Button></Link>
-            <Link to="/mk-autos"><Button variant="outline" size="sm" className="text-xs gap-1.5"><Car className="h-3.5 w-3.5" />MK Autos</Button></Link>
+            <Link to="/mk-autos"><Button variant="outline" size="sm" className="text-xs gap-1.5"><Car className="h-3.5 w-3.5" />Cars</Button></Link>
+            <Link to="/mk-autos-company"><Button variant="outline" size="sm" className="text-xs gap-1.5"><Building2 className="h-3.5 w-3.5" />Company</Button></Link>
             <Link to="/mkx"><Button variant="outline" size="sm" className="text-xs gap-1.5"><Bitcoin className="h-3.5 w-3.5" />MKX</Button></Link>
             <Link to="/garage"><Button variant="outline" size="sm" className="text-xs gap-1.5"><Wrench className="h-3.5 w-3.5" />MK Garage</Button></Link>
           </nav>
