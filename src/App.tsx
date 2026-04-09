@@ -5,7 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import RyaDashboard from "./pages/RyaDashboard";
 import OtcDashboard from "./pages/OtcDashboard";
-import MkAutosDashboard from "./pages/MkAutosDashboard";
+import MkAutosCarsDashboard from "./pages/MkAutosCarsDashboard";
+import MkAutosCompanyDashboard from "./pages/MkAutosCompanyDashboard";
 import MkxDashboard from "./pages/MkxDashboard";
 import GarageDashboard from "./pages/GarageDashboard";
 import CombinedDashboard from "./pages/CombinedDashboard";
@@ -22,7 +23,8 @@ const App = () => (
         <Routes>
           <Route path="/" element={<RyaDashboard />} />
           <Route path="/otc" element={<OtcDashboard />} />
-          <Route path="/mk-autos" element={<MkAutosDashboard />} />
+          <Route path="/mk-autos" element={<MkAutosCarsDashboard />} />
+          <Route path="/mk-autos-company" element={<MkAutosCompanyDashboard />} />
           <Route path="/mkx" element={<MkxDashboard />} />
           <Route path="/garage" element={<GarageDashboard />} />
           <Route path="/portfolio" element={<CombinedDashboard />} />
