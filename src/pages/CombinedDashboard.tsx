@@ -10,6 +10,7 @@ import { partnerCapital, otcSummary } from "@/data/otcData";
 import { ahmadCapital as mkAutosAhmad, mkAutosSummary, balanceSheet as mkAutosBS } from "@/data/mkAutosData";
 import { mkxSummary, balanceSheet as mkxBS } from "@/data/mkxData";
 import { monthlyPL as garagePL, balanceSheet as garageBS, ahmadGarage } from "@/data/garageData";
+import { goldCapital, profitLoss as ryaPL, AED_TO_USD_RATE } from "@/data/goldData";
 
 const formatAED = (v: number) =>
   `AED ${Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
