@@ -33,6 +33,10 @@ const formatUSDShort = (v: number) => {
 };
 
 const CombinedDashboard = () => {
+  const [currency, setCurrency] = useState<"AED" | "USD">("AED");
+  const toDisplay = (aedValue: number) => currency === "AED" ? aedValue : aedValue / AED_TO_USD_RATE;
+  const fmt = (v: number) => currency === "AED" ? formatAEDShort(v) : formatUSDShort(v);
+  const fmtFull = (v: number) => currency === "AED" ? formatAED(v) : formatUSD(v);
   const navigate = useNavigate();
 
   // === Ahmad's positions across all companies ===
