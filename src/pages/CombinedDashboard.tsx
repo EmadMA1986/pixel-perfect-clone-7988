@@ -206,7 +206,7 @@ const CombinedDashboard = () => {
             <CardContent className="p-5 relative">
               <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Total Investment</p>
               <p className="text-2xl font-bold font-serif text-foreground">{formatAEDShort(totalInvestment)}</p>
-              <p className="text-xs text-muted-foreground">Across 4 companies</p>
+              <p className="text-xs text-muted-foreground">Across 5 companies</p>
             </CardContent>
           </Card>
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
