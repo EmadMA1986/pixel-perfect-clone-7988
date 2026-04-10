@@ -10,6 +10,7 @@ import { partnerCapital, otcSummary } from "@/data/otcData";
 import { ahmadCapital as mkAutosAhmad, mkAutosSummary, balanceSheet as mkAutosBS } from "@/data/mkAutosData";
 import { mkxSummary, balanceSheet as mkxBS } from "@/data/mkxData";
 import { monthlyPL as garagePL, balanceSheet as garageBS, ahmadGarage } from "@/data/garageData";
+import { goldCapital, profitLoss as ryaPL, AED_TO_USD_RATE } from "@/data/goldData";
 
 const formatAED = (v: number) =>
   `AED ${Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
@@ -23,7 +24,16 @@ const formatAEDShort = (v: number) => {
 const CombinedDashboard = () => {
   const navigate = useNavigate();
 
-  // === Ahmad's positions across all 4 companies ===
+  // === Ahmad's positions across all companies ===
+
+  // 0. RYA Gold Trading (100% Ahmad) — values in USD, convert to AED
+  const ryaInvestmentUSD = Math.abs(goldCapital.initialCapital);
+  const ryaProfitUSD = ryaPL.netProfit;
+  const ryaNetPositionUSD = goldCapital.totalCurrentPosition;
+  const ryaInvestment = ryaInvestmentUSD * AED_TO_USD_RATE;
+  const ryaProfit = ryaProfitUSD * AED_TO_USD_RATE;
+  const ryaNetPosition = ryaNetPositionUSD * AED_TO_USD_RATE;
+  const ryaROI = (ryaProfitUSD / ryaInvestmentUSD) * 100;
 
   // 1. OTC Trading (50/50 with Maria)
   const otcInvestment = partnerCapital.ahmad.net; // 515,630 (funding - withdrawals)
@@ -39,9 +49,9 @@ const CombinedDashboard = () => {
   const mkAutosShareROI = (mkAutosShareProfit / mkAutosShareInvestment) * 100;
 
   // 2b. MK Autos - Cars Investment (NBV = Initial Investment - Accumulated Depreciation)
-  const mkAutosCarsInvestment = mkAutosSummary.totalNBV; // 2,209,377.52
-  const mkAutosCarsProfit = mkAutosSummary.netProfit; // 1,579,855.55
-  const mkAutosCarsPosition = mkAutosAhmad.positionAgainstCars; // 490,160.18
+  const mkAutosCarsInvestment = mkAutosSummary.totalNBV;
+  const mkAutosCarsProfit = mkAutosSummary.netProfit;
+  const mkAutosCarsPosition = mkAutosAhmad.positionAgainstCars;
   const mkAutosCarsROI = mkAutosSummary.overallROI;
 
   // 3. MKX Crypto (50%)
@@ -57,19 +67,32 @@ const CombinedDashboard = () => {
   const mkxROI = (mkxTotalPL / mkxShareCapital) * 100;
 
   // 4. MK Garage (40%)
-  const garageInvestment = ahmadGarage.shareCapital; // 520,000
+  const garageInvestment = ahmadGarage.shareCapital;
   const garageTotalNetProfit = garagePL.reduce((s, m) => s + m.netProfit, 0);
   const garageProfitShare = garageTotalNetProfit * (ahmadGarage.sharePercent / 100);
   const garageNetPosition = garageInvestment + garageProfitShare;
   const garageROI = (garageProfitShare / garageInvestment) * 100;
 
   // Combined totals
-  const totalInvestment = otcInvestment + mkAutosShareInvestment + mkAutosCarsInvestment + mkxShareCapital + garageInvestment;
-  const totalProfit = otcProfitShare + mkAutosShareProfit + mkAutosCarsProfit + mkxTotalPL + garageProfitShare;
-  const totalNetPosition = otcNetPosition + mkAutosSharePosition + mkAutosCarsPosition + mkxNetPosition + garageNetPosition;
+  const totalInvestment = ryaInvestment + otcInvestment + mkAutosShareInvestment + mkAutosCarsInvestment + mkxShareCapital + garageInvestment;
+  const totalProfit = ryaProfit + otcProfitShare + mkAutosShareProfit + mkAutosCarsProfit + mkxTotalPL + garageProfitShare;
+  const totalNetPosition = ryaNetPosition + otcNetPosition + mkAutosSharePosition + mkAutosCarsPosition + mkxNetPosition + garageNetPosition;
   const overallROI = (totalProfit / totalInvestment) * 100;
 
   const companies = [
+    {
+      name: "RYA Gold",
+      icon: Gem,
+      route: "/",
+      share: "100%",
+      investment: ryaInvestment,
+      profit: ryaProfit,
+      netPosition: ryaNetPosition,
+      roi: ryaROI,
+      color: "hsl(43, 74%, 52%)",
+      subtitle: "Gold trading",
+      updatedTo: "Mar 2026",
+    },
     {
       name: "OTC Trading",
       icon: DollarSign,
@@ -183,7 +206,7 @@ const CombinedDashboard = () => {
             <CardContent className="p-5 relative">
               <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Total Investment</p>
               <p className="text-2xl font-bold font-serif text-foreground">{formatAEDShort(totalInvestment)}</p>
-              <p className="text-xs text-muted-foreground">Across 4 companies</p>
+              <p className="text-xs text-muted-foreground">Across 5 companies</p>
             </CardContent>
           </Card>
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
@@ -213,7 +236,7 @@ const CombinedDashboard = () => {
         </div>
 
         {/* Company Cards with ROI */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           {companies.map((c) => {
             const Icon = c.icon;
             return (
