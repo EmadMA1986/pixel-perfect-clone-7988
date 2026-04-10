@@ -172,6 +172,14 @@ const CombinedDashboard = () => {
     },
   ];
 
+  // Derived analytics
+  const bestPerformer = [...companies].sort((a, b) => b.roi - a.roi)[0];
+  const worstPerformer = [...companies].sort((a, b) => a.roi - b.roi)[0];
+  const losingCompanies = companies.filter(c => c.profit < 0);
+  const profitableCompanies = companies.filter(c => c.profit >= 0);
+  const largestExposure = [...companies].sort((a, b) => b.investment - a.investment)[0];
+  const largestExposurePct = (largestExposure.investment / totalInvestment) * 100;
+
   const roiChartData = companies.map(c => ({
     name: c.name,
     roi: parseFloat(c.roi.toFixed(1)),
@@ -180,13 +188,13 @@ const CombinedDashboard = () => {
 
   const investmentPieData = companies.map(c => ({
     name: c.name,
-    value: c.investment,
+    value: toDisplay(c.investment),
     color: c.color,
   }));
 
   const profitChartData = companies.map(c => ({
     name: c.name,
-    profit: c.profit,
+    profit: toDisplay(c.profit),
     color: c.color,
   }));
 
@@ -202,50 +210,113 @@ const CombinedDashboard = () => {
               <p className="text-xs text-muted-foreground">Combined view across all companies</p>
             </div>
           </div>
-          <nav className="flex items-center gap-1">
-            <Link to="/"><Button variant="outline" size="sm" className="text-xs gap-1.5"><Gem className="h-3.5 w-3.5" />RYA Gold</Button></Link>
-            <Link to="/otc"><Button variant="outline" size="sm" className="text-xs gap-1.5"><DollarSign className="h-3.5 w-3.5" />OTC</Button></Link>
-            <Link to="/mk-autos"><Button variant="outline" size="sm" className="text-xs gap-1.5"><Car className="h-3.5 w-3.5" />Cars</Button></Link>
-            <Link to="/mk-autos-company"><Button variant="outline" size="sm" className="text-xs gap-1.5"><Building2 className="h-3.5 w-3.5" />Company</Button></Link>
-            <Link to="/mkx"><Button variant="outline" size="sm" className="text-xs gap-1.5"><Bitcoin className="h-3.5 w-3.5" />MKX</Button></Link>
-            <Link to="/garage"><Button variant="outline" size="sm" className="text-xs gap-1.5"><Wrench className="h-3.5 w-3.5" />MK Garage</Button></Link>
-          </nav>
+          <div className="flex items-center gap-2">
+            {/* Currency Toggle */}
+            <div className="flex items-center border border-border rounded-lg overflow-hidden mr-2">
+              <button
+                onClick={() => setCurrency("AED")}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors ${currency === "AED" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}
+              >AED</button>
+              <button
+                onClick={() => setCurrency("USD")}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors ${currency === "USD" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}
+              >USD</button>
+            </div>
+            <nav className="flex items-center gap-1">
+              <Link to="/"><Button variant="outline" size="sm" className="text-xs gap-1.5"><Gem className="h-3.5 w-3.5" />RYA</Button></Link>
+              <Link to="/otc"><Button variant="outline" size="sm" className="text-xs gap-1.5"><DollarSign className="h-3.5 w-3.5" />OTC</Button></Link>
+              <Link to="/mk-autos"><Button variant="outline" size="sm" className="text-xs gap-1.5"><Car className="h-3.5 w-3.5" />Cars</Button></Link>
+              <Link to="/mk-autos-company"><Button variant="outline" size="sm" className="text-xs gap-1.5"><Building2 className="h-3.5 w-3.5" />Company</Button></Link>
+              <Link to="/mkx"><Button variant="outline" size="sm" className="text-xs gap-1.5"><Bitcoin className="h-3.5 w-3.5" />MKX</Button></Link>
+              <Link to="/garage"><Button variant="outline" size="sm" className="text-xs gap-1.5"><Wrench className="h-3.5 w-3.5" />MK Garage</Button></Link>
+            </nav>
+          </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-6">
+
+        {/* Portfolio Health Alerts */}
+        {(losingCompanies.length > 0 || largestExposurePct > 40) && (
+          <div className="space-y-2">
+            {losingCompanies.map(c => (
+              <Card key={c.name} className="border-loss/30 bg-loss/5 cursor-pointer hover:border-loss/50 transition-colors" onClick={() => navigate(c.route)}>
+                <CardContent className="p-3 flex items-center gap-3">
+                  <AlertTriangle className="h-5 w-5 text-loss shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-loss">{c.name} — Loss Alert</p>
+                    <p className="text-xs text-muted-foreground">
+                      ROI: {c.roi.toFixed(1)}% · Loss: {fmt(toDisplay(c.profit))} · {((c.investment / totalInvestment) * 100).toFixed(0)}% of portfolio exposure
+                    </p>
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-loss" />
+                </CardContent>
+              </Card>
+            ))}
+            {largestExposurePct > 40 && (
+              <Card className="border-yellow-500/30 bg-yellow-500/5">
+                <CardContent className="p-3 flex items-center gap-3">
+                  <Shield className="h-5 w-5 text-yellow-500 shrink-0" />
+                  <div>
+                    <p className="text-sm font-semibold text-yellow-600 dark:text-yellow-400">Concentration Risk</p>
+                    <p className="text-xs text-muted-foreground">
+                      {largestExposure.name} represents {largestExposurePct.toFixed(0)}% of total investment. Consider diversification if above 40%.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
+
         {/* Overall Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
-            <CardContent className="p-5 relative">
-              <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Total Investment</p>
-              <p className="text-2xl font-bold font-serif text-foreground">{formatAEDShort(totalInvestment)}</p>
-              <p className="text-xs text-muted-foreground">Across 5 companies</p>
+            <CardContent className="p-4 relative">
+              <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground">Total Investment</p>
+              <p className="text-xl font-bold font-serif text-foreground">{fmt(toDisplay(totalInvestment))}</p>
+              <p className="text-[10px] text-muted-foreground">{companies.length} entities</p>
             </CardContent>
           </Card>
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
-            <CardContent className="p-5 relative">
-              <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Total Profit/Loss</p>
-              <p className={`text-2xl font-bold font-serif ${totalProfit >= 0 ? "text-success" : "text-loss"}`}>{formatAEDShort(totalProfit)}</p>
-              <p className="text-xs text-muted-foreground">Across all companies</p>
+            <CardContent className="p-4 relative">
+              <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground">Total Profit/Loss</p>
+              <p className={`text-xl font-bold font-serif ${totalProfit >= 0 ? "text-success" : "text-loss"}`}>{fmt(toDisplay(totalProfit))}</p>
+              <p className="text-[10px] text-muted-foreground">{profitableCompanies.length} profitable · {losingCompanies.length} losing</p>
             </CardContent>
           </Card>
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
-            <CardContent className="p-5 relative">
-              <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Net Position</p>
-              <p className={`text-2xl font-bold font-serif ${totalNetPosition >= 0 ? "text-success" : "text-loss"}`}>{formatAEDShort(totalNetPosition)}</p>
-              <p className="text-xs text-muted-foreground">Current portfolio value</p>
+            <CardContent className="p-4 relative">
+              <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground">Net Position</p>
+              <p className={`text-xl font-bold font-serif ${totalNetPosition >= 0 ? "text-success" : "text-loss"}`}>{fmt(toDisplay(totalNetPosition))}</p>
+              <p className="text-[10px] text-muted-foreground">Current portfolio value</p>
             </CardContent>
           </Card>
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
-            <CardContent className="p-5 relative">
-              <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Overall ROI</p>
-              <p className={`text-2xl font-bold font-serif ${overallROI >= 0 ? "text-success" : "text-loss"}`}>{overallROI.toFixed(1)}%</p>
-              <p className="text-xs text-muted-foreground">Weighted average return</p>
+            <CardContent className="p-4 relative">
+              <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground">Overall ROI</p>
+              <p className={`text-xl font-bold font-serif ${overallROI >= 0 ? "text-success" : "text-loss"}`}>{overallROI.toFixed(1)}%</p>
+              <p className="text-[10px] text-muted-foreground">Weighted average</p>
+            </CardContent>
+          </Card>
+          <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
+            <CardContent className="p-4 relative">
+              <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground flex items-center gap-1"><Trophy className="h-3 w-3 text-success" />Best Performer</p>
+              <p className="text-xl font-bold font-serif text-success">{bestPerformer.roi.toFixed(1)}%</p>
+              <p className="text-[10px] text-muted-foreground">{bestPerformer.name}</p>
+            </CardContent>
+          </Card>
+          <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
+            <CardContent className="p-4 relative">
+              <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground flex items-center gap-1"><Target className="h-3 w-3 text-loss" />Worst Performer</p>
+              <p className="text-xl font-bold font-serif text-loss">{worstPerformer.roi.toFixed(1)}%</p>
+              <p className="text-[10px] text-muted-foreground">{worstPerformer.name}</p>
             </CardContent>
           </Card>
         </div>
@@ -280,15 +351,15 @@ const CombinedDashboard = () => {
                   <div className="space-y-1.5 pt-1">
                     <div className="flex justify-between text-xs">
                       <span className="text-muted-foreground">Investment</span>
-                      <span className="font-medium text-foreground">{formatAEDShort(c.investment)}</span>
+                      <span className="font-medium text-foreground">{fmt(toDisplay(c.investment))}</span>
                     </div>
                     <div className={`flex justify-between items-center text-xs rounded-md px-2 py-1.5 -mx-2 ${c.profit >= 0 ? "bg-emerald-500/10" : "bg-red-500/10"}`}>
                       <span className={`font-semibold ${c.profit >= 0 ? "text-success" : "text-loss"}`}>Profit/Loss</span>
-                      <span className={`text-sm font-bold ${c.profit >= 0 ? "text-success" : "text-loss"}`}>{formatAEDShort(c.profit)}</span>
+                      <span className={`text-sm font-bold ${c.profit >= 0 ? "text-success" : "text-loss"}`}>{fmt(toDisplay(c.profit))}</span>
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-muted-foreground">Net Position</span>
-                      <span className={`font-medium ${c.netPosition >= 0 ? "text-success" : "text-loss"}`}>{formatAEDShort(c.netPosition)}</span>
+                      <span className={`font-medium ${c.netPosition >= 0 ? "text-success" : "text-loss"}`}>{fmt(toDisplay(c.netPosition))}</span>
                     </div>
                   </div>
 
@@ -358,7 +429,7 @@ const CombinedDashboard = () => {
                         <Cell key={i} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(v: number) => [formatAED(v), "Investment"]} contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                    <Tooltip formatter={(v: number) => [currency === "AED" ? formatAED(v) : formatUSD(v), "Investment"]} contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   </RechartsPie>
                 </ResponsiveContainer>
               </div>
@@ -377,8 +448,8 @@ const CombinedDashboard = () => {
                 <BarChart data={profitChartData} margin={{ left: 20, right: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                  <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v) => formatAEDShort(v)} />
-                  <Tooltip formatter={(v: number) => [formatAED(v), "Profit/Loss"]} contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                  <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v) => fmt(v)} />
+                  <Tooltip formatter={(v: number) => [currency === "AED" ? formatAED(v) : formatUSD(v), "Profit/Loss"]} contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <Bar dataKey="profit" radius={[4, 4, 0, 0]}>
                     {profitChartData.map((entry, i) => (
                       <Cell key={i} fill={entry.profit >= 0 ? "hsl(var(--success))" : "hsl(var(--loss))"} />
@@ -405,6 +476,7 @@ const CombinedDashboard = () => {
                   <TableHead className="text-xs text-right">Profit/Loss Share</TableHead>
                   <TableHead className="text-xs text-right">Net Position</TableHead>
                   <TableHead className="text-xs text-right">ROI</TableHead>
+                  <TableHead className="text-xs text-right">% of Portfolio</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -412,31 +484,35 @@ const CombinedDashboard = () => {
                   <TableRow key={c.name} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(c.route)}>
                     <TableCell className="font-medium text-sm">{c.name}</TableCell>
                     <TableCell className="text-right text-sm">{c.share}</TableCell>
-                    <TableCell className="text-right text-sm">{formatAED(c.investment)}</TableCell>
+                    <TableCell className="text-right text-sm">{fmtFull(toDisplay(c.investment))}</TableCell>
                     <TableCell className={`text-right text-sm font-medium ${c.profit >= 0 ? "text-success" : "text-loss"}`}>
-                      {c.profit >= 0 ? "" : "-"}{formatAED(Math.abs(c.profit))}
+                      {c.profit >= 0 ? "" : "-"}{fmtFull(toDisplay(Math.abs(c.profit)))}
                     </TableCell>
                     <TableCell className={`text-right text-sm font-medium ${c.netPosition >= 0 ? "text-success" : "text-loss"}`}>
-                      {c.netPosition >= 0 ? "" : "-"}{formatAED(Math.abs(c.netPosition))}
+                      {c.netPosition >= 0 ? "" : "-"}{fmtFull(toDisplay(Math.abs(c.netPosition)))}
                     </TableCell>
                     <TableCell className={`text-right text-sm font-bold ${c.roi >= 0 ? "text-success" : "text-loss"}`}>
                       {c.roi.toFixed(1)}%
+                    </TableCell>
+                    <TableCell className="text-right text-sm text-muted-foreground">
+                      {((c.investment / totalInvestment) * 100).toFixed(1)}%
                     </TableCell>
                   </TableRow>
                 ))}
                 <TableRow className="border-t-2 border-primary/30 bg-muted/30">
                   <TableCell className="font-bold text-sm">Total Portfolio</TableCell>
                   <TableCell className="text-right text-sm">—</TableCell>
-                  <TableCell className="text-right text-sm font-bold">{formatAED(totalInvestment)}</TableCell>
+                  <TableCell className="text-right text-sm font-bold">{fmtFull(toDisplay(totalInvestment))}</TableCell>
                   <TableCell className={`text-right text-sm font-bold ${totalProfit >= 0 ? "text-success" : "text-loss"}`}>
-                    {totalProfit >= 0 ? "" : "-"}{formatAED(Math.abs(totalProfit))}
+                    {totalProfit >= 0 ? "" : "-"}{fmtFull(toDisplay(Math.abs(totalProfit)))}
                   </TableCell>
                   <TableCell className={`text-right text-sm font-bold ${totalNetPosition >= 0 ? "text-success" : "text-loss"}`}>
-                    {totalNetPosition >= 0 ? "" : "-"}{formatAED(Math.abs(totalNetPosition))}
+                    {totalNetPosition >= 0 ? "" : "-"}{fmtFull(toDisplay(Math.abs(totalNetPosition)))}
                   </TableCell>
                   <TableCell className={`text-right text-sm font-bold ${overallROI >= 0 ? "text-success" : "text-loss"}`}>
                     {overallROI.toFixed(1)}%
                   </TableCell>
+                  <TableCell className="text-right text-sm font-bold">100%</TableCell>
                 </TableRow>
               </TableBody>
             </Table>
