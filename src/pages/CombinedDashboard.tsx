@@ -81,6 +81,19 @@ const CombinedDashboard = () => {
 
   const companies = [
     {
+      name: "RYA Gold",
+      icon: Gem,
+      route: "/",
+      share: "100%",
+      investment: ryaInvestment,
+      profit: ryaProfit,
+      netPosition: ryaNetPosition,
+      roi: ryaROI,
+      color: "hsl(43, 74%, 52%)",
+      subtitle: "Gold trading",
+      updatedTo: "Mar 2026",
+    },
+    {
       name: "OTC Trading",
       icon: DollarSign,
       route: "/otc",
