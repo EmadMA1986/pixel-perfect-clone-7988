@@ -17,10 +17,19 @@ import { goldCapital, profitLoss as ryaPL, AED_TO_USD_RATE } from "@/data/goldDa
 const formatAED = (v: number) =>
   `AED ${Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
+const formatUSD = (v: number) =>
+  `$${Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+
 const formatAEDShort = (v: number) => {
   const abs = Math.abs(v);
   const formatted = abs >= 1_000_000 ? `${(abs / 1_000_000).toFixed(2)}M` : abs >= 1_000 ? `${(abs / 1_000).toFixed(1)}K` : abs.toFixed(0);
   return `${v < 0 ? "-" : ""}AED ${formatted}`;
+};
+
+const formatUSDShort = (v: number) => {
+  const abs = Math.abs(v);
+  const formatted = abs >= 1_000_000 ? `${(abs / 1_000_000).toFixed(2)}M` : abs >= 1_000 ? `${(abs / 1_000).toFixed(1)}K` : abs.toFixed(0);
+  return `${v < 0 ? "-" : ""}$${formatted}`;
 };
 
 const CombinedDashboard = () => {
