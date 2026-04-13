@@ -847,7 +847,7 @@ const MkxDashboard = () => {
                     <TableHeader>
                       <TableRow className="border-border/50 hover:bg-transparent">
                         <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">KPI</TableHead>
-                        {kpiData.map((k) => (
+                        {filteredKPI.map((k) => (
                           <TableHead key={k.month} className="text-xs text-muted-foreground uppercase tracking-wider text-right">{k.month}</TableHead>
                         ))}
                       </TableRow>
@@ -855,19 +855,19 @@ const MkxDashboard = () => {
                     <TableBody>
                       <TableRow className="border-border/30 hover:bg-secondary/30">
                         <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Gross Margin</TableCell>
-                        {kpiData.map((k) => (
+                        {filteredKPI.map((k) => (
                           <TableCell key={k.month} className="text-sm tabular-nums text-right text-success">{k.grossMarginPct.toFixed(1)}%</TableCell>
                         ))}
                       </TableRow>
                       <TableRow className="border-border/30 hover:bg-secondary/30">
                         <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Net Margin</TableCell>
-                        {kpiData.map((k) => (
+                        {filteredKPI.map((k) => (
                           <TableCell key={k.month} className="text-sm tabular-nums text-right text-loss">{k.netMarginPct.toFixed(1)}%</TableCell>
                         ))}
                       </TableRow>
                       <TableRow className="border-border/30 hover:bg-secondary/30">
                         <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Asset Coverage Ratio</TableCell>
-                        {kpiData.map((k) => (
+                        {filteredKPI.map((k) => (
                           <TableCell key={k.month} className="text-sm tabular-nums text-right">
                             <Badge variant={k.assetCoverageRatio >= 1.5 ? "default" : "destructive"} className="text-xs">
                               {k.assetCoverageRatio.toFixed(2)}x
@@ -877,25 +877,25 @@ const MkxDashboard = () => {
                       </TableRow>
                       <TableRow className="border-border/30 hover:bg-secondary/30">
                         <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Liquidity Buffer</TableCell>
-                        {kpiData.map((k) => (
+                        {filteredKPI.map((k) => (
                           <TableCell key={k.month} className="text-sm tabular-nums text-right text-foreground">{formatAED(k.liquidityBuffer)}</TableCell>
                         ))}
                       </TableRow>
                       <TableRow className="border-border/30 hover:bg-secondary/30">
                         <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Trading Vol / Deposits</TableCell>
-                        {kpiData.map((k) => (
+                        {filteredKPI.map((k) => (
                           <TableCell key={k.month} className="text-sm tabular-nums text-right text-muted-foreground">{k.tradingVolumePerTotalDeposits.toFixed(3)}</TableCell>
                         ))}
                       </TableRow>
                       <TableRow className="border-border/30 hover:bg-secondary/30">
                         <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Revenue / Trading Vol</TableCell>
-                        {kpiData.map((k) => (
+                        {filteredKPI.map((k) => (
                           <TableCell key={k.month} className="text-sm tabular-nums text-right text-muted-foreground">{(k.revenuePerTradingVolume * 100).toFixed(2)}%</TableCell>
                         ))}
                       </TableRow>
                       <TableRow className="border-border/30 hover:bg-secondary/30">
                         <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Asset Valuation Diff</TableCell>
-                        {kpiData.map((k) => (
+                        {filteredKPI.map((k) => (
                           <TableCell key={k.month} className={`text-sm tabular-nums text-right ${k.assetValuationDiff >= 0 ? "text-success" : "text-loss"}`}>
                             {formatAED(k.assetValuationDiff)}
                           </TableCell>
@@ -903,13 +903,13 @@ const MkxDashboard = () => {
                       </TableRow>
                       <TableRow className="border-border/30 hover:bg-secondary/30">
                         <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Break-even Trading Vol</TableCell>
-                        {kpiData.map((k) => (
+                        {filteredKPI.map((k) => (
                           <TableCell key={k.month} className="text-sm tabular-nums text-right text-muted-foreground">{formatAED(k.breakEvenTradingVolume)}</TableCell>
                         ))}
                       </TableRow>
                       <TableRow className="border-border/30 hover:bg-secondary/30">
                         <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Net Profit / Trading Vol</TableCell>
-                        {kpiData.map((k) => (
+                        {filteredKPI.map((k) => (
                           <TableCell key={k.month} className={`text-sm tabular-nums text-right ${k.netProfitPerTradingVolume >= 0 ? "text-success" : "text-loss"}`}>
                             {(k.netProfitPerTradingVolume * 100).toFixed(2)}%
                           </TableCell>
