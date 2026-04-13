@@ -663,7 +663,8 @@ const MkxDashboard = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {plMonths.map((month, i) => {
+                      {plMonths.filter((m) => selectedMonth === "all" || monthlyData.some(md => md.month === selectedMonth && m.includes(md.month.split("-")[0]) && m.includes(md.month.split("-")[1]))).map((month, _, filteredArr) => {
+                        const i = plMonths.indexOf(month);
                         const income = plData.find(r => r.label === "Total Income");
                         const cogs = plData.find(r => r.label === "Total Cost of Sales");
                         const gp = plData.find(r => r.label === "Gross Profit");
