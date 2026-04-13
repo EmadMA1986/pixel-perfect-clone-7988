@@ -206,7 +206,8 @@ const MkxDashboard = () => {
         </div>
         )}
 
-        {/* MKX Crypto Assets */}
+        {/* MKX Crypto Assets - only in All Time */}
+        {!isFiltered && (
         <Card className="border-border/50 bg-gradient-to-r from-emerald-500/10 to-violet-500/5 backdrop-blur-sm">
           <CardContent className="p-5">
             <div className="flex flex-wrap items-center justify-between gap-4">
