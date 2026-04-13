@@ -166,6 +166,64 @@ const MkAutosDashboard = () => {
           </div>
         </div>
 
+        {/* Vehicle Performance Insights */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Income vs Depreciation per Vehicle */}
+          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Income vs Depreciation by Vehicle</CardTitle>
+              <p className="text-[10px] text-muted-foreground">Monthly avg income vs monthly depreciation cost</p>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={vehicles.filter(v => v.initialInvestment > 0).map(v => ({
+                  name: v.name.split(" -")[0].split(" 20")[0],
+                  income: Math.round(v.avgMonthlyProfit),
+                  depreciation: v.monthsOfProfit > 0 ? Math.round(v.totalDepreciation / v.monthsOfProfit) : 0,
+                }))} layout="vertical" margin={{ left: 70, right: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis type="number" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
+                  <YAxis dataKey="name" type="category" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} width={65} />
+                  <Tooltip formatter={(v: number) => [formatAED(v), ""]} />
+                  <Bar dataKey="income" name="Monthly Income" fill="hsl(142, 71%, 45%)" radius={[0, 2, 2, 0]} />
+                  <Bar dataKey="depreciation" name="Monthly Depr." fill="hsl(0, 60%, 50%)" radius={[0, 2, 2, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Vehicle Scorecard */}
+          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Vehicle Performance Scorecard</CardTitle>
+              <p className="text-[10px] text-muted-foreground">Ranked by Real ROI (income after depreciation)</p>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {vehicles.filter(v => v.initialInvestment > 0).sort((a, b) => b.realROI - a.realROI).map(v => (
+                <div key={v.name} className="flex items-center justify-between text-xs p-2 rounded-lg bg-muted/20 border border-border/20">
+                  <div className="flex items-center gap-2">
+                    <div className={`h-2 w-2 rounded-full ${v.realROI >= 0 ? "bg-success" : "bg-loss"}`} />
+                    <span className="font-medium text-foreground">{v.name.split(" -")[0].split(" 20")[0]}</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <p className="text-[10px] text-muted-foreground">Real ROI</p>
+                      <p className={`font-bold ${v.realROI >= 0 ? "text-success" : "text-loss"}`}>{v.realROI}%</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] text-muted-foreground">Avg/Mo</p>
+                      <p className="font-medium text-foreground">{formatAED(v.avgMonthlyProfit)}</p>
+                    </div>
+                    <Badge variant={v.realROI >= 0 ? "default" : "destructive"} className="text-[10px]">
+                      {v.realROI >= 5 ? "⭐ Keep" : v.realROI >= 0 ? "Hold" : v.realROI >= -10 ? "Watch" : "Consider Sell"}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Monthly Income Trend */}

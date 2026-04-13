@@ -393,7 +393,95 @@ const GarageDashboard = () => {
           </Card>
         </div>
 
-        {/* Financial Ratios - only in All Time */}
+        {/* Operational KPIs */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Break-Even Analysis */}
+          {(() => {
+            const avgRent = monthlyPL.reduce((s, m) => s + m.rent, 0) / monthlyPL.length;
+            const avgPayroll = monthlyPL.reduce((s, m) => s + m.payroll, 0) / monthlyPL.length;
+            const avgFixedCosts = avgRent + avgPayroll;
+            const avgGrossMargin = monthlyPL.reduce((s, m) => s + (m.totalRevenue > 0 ? m.grossProfit / m.totalRevenue : 0), 0) / monthlyPL.length;
+            const breakEvenRevenue = avgGrossMargin > 0 ? avgFixedCosts / avgGrossMargin : 0;
+            const avgRevenue = monthlyPL.reduce((s, m) => s + m.totalRevenue, 0) / monthlyPL.length;
+            const gapPct = ((avgRevenue - breakEvenRevenue) / breakEvenRevenue) * 100;
+            return (
+              <Card className={`border-border/50 backdrop-blur-sm ${gapPct < 0 ? "bg-loss/5 border-loss/20" : "bg-success/5 border-success/20"}`}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Break-Even Analysis</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Monthly Break-Even Revenue</p>
+                    <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(breakEvenRevenue)}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="p-2 rounded bg-muted/30">
+                      <p className="text-muted-foreground">Avg Fixed Costs</p>
+                      <p className="font-bold text-foreground">{formatAEDFull(avgFixedCosts)}</p>
+                      <p className="text-[10px] text-muted-foreground">Payroll + Rent</p>
+                    </div>
+                    <div className="p-2 rounded bg-muted/30">
+                      <p className="text-muted-foreground">Avg Revenue</p>
+                      <p className="font-bold text-foreground">{formatAEDFull(avgRevenue)}</p>
+                      <p className={`text-[10px] font-medium ${gapPct >= 0 ? "text-success" : "text-loss"}`}>
+                        {gapPct >= 0 ? `${gapPct.toFixed(0)}% above break-even` : `${Math.abs(gapPct).toFixed(0)}% below break-even`}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })()}
+
+          {/* Payroll-to-Revenue Ratio */}
+          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Payroll-to-Revenue Ratio</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={monthlyPL.map(m => ({
+                  name: m.month,
+                  ratio: m.totalRevenue > 0 ? parseFloat(((m.payroll / m.totalRevenue) * 100).toFixed(1)) : 0,
+                }))} margin={{ top: 5, right: 10, bottom: 30, left: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} angle={-45} textAnchor="end" />
+                  <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v) => `${v}%`} />
+                  <Tooltip formatter={(v: number) => [`${v}%`, "Payroll/Revenue"]} />
+                  <Line type="monotone" dataKey="ratio" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
+                </LineChart>
+              </ResponsiveContainer>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Avg: {((monthlyPL.reduce((s, m) => s + m.payroll, 0) / monthlyPL.reduce((s, m) => s + m.totalRevenue, 0)) * 100).toFixed(1)}% — Target: below 40%
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Gross Margin Trend */}
+          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Gross Margin Trend</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={monthlyPL.map(m => ({
+                  name: m.month,
+                  margin: m.totalRevenue > 0 ? parseFloat(((m.grossProfit / m.totalRevenue) * 100).toFixed(1)) : 0,
+                }))} margin={{ top: 5, right: 10, bottom: 30, left: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} angle={-45} textAnchor="end" />
+                  <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v) => `${v}%`} />
+                  <Tooltip formatter={(v: number) => [`${v}%`, "Gross Margin"]} />
+                  <Line type="monotone" dataKey="margin" stroke="hsl(142, 71%, 45%)" strokeWidth={2} dot={{ r: 3 }} />
+                </LineChart>
+              </ResponsiveContainer>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Avg: {((monthlyPL.reduce((s, m) => s + m.grossProfit, 0) / monthlyPL.reduce((s, m) => s + m.totalRevenue, 0)) * 100).toFixed(1)}% gross margin
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
         {!isFiltered && (() => {
           const allTotalRevenue = monthlyPL.reduce((s, m) => s + m.totalRevenue, 0);
           const allTotalGrossProfit = monthlyPL.reduce((s, m) => s + m.grossProfit, 0);
