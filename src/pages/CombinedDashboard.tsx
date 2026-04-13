@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Briefcase, TrendingUp, TrendingDown, DollarSign, PieChart, BarChart3, Building2, Car, Bitcoin, Wrench, ArrowRight, Gem, AlertTriangle, Shield, Trophy, Target } from "lucide-react";
+import { Briefcase, TrendingUp, TrendingDown, DollarSign, PieChart, BarChart3, Building2, Car, Bitcoin, Wrench, ArrowRight, Gem, AlertTriangle, Shield, Trophy, Target, ArrowUpRight, ArrowDownRight, Minus, FileText } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart as RechartsPie, Pie, Legend } from "recharts";
@@ -84,12 +84,12 @@ const CombinedDashboard = () => {
   const fmtFull = (v: number) => currency === "AED" ? formatAED(v) : formatUSD(v);
   const navigate = useNavigate();
 
-  // === Compute per-company profit for selected month ===
-  const companyData = useMemo(() => {
-    const isAll = selectedMonth === "all";
-    const norm = isAll ? "" : selectedMonth;
+  // === Helper to compute per-company data for any month ===
+  const computeForMonth = (month: string) => {
+    const isAll = month === "all";
+    const norm = isAll ? "" : month;
 
-    // RYA Gold - aggregate by month from sales/expenses
+    // RYA Gold
     let ryaProfitUSD: number;
     let ryaInvestmentUSD = Math.abs(goldCapital.initialCapital);
     let ryaNetPositionUSD: number;
@@ -97,30 +97,23 @@ const CombinedDashboard = () => {
       ryaProfitUSD = ryaPL.netProfit;
       ryaNetPositionUSD = goldCapital.totalCurrentPosition;
     } else {
-      // Parse month for comparison
       const salesInMonth = goldSales.filter(s => {
         const d = new Date(s.date);
         if (isNaN(d.getTime())) return false;
-        const label = `${d.toLocaleString("en-US", { month: "short" })}-${String(d.getFullYear()).slice(2)}`;
-        return label === norm;
+        return `${d.toLocaleString("en-US", { month: "short" })}-${String(d.getFullYear()).slice(2)}` === norm;
       });
       const expInMonth = goldExpenses.filter(e => {
         const d = new Date(e.date);
         if (isNaN(d.getTime())) return false;
-        const label = `${d.toLocaleString("en-US", { month: "short" })}-${String(d.getFullYear()).slice(2)}`;
-        return label === norm;
+        return `${d.toLocaleString("en-US", { month: "short" })}-${String(d.getFullYear()).slice(2)}` === norm;
       });
       const discInMonth = goldDiscounts.filter(e => {
         const d = new Date(e.date);
         if (isNaN(d.getTime())) return false;
-        const label = `${d.toLocaleString("en-US", { month: "short" })}-${String(d.getFullYear()).slice(2)}`;
-        return label === norm;
+        return `${d.toLocaleString("en-US", { month: "short" })}-${String(d.getFullYear()).slice(2)}` === norm;
       });
-      const salesProfit = salesInMonth.reduce((s, t) => s + t.profitUSD, 0);
-      const expTotal = expInMonth.reduce((s, t) => s + t.amount, 0);
-      const discTotal = discInMonth.reduce((s, t) => s + t.amount, 0);
-      ryaProfitUSD = salesProfit - expTotal - discTotal;
-      ryaNetPositionUSD = ryaInvestmentUSD + ryaProfitUSD; // simplified for monthly
+      ryaProfitUSD = salesInMonth.reduce((s, t) => s + t.profitUSD, 0) - expInMonth.reduce((s, t) => s + t.amount, 0) - discInMonth.reduce((s, t) => s + t.amount, 0);
+      ryaNetPositionUSD = ryaInvestmentUSD + ryaProfitUSD;
     }
     const ryaInvestment = ryaInvestmentUSD * AED_TO_USD_RATE;
     const ryaProfit = ryaProfitUSD * AED_TO_USD_RATE;
@@ -139,20 +132,20 @@ const CombinedDashboard = () => {
     const otcNetPosition = isAll ? partnerCapital.ahmad.netPosition : otcInvestment + otcProfitShare;
     const otcROI = (otcProfitShare / otcInvestment) * 100;
 
-    // MK Autos Company (45% share) - no monthly P&L available, show cumulative
+    // MK Autos Company (45%)
     const mkAutosShareInvestment = mkAutosAhmad.shareCapital;
     const mkAutosCompanyPL = mkAutosBS.profitLoss.total;
     const mkAutosShareProfit = mkAutosCompanyPL * (mkAutosAhmad.sharePercentage / 100);
     const mkAutosSharePosition = mkAutosShareInvestment + mkAutosShareProfit;
     const mkAutosShareROI = (mkAutosShareProfit / mkAutosShareInvestment) * 100;
 
-    // MK Autos Cars (100%) - monthly income available
+    // MK Autos Cars (100%)
     let mkAutosCarsProfit: number;
     if (isAll) {
       mkAutosCarsProfit = mkAutosSummary.netProfit;
     } else {
       const row = mkAutosMonthlyIncome.find(r => normalizeMonth(r.month) === norm);
-      mkAutosCarsProfit = row ? row.total : 0; // monthly income (no expense breakdown)
+      mkAutosCarsProfit = row ? row.total : 0;
     }
     const mkAutosCarsInvestment = mkAutosSummary.totalNBV;
     const mkAutosCarsPosition = isAll ? mkAutosAhmad.positionAgainstCars : mkAutosCarsInvestment + mkAutosCarsProfit;
@@ -192,42 +185,74 @@ const CombinedDashboard = () => {
       mkx: { investment: mkxShareCapital, profit: mkxTotalPL, netPosition: mkxNetPosition, roi: mkxROI },
       garage: { investment: garageInvestment, profit: garageProfitShare, netPosition: garageNetPosition, roi: garageROI },
     };
+  };
+
+  const companyData = useMemo(() => computeForMonth(selectedMonth), [selectedMonth]);
+
+  // === Compute previous month data for MoM comparison ===
+  const prevMonthData = useMemo(() => {
+    if (selectedMonth === "all") return null;
+    const idx = ALL_MONTHS.indexOf(selectedMonth);
+    if (idx <= 0) return null;
+    return computeForMonth(ALL_MONTHS[idx - 1]);
   }, [selectedMonth]);
 
   const d = companyData;
+  const pd = prevMonthData; // previous month data or null
 
+  // MoM trend helper
+  const getTrend = (current: number, previous: number | undefined) => {
+    if (previous === undefined || previous === null) return null;
+    const delta = current - previous;
+    const pct = previous !== 0 ? (delta / Math.abs(previous)) * 100 : 0;
+    return { delta, pct, direction: delta > 0 ? "up" as const : delta < 0 ? "down" as const : "neutral" as const };
+  };
+
+  const TrendBadge = ({ current, previous, isCurrency = true }: { current: number; previous?: number; isCurrency?: boolean }) => {
+    if (previous === undefined || selectedMonth === "all") return null;
+    const trend = getTrend(current, previous);
+    if (!trend) return null;
+    const color = trend.direction === "up" ? "text-success" : trend.direction === "down" ? "text-loss" : "text-muted-foreground";
+    const Icon = trend.direction === "up" ? ArrowUpRight : trend.direction === "down" ? ArrowDownRight : Minus;
+    return (
+      <span className={`inline-flex items-center gap-0.5 text-[10px] font-medium ${color}`}>
+        <Icon className="h-3 w-3" />
+        {isCurrency ? fmt(toDisplay(Math.abs(trend.delta))) : `${Math.abs(trend.pct).toFixed(1)}%`}
+      </span>
+    );
+  };
   const companies = [
     {
-      name: "RYA Gold", icon: Gem, route: "/", share: "100%",
+      name: "RYA Gold", icon: Gem, route: "/", share: "100%", key: "rya" as const,
       investment: d.rya.investment, profit: d.rya.profit, netPosition: d.rya.netPosition, roi: d.rya.roi,
       color: "hsl(43, 74%, 52%)", subtitle: "Gold trading", updatedTo: "Mar 2026",
     },
     {
-      name: "OTC Trading", icon: DollarSign, route: "/otc", share: "50%",
+      name: "OTC Trading", icon: DollarSign, route: "/otc", share: "50%", key: "otc" as const,
       investment: d.otc.investment, profit: d.otc.profit, netPosition: d.otc.netPosition, roi: d.otc.roi,
       color: "hsl(var(--chart-1))", updatedTo: "Mar 2026",
     },
     {
-      name: "MK Autos (Company)", icon: Building2, route: "/mk-autos-company",
+      name: "MK Autos (Company)", icon: Building2, route: "/mk-autos-company", key: "mkAutosCompany" as const,
       share: `${mkAutosAhmad.sharePercentage}%`,
       investment: d.mkAutosCompany.investment, profit: d.mkAutosCompany.profit,
       netPosition: d.mkAutosCompany.netPosition, roi: d.mkAutosCompany.roi,
       color: "hsl(var(--chart-2))", subtitle: "Share Capital & P&L", updatedTo: "Feb 2026",
     },
     {
-      name: "MK Autos (Cars)", icon: Car, route: "/mk-autos", share: "100%",
+      name: "MK Autos (Cars)", icon: Car, route: "/mk-autos", share: "100%", key: "mkAutosCars" as const,
       investment: d.mkAutosCars.investment, profit: d.mkAutosCars.profit,
       netPosition: d.mkAutosCars.netPosition, roi: d.mkAutosCars.roi,
       color: "hsl(var(--chart-5))", subtitle: "Fleet rental income", updatedTo: "Mar 2026",
     },
     {
-      name: "MKX Crypto", icon: Bitcoin, route: "/mkx", share: "50%",
+      name: "MKX Crypto", icon: Bitcoin, route: "/mkx", share: "50%", key: "mkx" as const,
       investment: d.mkx.investment, profit: d.mkx.profit,
       netPosition: d.mkx.netPosition, roi: d.mkx.roi,
       color: "hsl(var(--chart-3))", updatedTo: "Mar 2026",
     },
     {
-      name: "MK Garage", icon: Wrench, route: "/garage", share: "40%",
+      name: "MK Garage", icon: Wrench, route: "/garage", share: "40%", key: "garage" as const,
       investment: d.garage.investment, profit: d.garage.profit,
       netPosition: d.garage.netPosition, roi: d.garage.roi,
       color: "hsl(var(--chart-4))", updatedTo: "Feb 2026",
@@ -239,6 +264,12 @@ const CombinedDashboard = () => {
   const totalNetPosition = companies.reduce((s, c) => s + c.netPosition, 0);
   const overallROI = (totalProfit / totalInvestment) * 100;
 
+  // Previous month totals for MoM
+  const prevTotalProfit = pd ? Object.values(pd).reduce((s, v) => s + v.profit, 0) : null;
+  const prevTotalNetPosition = pd ? Object.values(pd).reduce((s, v) => s + v.netPosition, 0) : null;
+  const prevTotalInvestment = pd ? Object.values(pd).reduce((s, v) => s + v.investment, 0) : null;
+  const prevOverallROI = pd && prevTotalInvestment ? (prevTotalProfit! / prevTotalInvestment) * 100 : null;
+
   // Derived analytics
   const bestPerformer = [...companies].sort((a, b) => b.roi - a.roi)[0];
   const worstPerformer = [...companies].sort((a, b) => a.roi - b.roi)[0];
@@ -246,6 +277,27 @@ const CombinedDashboard = () => {
   const profitableCompanies = companies.filter(c => c.profit >= 0);
   const largestExposure = [...companies].sort((a, b) => b.investment - a.investment)[0];
   const largestExposurePct = (largestExposure.investment / totalInvestment) * 100;
+
+  // Executive Summary
+  const executiveSummary = useMemo(() => {
+    const period = selectedMonth === "all" ? "across all time" : `in ${selectedMonth}`;
+    const profitLine = totalProfit >= 0
+      ? `Portfolio generated ${fmt(toDisplay(totalProfit))} net profit ${period}`
+      : `Portfolio recorded a net loss of ${fmt(toDisplay(Math.abs(totalProfit)))} ${period}`;
+    
+    const drivers = [...companies].sort((a, b) => Math.abs(b.profit) - Math.abs(a.profit)).slice(0, 2);
+    const driverLine = drivers.map(d => `${d.name} (${d.profit >= 0 ? "+" : ""}${fmt(toDisplay(d.profit))})`).join(" and ");
+    
+    const momLine = prevTotalProfit !== null
+      ? totalProfit > prevTotalProfit!
+        ? ` Performance improved vs previous month by ${fmt(toDisplay(Math.abs(totalProfit - prevTotalProfit!)))}.`
+        : totalProfit < prevTotalProfit!
+        ? ` Performance declined vs previous month by ${fmt(toDisplay(Math.abs(totalProfit - prevTotalProfit!)))}.`
+        : ""
+      : "";
+
+    return `${profitLine}, driven by ${driverLine}.${momLine}`;
+  }, [companies, totalProfit, selectedMonth, prevTotalProfit, currency]);
 
   const roiChartData = companies.map(c => ({
     name: c.name,
@@ -340,6 +392,17 @@ const CombinedDashboard = () => {
           </div>
         )}
 
+        {/* Executive Summary */}
+        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-transparent backdrop-blur-sm">
+          <CardContent className="p-4 flex items-start gap-3">
+            <FileText className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-1">Executive Summary</p>
+              <p className="text-sm text-foreground leading-relaxed">{executiveSummary}</p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Overall Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
@@ -357,7 +420,10 @@ const CombinedDashboard = () => {
                 {selectedMonth !== "all" ? "Monthly P/L" : "Total Profit/Loss"}
               </p>
               <p className={`text-xl font-bold font-serif ${totalProfit >= 0 ? "text-success" : "text-loss"}`}>{fmt(toDisplay(totalProfit))}</p>
-              <p className="text-[10px] text-muted-foreground">{profitableCompanies.length} profitable · {losingCompanies.length} losing</p>
+              <div className="flex items-center gap-1">
+                <p className="text-[10px] text-muted-foreground">{profitableCompanies.length} profitable · {losingCompanies.length} losing</p>
+                <TrendBadge current={totalProfit} previous={prevTotalProfit ?? undefined} />
+              </div>
             </CardContent>
           </Card>
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
@@ -365,7 +431,10 @@ const CombinedDashboard = () => {
             <CardContent className="p-4 relative">
               <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground">Net Position</p>
               <p className={`text-xl font-bold font-serif ${totalNetPosition >= 0 ? "text-success" : "text-loss"}`}>{fmt(toDisplay(totalNetPosition))}</p>
-              <p className="text-[10px] text-muted-foreground">Current portfolio value</p>
+              <div className="flex items-center gap-1">
+                <p className="text-[10px] text-muted-foreground">Current portfolio value</p>
+                <TrendBadge current={totalNetPosition} previous={prevTotalNetPosition ?? undefined} />
+              </div>
             </CardContent>
           </Card>
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
@@ -375,7 +444,10 @@ const CombinedDashboard = () => {
                 {selectedMonth !== "all" ? "Monthly ROI" : "Overall ROI"}
               </p>
               <p className={`text-xl font-bold font-serif ${overallROI >= 0 ? "text-success" : "text-loss"}`}>{overallROI.toFixed(1)}%</p>
-              <p className="text-[10px] text-muted-foreground">Weighted average</p>
+              <div className="flex items-center gap-1">
+                <p className="text-[10px] text-muted-foreground">Weighted average</p>
+                {prevOverallROI !== null && <TrendBadge current={overallROI} previous={prevOverallROI} isCurrency={false} />}
+              </div>
             </CardContent>
           </Card>
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
@@ -400,6 +472,7 @@ const CombinedDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           {companies.map((c) => {
             const Icon = c.icon;
+            const prevCompany = pd ? pd[c.key] : null;
             return (
               <Card
                 key={c.name}
@@ -432,7 +505,10 @@ const CombinedDashboard = () => {
                       <span className={`font-semibold ${c.profit >= 0 ? "text-success" : "text-loss"}`}>
                         {selectedMonth !== "all" ? "Monthly P/L" : "Profit/Loss"}
                       </span>
-                      <span className={`text-sm font-bold ${c.profit >= 0 ? "text-success" : "text-loss"}`}>{fmt(toDisplay(c.profit))}</span>
+                      <div className="flex items-center gap-1">
+                        <span className={`text-sm font-bold ${c.profit >= 0 ? "text-success" : "text-loss"}`}>{fmt(toDisplay(c.profit))}</span>
+                        <TrendBadge current={c.profit} previous={prevCompany?.profit} />
+                      </div>
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-muted-foreground">Net Position</span>
