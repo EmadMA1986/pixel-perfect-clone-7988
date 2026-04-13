@@ -326,6 +326,63 @@ const MkxDashboard = () => {
         </Card>
         )}
 
+        {/* Burn Rate & Runway */}
+        {!isFiltered && (() => {
+          const totalShareCapital = 5788933.98 + 5573974.65; // Ahmad + Maria
+          const totalRetainedLoss = 8126209.49;
+          const remainingEquity = totalShareCapital - totalRetainedLoss;
+          // Average monthly net loss over last 6 months
+          const recentMonths = monthlyData.slice(-6);
+          const avgMonthlyLoss = Math.abs(recentMonths.reduce((s, m) => s + m.netProfit, 0) / recentMonths.length);
+          const runwayMonths = remainingEquity > 0 ? Math.floor(remainingEquity / avgMonthlyLoss) : 0;
+          const lastMonthLoss = Math.abs(monthlyData[monthlyData.length - 1].netProfit);
+          const prevMonthLoss = Math.abs(monthlyData[monthlyData.length - 2].netProfit);
+          const burnImproving = lastMonthLoss < prevMonthLoss;
+
+          return (
+            <Card className={`border-border/50 backdrop-blur-sm ${runwayMonths <= 6 ? "bg-gradient-to-r from-loss/10 to-loss/5 border-loss/30" : "bg-gradient-to-r from-amber-500/10 to-amber-500/5 border-amber-500/30"}`}>
+              <CardContent className="p-5">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${runwayMonths <= 6 ? "bg-loss/20" : "bg-amber-500/20"}`}>
+                    <AlertTriangle className={`h-5 w-5 ${runwayMonths <= 6 ? "text-loss" : "text-amber-500"}`} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Burn Rate & Capital Runway</p>
+                    <p className="text-sm text-muted-foreground">At current loss rate, how long can MKX sustain operations</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Remaining Equity</p>
+                    <p className={`text-xl font-bold font-serif ${remainingEquity > 0 ? "text-foreground" : "text-loss"}`}>{formatAEDFull(remainingEquity)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Avg Monthly Burn (6mo)</p>
+                    <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(-avgMonthlyLoss)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Last Month Burn</p>
+                    <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(-lastMonthLoss)}</p>
+                    <p className={`text-[10px] font-medium ${burnImproving ? "text-success" : "text-loss"}`}>
+                      {burnImproving ? "↓ Improving" : "↑ Worsening"} vs prev month
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Capital Runway</p>
+                    <p className={`text-2xl font-bold font-serif ${runwayMonths <= 6 ? "text-loss" : runwayMonths <= 12 ? "text-amber-500" : "text-success"}`}>
+                      {runwayMonths} months
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Break-Even Revenue Needed</p>
+                    <p className="text-xl font-bold font-serif text-foreground">{formatAEDFull(avgMonthlyLoss)}</p>
+                    <p className="text-[10px] text-muted-foreground">per month to stop losses</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
         {/* Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
