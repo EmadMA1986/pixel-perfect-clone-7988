@@ -181,6 +181,7 @@ const MkAutosCarsDashboard = () => {
           <TabsList className="bg-secondary/50">
             {!isFiltered && <TabsTrigger value="fleet">Vehicle Fleet</TabsTrigger>}
             <TabsTrigger value="monthly">Monthly Income</TabsTrigger>
+            {!isFiltered && <TabsTrigger value="scorecard">Performance Scorecard</TabsTrigger>}
           </TabsList>
 
           {!isFiltered && (
@@ -301,6 +302,62 @@ const MkAutosCarsDashboard = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {!isFiltered && (
+            <TabsContent value="scorecard">
+              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-serif text-foreground">Vehicle Performance Scorecard</CardTitle>
+                  <p className="text-xs text-muted-foreground">Ranked by Real ROI — recommendations based on profitability after depreciation</p>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-border/50 hover:bg-transparent">
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">Vehicle</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Real ROI</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Final ROI</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Avg/Month</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Monthly Depr.</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Net Margin</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-center">Recommendation</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {vehicles
+                          .filter((v) => v.initialInvestment > 0)
+                          .sort((a, b) => b.realROI - a.realROI)
+                          .map((v) => {
+                            const monthlyDepr = v.monthsOfProfit > 0 ? v.totalDepreciation / v.monthsOfProfit : 0;
+                            const netMargin = v.totalProfit > 0 ? ((v.totalProfit - v.maintenanceExpenses - v.totalDepreciation) / v.totalProfit) * 100 : 0;
+                            const recommendation = v.realROI >= 5 ? "Keep" : v.realROI >= 0 ? "Hold" : v.realROI >= -10 ? "Watch" : "Sell";
+                            const badgeVariant = recommendation === "Keep" ? "default" : recommendation === "Hold" ? "secondary" : recommendation === "Watch" ? "outline" : "destructive";
+                            const icon = recommendation === "Keep" ? "⭐" : recommendation === "Hold" ? "✋" : recommendation === "Watch" ? "👁" : "🔻";
+
+                            return (
+                              <TableRow key={v.name} className="border-border/30 hover:bg-secondary/30">
+                                <TableCell className="text-sm font-medium text-foreground">{v.name}</TableCell>
+                                <TableCell className={`text-sm tabular-nums text-right font-bold ${v.realROI >= 0 ? "text-success" : "text-destructive"}`}>{v.realROI}%</TableCell>
+                                <TableCell className={`text-sm tabular-nums text-right ${v.finalROI >= 0 ? "text-success" : "text-destructive"}`}>{v.finalROI}%</TableCell>
+                                <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(v.avgMonthlyProfit)}</TableCell>
+                                <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAED(monthlyDepr)}</TableCell>
+                                <TableCell className={`text-sm tabular-nums text-right ${netMargin >= 0 ? "text-success" : "text-destructive"}`}>{netMargin.toFixed(1)}%</TableCell>
+                                <TableCell className="text-center">
+                                  <Badge variant={badgeVariant as any} className="text-xs">
+                                    {icon} {recommendation}
+                                  </Badge>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
         </Tabs>
       </main>
     </div>
