@@ -256,8 +256,10 @@ const MkxDashboard = () => {
             </div>
           </CardContent>
         </Card>
+        )}
 
         {/* Client Liabilities vs Assets */}
+        {!isFiltered && (
         <Card className="border-border/50 bg-gradient-to-r from-amber-500/10 to-amber-700/5 backdrop-blur-sm">
           <CardContent className="p-5">
             <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 items-end">
