@@ -505,7 +505,10 @@ const CombinedDashboard = () => {
                       <span className={`font-semibold ${c.profit >= 0 ? "text-success" : "text-loss"}`}>
                         {selectedMonth !== "all" ? "Monthly P/L" : "Profit/Loss"}
                       </span>
-                      <span className={`text-sm font-bold ${c.profit >= 0 ? "text-success" : "text-loss"}`}>{fmt(toDisplay(c.profit))}</span>
+                      <div className="flex items-center gap-1">
+                        <span className={`text-sm font-bold ${c.profit >= 0 ? "text-success" : "text-loss"}`}>{fmt(toDisplay(c.profit))}</span>
+                        <TrendBadge current={c.profit} previous={prevCompany?.profit} />
+                      </div>
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-muted-foreground">Net Position</span>
