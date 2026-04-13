@@ -198,7 +198,29 @@ const CombinedDashboard = () => {
   }, [selectedMonth]);
 
   const d = companyData;
+  const pd = prevMonthData; // previous month data or null
 
+  // MoM trend helper
+  const getTrend = (current: number, previous: number | undefined) => {
+    if (previous === undefined || previous === null) return null;
+    const delta = current - previous;
+    const pct = previous !== 0 ? (delta / Math.abs(previous)) * 100 : 0;
+    return { delta, pct, direction: delta > 0 ? "up" as const : delta < 0 ? "down" as const : "neutral" as const };
+  };
+
+  const TrendBadge = ({ current, previous, isCurrency = true }: { current: number; previous?: number; isCurrency?: boolean }) => {
+    if (previous === undefined || selectedMonth === "all") return null;
+    const trend = getTrend(current, previous);
+    if (!trend) return null;
+    const color = trend.direction === "up" ? "text-success" : trend.direction === "down" ? "text-loss" : "text-muted-foreground";
+    const Icon = trend.direction === "up" ? ArrowUpRight : trend.direction === "down" ? ArrowDownRight : Minus;
+    return (
+      <span className={`inline-flex items-center gap-0.5 text-[10px] font-medium ${color}`}>
+        <Icon className="h-3 w-3" />
+        {isCurrency ? fmt(toDisplay(Math.abs(trend.delta))) : `${Math.abs(trend.pct).toFixed(1)}%`}
+      </span>
+    );
+  };
   const companies = [
     {
       name: "RYA Gold", icon: Gem, route: "/", share: "100%",
