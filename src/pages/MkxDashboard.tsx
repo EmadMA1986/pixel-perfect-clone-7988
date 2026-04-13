@@ -11,6 +11,8 @@ import {
   Activity,
   FileText,
   Building2,
+  AlertTriangle,
+  CheckCircle2,
 } from "lucide-react";
 import SummaryCard from "@/components/SummaryCard";
 import MonthFilter from "@/components/MonthFilter";
@@ -48,6 +50,7 @@ import {
   plData,
   plMonths,
   balanceSheet,
+  varaStandards,
 } from "@/data/mkxData";
 
 const MkxDashboard = () => {
@@ -69,47 +72,73 @@ const MkxDashboard = () => {
   const hasMonthlyData = filteredMonthly.length > 0;
 
   const revenueChartData = useMemo(
-    () =>
-      filteredMonthly.map((m) => ({
-        name: m.month,
-        revenue: Math.round(m.revenue),
-        grossProfit: Math.round(m.grossProfit),
-        expenses: Math.round(m.totalExpenses),
-      })),
+    () => filteredMonthly.map((m) => ({ name: m.month, revenue: Math.round(m.revenue), grossProfit: Math.round(m.grossProfit), expenses: Math.round(m.totalExpenses) })),
     [filteredMonthly]
   );
 
   const profitChartData = useMemo(
-    () =>
-      filteredMonthly.map((m) => ({
-        name: m.month,
-        netProfit: Math.round(m.netProfit),
-      })),
+    () => filteredMonthly.map((m) => ({ name: m.month, netProfit: Math.round(m.netProfit) })),
     [filteredMonthly]
   );
 
   const volumeChartData = useMemo(
-    () =>
-      filteredMonthly.map((m) => ({
-        name: m.month,
-        volume: Math.round(m.tradingVolume),
-      })),
+    () => filteredMonthly.map((m) => ({ name: m.month, volume: Math.round(m.tradingVolume) })),
     [filteredMonthly]
   );
 
   const liquidityChartData = useMemo(
-    () =>
-      filteredKPI.map((k) => ({
-        name: k.month,
-        buffer: Math.round(k.liquidityBuffer),
-        coverage: k.assetCoverageRatio,
-      })),
+    () => filteredKPI.map((k) => ({ name: k.month, buffer: Math.round(k.liquidityBuffer), coverage: k.assetCoverageRatio })),
     [filteredKPI]
   );
 
   const formatPLValue = (v: number) => {
     if (v === 0) return "—";
     return formatAEDFull(v);
+  };
+
+  // Latest KPI for VARA assessment
+  const latestKPI = kpiData[kpiData.length - 1];
+
+  const getVARAStatus = (kpiKey: string): { value: string; status: "healthy" | "warning" | "risky" } => {
+    const k = latestKPI;
+    switch (kpiKey) {
+      case "revenuePerTradingVolume": {
+        const v = k.revenuePerTradingVolume * 100;
+        return { value: `${v.toFixed(2)}%`, status: v >= 0.7 ? "healthy" : v >= 0.5 ? "warning" : "risky" };
+      }
+      case "grossMarginPct":
+        return { value: `${k.grossMarginPct.toFixed(1)}%`, status: k.grossMarginPct >= 80 ? "healthy" : k.grossMarginPct >= 70 ? "warning" : "risky" };
+      case "netMarginPct":
+        return { value: `${k.netMarginPct.toFixed(1)}%`, status: k.netMarginPct >= 0 ? "healthy" : k.netMarginPct >= -100 ? "warning" : "risky" };
+      case "fiatDepositWithdrawalRatio":
+        return { value: k.fiatDepositWithdrawalRatio.toFixed(2), status: k.fiatDepositWithdrawalRatio >= 1.0 ? "healthy" : "risky" };
+      case "vaDepositWithdrawalRatio":
+        return { value: k.vaDepositWithdrawalRatio.toFixed(2), status: k.vaDepositWithdrawalRatio >= 1.2 ? "healthy" : k.vaDepositWithdrawalRatio >= 1.0 ? "warning" : "risky" };
+      case "tradingVolumePerTotalDeposits":
+        return { value: `${k.tradingVolumePerTotalDeposits.toFixed(2)}×`, status: k.tradingVolumePerTotalDeposits >= 5 ? "healthy" : k.tradingVolumePerTotalDeposits >= 2 ? "warning" : "risky" };
+      case "revenuePerTotalClientFlow": {
+        const v = k.revenuePerTotalClientFlow * 100;
+        return { value: `${v.toFixed(2)}%`, status: v >= 0.8 ? "healthy" : v >= 0.5 ? "warning" : "risky" };
+      }
+      case "netFiatFlow":
+        return { value: formatAED(k.netFiatFlow), status: k.netFiatFlow >= 0 ? "healthy" : "risky" };
+      case "netVAFlow":
+        return { value: formatAED(k.netVAFlow), status: k.netVAFlow >= 0 ? "healthy" : "risky" };
+      case "netFlowPerTradingVolume":
+        return { value: k.netFlowPerTradingVolume.toFixed(3), status: k.netFlowPerTradingVolume >= 0 ? "healthy" : k.netFlowPerTradingVolume >= -0.05 ? "warning" : "risky" };
+      case "assetCoverageRatio":
+        return { value: `${k.assetCoverageRatio.toFixed(2)}×`, status: k.assetCoverageRatio >= 1.5 ? "healthy" : k.assetCoverageRatio >= 1.0 ? "warning" : "risky" };
+      case "liquidityBuffer":
+        return { value: formatAED(k.liquidityBuffer), status: k.liquidityBuffer > 100000 ? "healthy" : k.liquidityBuffer > 0 ? "warning" : "risky" };
+      case "assetValuationDiff":
+        return { value: formatAED(k.assetValuationDiff), status: k.assetValuationDiff >= 0 ? "healthy" : k.assetValuationDiff >= -50000 ? "warning" : "risky" };
+      case "assetValuationRatio": {
+        const v = k.assetValuationRatio * 100;
+        return { value: `${v.toFixed(2)}%`, status: v >= 0 ? "healthy" : v >= -5 ? "warning" : "risky" };
+      }
+      default:
+        return { value: "—", status: "warning" };
+    }
   };
 
   return (
@@ -145,7 +174,6 @@ const MkxDashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-6">
-        {/* Partners' Capital Position */}
         {/* Partners' Capital Position - only in All Time */}
         {!isFiltered && (<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Ahmad */}
@@ -157,21 +185,21 @@ const MkxDashboard = () => {
                 </div>
                 <div>
                   <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Ahmad's Share Capital</p>
-                  <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(5329871.48)}</p>
+                  <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(5788933.98)}</p>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-2">
                 <div>
                   <p className="text-xs text-muted-foreground">Total Retained Earnings</p>
-                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-7959404)}</p>
+                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-8126209.49)}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-xs text-muted-foreground">Ahmad's Share (50%)</p>
-                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-3979702)}</p>
+                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-4063104.75)}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">Ahmad's Net Position</p>
-                  <p className="text-lg font-bold font-serif text-foreground">{formatAEDFull(5329871.48 - 3979702)}</p>
+                  <p className="text-lg font-bold font-serif text-foreground">{formatAEDFull(5788933.98 - 4063104.75)}</p>
                 </div>
               </div>
             </CardContent>
@@ -185,21 +213,21 @@ const MkxDashboard = () => {
                 </div>
                 <div>
                   <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Maria's Share Capital</p>
-                  <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(5573975)}</p>
+                  <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(5573974.65)}</p>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-2">
                 <div>
                   <p className="text-xs text-muted-foreground">Total Retained Earnings</p>
-                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-7959404)}</p>
+                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-8126209.49)}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-xs text-muted-foreground">Maria's Share (50%)</p>
-                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-3979702)}</p>
+                  <p className="text-lg font-bold font-serif text-loss">{formatAEDFull(-4063104.75)}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">Maria's Net Position</p>
-                  <p className="text-lg font-bold font-serif text-foreground">{formatAEDFull(5573975 - 3979702)}</p>
+                  <p className="text-lg font-bold font-serif text-foreground">{formatAEDFull(5573974.65 - 4063104.75)}</p>
                 </div>
               </div>
             </CardContent>
@@ -218,23 +246,23 @@ const MkxDashboard = () => {
                 </div>
                 <div>
                   <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">MKX Assets in Fiat</p>
-                  <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(1911111 - 429338)}</p>
-                  <p className="text-[10px] text-muted-foreground">Client Money (1,911,111) − Fiat Due to Customers (429,338)</p>
+                  <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(1640913 - 137968)}</p>
+                  <p className="text-[10px] text-muted-foreground">Client Money (1,640,913) − Fiat Due to Customers (137,968)</p>
                 </div>
               </div>
               <div className="text-center">
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">MKX Assets in VA</p>
-                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(128144 + 1856037 - 1619190)}</p>
+                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(128875 + 2628064 - 1999061)}</p>
                 <p className="text-[10px] text-muted-foreground">Cold Wallets + VA Holdings − VA Due to Customers</p>
               </div>
               <div className="text-center border-l border-r border-border/50 px-6">
-                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">February Gross Profit</p>
-                <p className="text-2xl font-bold font-serif text-success">{formatAEDFull(58654)}</p>
+                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">March Gross Profit</p>
+                <p className="text-2xl font-bold font-serif text-success">{formatAEDFull(63906)}</p>
               </div>
               <div className="text-right">
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Net MKX Assets</p>
-                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull((1911111 - 429338) + (128144 + 1856037 - 1619190) - 58654)}</p>
-                <p className="text-[10px] text-muted-foreground">Fiat + VA − Feb Profit</p>
+                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull((1640913 - 137968) + (128875 + 2628064 - 1999061))}</p>
+                <p className="text-[10px] text-muted-foreground">Fiat + VA Net Assets</p>
               </div>
             </div>
             <div className="mt-4 pt-4 border-t border-border/50 flex flex-wrap items-center gap-6">
@@ -244,7 +272,7 @@ const MkxDashboard = () => {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Ahmad</p>
-                <p className="text-sm font-bold font-serif text-foreground">{formatAEDFull(1688442)}</p>
+                <p className="text-sm font-bold font-serif text-foreground">{formatAEDFull(2147504.48)}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Maria</p>
@@ -252,7 +280,7 @@ const MkxDashboard = () => {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Total</p>
-                <p className="text-sm font-bold font-serif text-foreground">{formatAEDFull(1688442 + 200000)}</p>
+                <p className="text-sm font-bold font-serif text-foreground">{formatAEDFull(2347504.48)}</p>
               </div>
             </div>
           </CardContent>
@@ -266,29 +294,29 @@ const MkxDashboard = () => {
             <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 items-end">
               <div>
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Fiat Client Liabilities</p>
-                <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(429338)}</p>
+                <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(137968)}</p>
               </div>
               <div>
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Fiat Assets Held</p>
-                <p className="text-xl font-bold font-serif text-foreground">{formatAEDFull(1911111)}</p>
+                <p className="text-xl font-bold font-serif text-foreground">{formatAEDFull(1640913)}</p>
               </div>
               <div>
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Fiat Surplus</p>
-                <p className="text-xl font-bold font-serif text-success">{formatAEDFull(1911111 - 429338)}</p>
-                <p className="text-[10px] text-muted-foreground">Ratio: {(1911111 / 429338).toFixed(2)}x</p>
+                <p className="text-xl font-bold font-serif text-success">{formatAEDFull(1640913 - 137968)}</p>
+                <p className="text-[10px] text-muted-foreground">Ratio: {(1640913 / 137968).toFixed(2)}x</p>
               </div>
               <div>
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">VA Client Liabilities</p>
-                <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(1619190)}</p>
+                <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(1999061)}</p>
               </div>
               <div>
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">VA Assets Held</p>
-                <p className="text-xl font-bold font-serif text-foreground">{formatAEDFull(128144 + 1856037)}</p>
+                <p className="text-xl font-bold font-serif text-foreground">{formatAEDFull(128875 + 2628064)}</p>
               </div>
               <div>
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">VA Surplus</p>
-                <p className="text-xl font-bold font-serif text-success">{formatAEDFull(128144 + 1856037 - 1619190)}</p>
-                <p className="text-[10px] text-muted-foreground">Ratio: {((128144 + 1856037) / 1619190).toFixed(2)}x</p>
+                <p className="text-xl font-bold font-serif text-success">{formatAEDFull(128875 + 2628064 - 1999061)}</p>
+                <p className="text-[10px] text-muted-foreground">Ratio: {((128875 + 2628064) / 1999061).toFixed(2)}x</p>
               </div>
             </div>
           </CardContent>
@@ -308,12 +336,12 @@ const MkxDashboard = () => {
                 <span className="text-sm font-semibold text-foreground">{formatAEDFull(168104.47)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-xs text-muted-foreground">2026 YTD (Jan–Feb)</span>
-                <span className="text-sm font-semibold text-foreground">{formatAEDFull(298654.24)}</span>
+                <span className="text-xs text-muted-foreground">2026 YTD (Jan–Mar)</span>
+                <span className="text-sm font-semibold text-foreground">{formatAEDFull(370104.01)}</span>
               </div>
               <div className="border-t border-border/50 pt-1 flex justify-between items-center">
                 <span className="text-xs font-bold text-foreground">Total</span>
-                <span className="text-sm font-bold text-foreground">{formatAEDFull(466758.71)}</span>
+                <span className="text-sm font-bold text-foreground">{formatAEDFull(538208.48)}</span>
               </div>
             </CardContent>
           </Card>
@@ -328,12 +356,12 @@ const MkxDashboard = () => {
                 <span className="text-sm font-semibold text-foreground">{formatAEDFull(152213)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-xs text-muted-foreground">2026 YTD (Jan–Feb)</span>
-                <span className="text-sm font-semibold text-foreground">{formatAEDFull(288007)}</span>
+                <span className="text-xs text-muted-foreground">2026 YTD (Jan–Mar)</span>
+                <span className="text-sm font-semibold text-foreground">{formatAEDFull(351913)}</span>
               </div>
               <div className="border-t border-border/50 pt-1 flex justify-between items-center">
                 <span className="text-xs font-bold text-foreground">Total</span>
-                <span className="text-sm font-bold text-success">{formatAEDFull(440220)}</span>
+                <span className="text-sm font-bold text-success">{formatAEDFull(504126)}</span>
               </div>
             </CardContent>
           </Card>
@@ -344,7 +372,7 @@ const MkxDashboard = () => {
                 { year: "2023", value: -783860.87 },
                 { year: "2024", value: -2571547.87 },
                 { year: "2025", value: -3905605.53 },
-                { year: "2026 YTD", value: -698389.49 },
+                { year: "2026 YTD", value: -865195.22 },
               ].map((item) => (
                 <div key={item.year} className="flex justify-between items-center">
                   <span className="text-xs text-muted-foreground">{item.year}</span>
@@ -353,13 +381,13 @@ const MkxDashboard = () => {
               ))}
               <div className="border-t border-border/50 pt-1 flex justify-between items-center">
                 <span className="text-xs font-bold text-foreground">Total Retained Loss</span>
-                <span className="text-sm font-bold text-loss">{formatAEDFull(-783860.87 + -2571547.87 + -3905605.53 + -698389.49)}</span>
+                <span className="text-sm font-bold text-loss">{formatAEDFull(-8126209.49)}</span>
               </div>
             </CardContent>
           </Card>
           <SummaryCard
             title="Current Assets"
-            value={formatAED(1856037 + 128144 + 92628 + 96287 + 1911111)}
+            value={formatAED(2628064 + 128875 + 938.60 + 50647 + 1640913)}
             subtitle="VA + Cold + Zand + Mashreq + CMA"
             icon={Building2}
           />
@@ -370,11 +398,11 @@ const MkxDashboard = () => {
                 <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Current Liabilities</p>
               </div>
               {[
-                { label: "Accounts Payable", value: 98440 },
-                { label: "Fiat Due to Customers", value: 429338 },
-                { label: "Payroll Staff Payable", value: 363864 },
-                { label: "VAT Control", value: -111961 },
-                { label: "VA Due to Customers", value: 1619190 },
+                { label: "Accounts Payable", value: 86285 },
+                { label: "Fiat Due to Customers", value: 137968 },
+                { label: "Payroll Staff Payable", value: 196278 },
+                { label: "VAT Control", value: -113961 },
+                { label: "VA Due to Customers", value: 1999061 },
               ].map((item) => (
                 <div key={item.label} className="flex justify-between items-center">
                   <span className="text-xs text-muted-foreground">{item.label}</span>
@@ -383,7 +411,7 @@ const MkxDashboard = () => {
               ))}
               <div className="border-t border-border/50 pt-1 flex justify-between items-center">
                 <span className="text-xs font-bold text-foreground">Total</span>
-                <span className="text-sm font-bold text-loss">{formatAEDFull(2398871)}</span>
+                <span className="text-sm font-bold text-loss">{formatAEDFull(2345385)}</span>
               </div>
             </CardContent>
           </Card>
@@ -403,228 +431,75 @@ const MkxDashboard = () => {
 
         {/* Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Revenue & Gross Profit */}
           <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-serif text-foreground">
-                Revenue vs Gross Profit
-              </CardTitle>
+              <CardTitle className="text-lg font-serif text-foreground">Revenue vs Gross Profit</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart
-                  data={revenueChartData}
-                  margin={{ top: 5, right: 5, bottom: 40, left: 5 }}
-                >
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }}
-                    angle={-45}
-                    textAnchor="end"
-                    axisLine={{ stroke: "hsl(220 14% 18%)" }}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }}
-                    axisLine={false}
-                    tickLine={false}
-                    tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(220 16% 11%)",
-                      border: "1px solid hsl(220 14% 18%)",
-                      borderRadius: "8px",
-                      color: "hsl(40 20% 90%)",
-                      fontSize: 12,
-                    }}
-                    formatter={(value: number) => [formatAEDFull(value), ""]}
-                  />
-                  <Bar
-                    dataKey="revenue"
-                    name="Revenue"
-                    fill="hsl(263, 50%, 55%)"
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar
-                    dataKey="grossProfit"
-                    name="Gross Profit"
-                    fill="hsl(160, 50%, 40%)"
-                    radius={[4, 4, 0, 0]}
-                  />
+                <BarChart data={revenueChartData} margin={{ top: 5, right: 5, bottom: 40, left: 5 }}>
+                  <XAxis dataKey="name" tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} angle={-45} textAnchor="end" axisLine={{ stroke: "hsl(220 14% 18%)" }} tickLine={false} />
+                  <YAxis tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                  <Tooltip contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }} formatter={(value: number) => [formatAEDFull(value), ""]} />
+                  <Bar dataKey="revenue" name="Revenue" fill="hsl(263, 50%, 55%)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="grossProfit" name="Gross Profit" fill="hsl(160, 50%, 40%)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
 
-          {/* Trading Volume */}
           <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-serif text-foreground">
-                Trading Volume
-              </CardTitle>
+              <CardTitle className="text-lg font-serif text-foreground">Trading Volume</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <AreaChart
-                  data={volumeChartData}
-                  margin={{ top: 5, right: 5, bottom: 40, left: 5 }}
-                >
+                <AreaChart data={volumeChartData} margin={{ top: 5, right: 5, bottom: 40, left: 5 }}>
                   <defs>
-                    <linearGradient
-                      id="volumeGrad"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop
-                        offset="0%"
-                        stopColor="hsl(263, 50%, 55%)"
-                        stopOpacity={0.4}
-                      />
-                      <stop
-                        offset="100%"
-                        stopColor="hsl(263, 50%, 55%)"
-                        stopOpacity={0}
-                      />
+                    <linearGradient id="volumeGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(263, 50%, 55%)" stopOpacity={0.4} />
+                      <stop offset="100%" stopColor="hsl(263, 50%, 55%)" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }}
-                    angle={-45}
-                    textAnchor="end"
-                    axisLine={{ stroke: "hsl(220 14% 18%)" }}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }}
-                    axisLine={false}
-                    tickLine={false}
-                    tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(220 16% 11%)",
-                      border: "1px solid hsl(220 14% 18%)",
-                      borderRadius: "8px",
-                      color: "hsl(40 20% 90%)",
-                      fontSize: 12,
-                    }}
-                    formatter={(value: number) => [formatAEDFull(value), ""]}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="volume"
-                    stroke="hsl(263, 50%, 55%)"
-                    fill="url(#volumeGrad)"
-                    strokeWidth={2}
-                  />
+                  <XAxis dataKey="name" tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} angle={-45} textAnchor="end" axisLine={{ stroke: "hsl(220 14% 18%)" }} tickLine={false} />
+                  <YAxis tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
+                  <Tooltip contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }} formatter={(value: number) => [formatAEDFull(value), ""]} />
+                  <Area type="monotone" dataKey="volume" stroke="hsl(263, 50%, 55%)" fill="url(#volumeGrad)" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
         </div>
 
-        {/* Second Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Net Profit Trend */}
           <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-serif text-foreground">
-                Net Profit Trend
-              </CardTitle>
+              <CardTitle className="text-lg font-serif text-foreground">Net Profit Trend</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={250}>
-                <LineChart
-                  data={profitChartData}
-                  margin={{ top: 5, right: 5, bottom: 40, left: 5 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="hsl(220 14% 18%)"
-                  />
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }}
-                    angle={-45}
-                    textAnchor="end"
-                    axisLine={{ stroke: "hsl(220 14% 18%)" }}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }}
-                    axisLine={false}
-                    tickLine={false}
-                    tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(220 16% 11%)",
-                      border: "1px solid hsl(220 14% 18%)",
-                      borderRadius: "8px",
-                      color: "hsl(40 20% 90%)",
-                      fontSize: 12,
-                    }}
-                    formatter={(value: number) => [formatAEDFull(value), ""]}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="netProfit"
-                    stroke="hsl(0, 60%, 50%)"
-                    strokeWidth={2}
-                    dot={{ fill: "hsl(0, 60%, 50%)", r: 4 }}
-                  />
+                <LineChart data={profitChartData} margin={{ top: 5, right: 5, bottom: 40, left: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 18%)" />
+                  <XAxis dataKey="name" tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} angle={-45} textAnchor="end" axisLine={{ stroke: "hsl(220 14% 18%)" }} tickLine={false} />
+                  <YAxis tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                  <Tooltip contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }} formatter={(value: number) => [formatAEDFull(value), ""]} />
+                  <Line type="monotone" dataKey="netProfit" stroke="hsl(0, 60%, 50%)" strokeWidth={2} dot={{ fill: "hsl(0, 60%, 50%)", r: 4 }} />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
 
-          {/* Liquidity Buffer */}
           <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-serif text-foreground">
-                Liquidity Buffer
-              </CardTitle>
+              <CardTitle className="text-lg font-serif text-foreground">Liquidity Buffer</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={250}>
-                <BarChart
-                  data={liquidityChartData}
-                  margin={{ top: 5, right: 5, bottom: 40, left: 5 }}
-                >
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }}
-                    angle={-45}
-                    textAnchor="end"
-                    axisLine={{ stroke: "hsl(220 14% 18%)" }}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }}
-                    axisLine={false}
-                    tickLine={false}
-                    tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(220 16% 11%)",
-                      border: "1px solid hsl(220 14% 18%)",
-                      borderRadius: "8px",
-                      color: "hsl(40 20% 90%)",
-                      fontSize: 12,
-                    }}
-                    formatter={(value: number) => [formatAEDFull(value), ""]}
-                  />
-                  <Bar
-                    dataKey="buffer"
-                    name="Liquidity Buffer"
-                    fill="hsl(43, 74%, 52%)"
-                    radius={[4, 4, 0, 0]}
-                  />
+                <BarChart data={liquidityChartData} margin={{ top: 5, right: 5, bottom: 40, left: 5 }}>
+                  <XAxis dataKey="name" tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} angle={-45} textAnchor="end" axisLine={{ stroke: "hsl(220 14% 18%)" }} tickLine={false} />
+                  <YAxis tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                  <Tooltip contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }} formatter={(value: number) => [formatAEDFull(value), ""]} />
+                  <Bar dataKey="buffer" name="Liquidity Buffer" fill="hsl(43, 74%, 52%)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -638,15 +513,16 @@ const MkxDashboard = () => {
             <TabsTrigger value="fullpl">Full Year P&L</TabsTrigger>
             <TabsTrigger value="balance">Balance Sheet</TabsTrigger>
             <TabsTrigger value="kpi">KPI Analysis</TabsTrigger>
+            <TabsTrigger value="vara">VARA Ratios</TabsTrigger>
             <TabsTrigger value="flows">Client Flows</TabsTrigger>
           </TabsList>
 
-          {/* Monthly P&L (full year) */}
+          {/* Monthly P&L */}
           <TabsContent value="monthly">
             <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg font-serif text-foreground">
-                  Monthly Profit & Loss (Jan 2025 – Feb 2026)
+                  Monthly Profit & Loss (Jan 2025 – Mar 2026)
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
@@ -713,12 +589,8 @@ const MkxDashboard = () => {
                 <div className="flex items-center gap-2">
                   <FileText className="h-5 w-5 text-primary" />
                   <div>
-                    <CardTitle className="text-lg font-serif text-foreground">
-                      Profit & Loss Statement
-                    </CardTitle>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      MKX Virtual Assets Broker & Dealer Services L.L.C — Jan 2025 to Feb 2026
-                    </p>
+                    <CardTitle className="text-lg font-serif text-foreground">Profit & Loss Statement</CardTitle>
+                    <p className="text-xs text-muted-foreground mt-1">MKX Virtual Assets Broker & Dealer Services L.L.C — Jan 2025 to Mar 2026</p>
                   </div>
                 </div>
               </CardHeader>
@@ -739,29 +611,19 @@ const MkxDashboard = () => {
                         if (row.isHeader) {
                           return (
                             <TableRow key={idx} className="border-border/50 bg-secondary/20 hover:bg-secondary/30">
-                              <TableCell colSpan={16} className="text-sm font-bold text-foreground py-2 sticky left-0 bg-secondary/20">
+                              <TableCell colSpan={plMonths.length + 2} className="text-sm font-bold text-foreground py-2 sticky left-0 bg-secondary/20">
                                 {row.label}
                               </TableCell>
                             </TableRow>
                           );
                         }
                         return (
-                          <TableRow
-                            key={idx}
-                            className={`border-border/30 hover:bg-secondary/30 ${row.isTotal ? "bg-secondary/20 font-semibold" : ""}`}
-                          >
+                          <TableRow key={idx} className={`border-border/30 hover:bg-secondary/30 ${row.isTotal ? "bg-secondary/20 font-semibold" : ""}`}>
                             <TableCell className={`text-sm whitespace-nowrap sticky left-0 bg-card z-10 ${row.isTotal ? "font-semibold text-foreground bg-secondary/20" : row.indent ? "pl-8 text-muted-foreground" : "text-foreground"}`}>
                               {row.label}
                             </TableCell>
                             {row.values.length > 0 ? row.values.map((v, i) => (
-                              <TableCell
-                                key={i}
-                                className={`text-xs tabular-nums text-right ${
-                                  row.isTotal
-                                    ? v < 0 ? "text-loss font-semibold" : "text-foreground font-semibold"
-                                    : v < 0 ? "text-loss" : v === 0 ? "text-muted-foreground/50" : "text-foreground"
-                                }`}
-                              >
+                              <TableCell key={i} className={`text-xs tabular-nums text-right ${row.isTotal ? v < 0 ? "text-loss font-semibold" : "text-foreground font-semibold" : v < 0 ? "text-loss" : v === 0 ? "text-muted-foreground/50" : "text-foreground"}`}>
                                 {formatPLValue(v)}
                               </TableCell>
                             )) : plMonths.map((_, i) => (
@@ -787,12 +649,8 @@ const MkxDashboard = () => {
                 <div className="flex items-center gap-2">
                   <Building2 className="h-5 w-5 text-primary" />
                   <div>
-                    <CardTitle className="text-lg font-serif text-foreground">
-                      Balance Sheet
-                    </CardTitle>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      As of February 28, 2026
-                    </p>
+                    <CardTitle className="text-lg font-serif text-foreground">Balance Sheet</CardTitle>
+                    <p className="text-xs text-muted-foreground mt-1">As of March 31, 2026</p>
                   </div>
                 </div>
               </CardHeader>
@@ -800,30 +658,15 @@ const MkxDashboard = () => {
                 {balanceSheet.map((item, idx) => {
                   if (item.isSectionHeader) {
                     return (
-                      <div
-                        key={idx}
-                        className={`flex items-center justify-between py-2 px-3 rounded-md bg-secondary/30 mt-2 first:mt-0`}
-                        style={{ paddingLeft: `${(item.indent || 0) * 16 + 12}px` }}
-                      >
+                      <div key={idx} className="flex items-center justify-between py-2 px-3 rounded-md bg-secondary/30 mt-2 first:mt-0" style={{ paddingLeft: `${(item.indent || 0) * 16 + 12}px` }}>
                         <span className="text-sm font-bold text-foreground">{item.label}</span>
                       </div>
                     );
                   }
                   return (
-                    <div
-                      key={idx}
-                      className={`flex items-center justify-between py-1.5 px-3 rounded-md text-sm ${
-                        item.isTotal ? "bg-secondary/20 font-semibold border border-border/30" : ""
-                      }`}
-                      style={{ paddingLeft: `${(item.indent || 0) * 16 + 12}px` }}
-                    >
-                      <span className={`${item.isTotal ? "text-foreground" : "text-muted-foreground"}`}>
-                        {item.label}
-                      </span>
-                      <span className={`tabular-nums ${
-                        item.isTotal ? "text-foreground font-serif" :
-                        item.value < 0 ? "text-loss" : "text-foreground"
-                      }`}>
+                    <div key={idx} className={`flex items-center justify-between py-1.5 px-3 rounded-md text-sm ${item.isTotal ? "bg-secondary/20 font-semibold border border-border/30" : ""}`} style={{ paddingLeft: `${(item.indent || 0) * 16 + 12}px` }}>
+                      <span className={`${item.isTotal ? "text-foreground" : "text-muted-foreground"}`}>{item.label}</span>
+                      <span className={`tabular-nums ${item.isTotal ? "text-foreground font-serif" : item.value < 0 ? "text-loss" : "text-foreground"}`}>
                         {item.value !== 0 ? formatAEDFull(item.value) : ""}
                       </span>
                     </div>
@@ -837,9 +680,7 @@ const MkxDashboard = () => {
           <TabsContent value="kpi">
             <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-serif text-foreground">
-                  Key Performance Indicators
-                </CardTitle>
+                <CardTitle className="text-lg font-serif text-foreground">Key Performance Indicators</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
@@ -869,9 +710,7 @@ const MkxDashboard = () => {
                         <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Asset Coverage Ratio</TableCell>
                         {filteredKPI.map((k) => (
                           <TableCell key={k.month} className="text-sm tabular-nums text-right">
-                            <Badge variant={k.assetCoverageRatio >= 1.5 ? "default" : "destructive"} className="text-xs">
-                              {k.assetCoverageRatio.toFixed(2)}x
-                            </Badge>
+                            <Badge variant={k.assetCoverageRatio >= 1.5 ? "default" : "destructive"} className="text-xs">{k.assetCoverageRatio.toFixed(2)}x</Badge>
                           </TableCell>
                         ))}
                       </TableRow>
@@ -896,9 +735,7 @@ const MkxDashboard = () => {
                       <TableRow className="border-border/30 hover:bg-secondary/30">
                         <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Asset Valuation Diff</TableCell>
                         {filteredKPI.map((k) => (
-                          <TableCell key={k.month} className={`text-sm tabular-nums text-right ${k.assetValuationDiff >= 0 ? "text-success" : "text-loss"}`}>
-                            {formatAED(k.assetValuationDiff)}
-                          </TableCell>
+                          <TableCell key={k.month} className={`text-sm tabular-nums text-right ${k.assetValuationDiff >= 0 ? "text-success" : "text-loss"}`}>{formatAED(k.assetValuationDiff)}</TableCell>
                         ))}
                       </TableRow>
                       <TableRow className="border-border/30 hover:bg-secondary/30">
@@ -910,9 +747,7 @@ const MkxDashboard = () => {
                       <TableRow className="border-border/30 hover:bg-secondary/30">
                         <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Net Profit / Trading Vol</TableCell>
                         {filteredKPI.map((k) => (
-                          <TableCell key={k.month} className={`text-sm tabular-nums text-right ${k.netProfitPerTradingVolume >= 0 ? "text-success" : "text-loss"}`}>
-                            {(k.netProfitPerTradingVolume * 100).toFixed(2)}%
-                          </TableCell>
+                          <TableCell key={k.month} className={`text-sm tabular-nums text-right ${k.netProfitPerTradingVolume >= 0 ? "text-success" : "text-loss"}`}>{(k.netProfitPerTradingVolume * 100).toFixed(2)}%</TableCell>
                         ))}
                       </TableRow>
                     </TableBody>
@@ -922,13 +757,114 @@ const MkxDashboard = () => {
             </Card>
           </TabsContent>
 
+          {/* VARA Ratios */}
+          <TabsContent value="vara">
+            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-primary" />
+                  <div>
+                    <CardTitle className="text-lg font-serif text-foreground">VARA Required Ratios — Compliance Assessment</CardTitle>
+                    <p className="text-xs text-muted-foreground mt-1">Current values as of {latestKPI.month} vs UAE VARA Standards</p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-border/50 hover:bg-transparent">
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider min-w-[200px]">Ratio</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-center min-w-[120px]">Current Value</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-center min-w-[80px]">Status</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider min-w-[200px]">Healthy (VARA Standard)</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider min-w-[200px]">Risky (Warning Flags)</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {varaStandards.map((std, idx) => {
+                        const { value, status } = getVARAStatus(std.kpiKey);
+                        return (
+                          <TableRow key={idx} className="border-border/30 hover:bg-secondary/30">
+                            <TableCell className="text-sm font-medium text-foreground">{std.ratio}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-center font-semibold">
+                              <span className={status === "healthy" ? "text-success" : status === "warning" ? "text-amber-400" : "text-loss"}>
+                                {value}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {status === "healthy" ? (
+                                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">
+                                  <CheckCircle2 className="h-3 w-3 mr-1" />OK
+                                </Badge>
+                              ) : status === "warning" ? (
+                                <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs">
+                                  <AlertTriangle className="h-3 w-3 mr-1" />Watch
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-xs">
+                                  <AlertTriangle className="h-3 w-3 mr-1" />Risk
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-xs text-success/80">{std.healthy}</TableCell>
+                            <TableCell className="text-xs text-loss/80">{std.risky}</TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* VARA Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+              {(() => {
+                const results = varaStandards.map(s => getVARAStatus(s.kpiKey));
+                const healthy = results.filter(r => r.status === "healthy").length;
+                const warning = results.filter(r => r.status === "warning").length;
+                const risky = results.filter(r => r.status === "risky").length;
+                return (
+                  <>
+                    <Card className="border-emerald-500/30 bg-emerald-500/5">
+                      <CardContent className="p-4 flex items-center gap-3">
+                        <CheckCircle2 className="h-8 w-8 text-emerald-400" />
+                        <div>
+                          <p className="text-2xl font-bold font-serif text-emerald-400">{healthy}</p>
+                          <p className="text-xs text-muted-foreground">Healthy Ratios</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-amber-500/30 bg-amber-500/5">
+                      <CardContent className="p-4 flex items-center gap-3">
+                        <AlertTriangle className="h-8 w-8 text-amber-400" />
+                        <div>
+                          <p className="text-2xl font-bold font-serif text-amber-400">{warning}</p>
+                          <p className="text-xs text-muted-foreground">Watch Items</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-red-500/30 bg-red-500/5">
+                      <CardContent className="p-4 flex items-center gap-3">
+                        <AlertTriangle className="h-8 w-8 text-red-400" />
+                        <div>
+                          <p className="text-2xl font-bold font-serif text-red-400">{risky}</p>
+                          <p className="text-xs text-muted-foreground">Risk Flags</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </>
+                );
+              })()}
+            </div>
+          </TabsContent>
+
           {/* Client Flows */}
           <TabsContent value="flows">
             <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-serif text-foreground">
-                  Client Flows & Liabilities
-                </CardTitle>
+                <CardTitle className="text-lg font-serif text-foreground">Client Flows & Liabilities</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
@@ -949,20 +885,20 @@ const MkxDashboard = () => {
                       {filteredMonthly.map((row) => {
                         const i = monthlyData.indexOf(row);
                         return (
-                        <TableRow key={row.month} className="border-border/30 hover:bg-secondary/30">
-                          <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">{row.month}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAEDFull(row.clientDepositsFiat)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAEDFull(row.clientWithdrawalsFiat)}</TableCell>
-                          <TableCell className={`text-sm tabular-nums text-right font-medium ${(kpiData[i]?.netFiatFlow ?? (row.clientDepositsFiat - row.clientWithdrawalsFiat)) >= 0 ? "text-success" : "text-loss"}`}>
-                            {formatAEDFull(kpiData[i]?.netFiatFlow ?? (row.clientDepositsFiat - row.clientWithdrawalsFiat))}
-                          </TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAEDFull(row.clientDepositsVA)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAEDFull(row.clientWithdrawalsVA)}</TableCell>
-                          <TableCell className={`text-sm tabular-nums text-right font-medium ${(kpiData[i]?.netVAFlow ?? (row.clientDepositsVA - row.clientWithdrawalsVA)) >= 0 ? "text-success" : "text-loss"}`}>
-                            {formatAEDFull(kpiData[i]?.netVAFlow ?? (row.clientDepositsVA - row.clientWithdrawalsVA))}
-                          </TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAEDFull(row.tradingVolume)}</TableCell>
-                        </TableRow>
+                          <TableRow key={row.month} className="border-border/30 hover:bg-secondary/30">
+                            <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">{row.month}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAEDFull(row.clientDepositsFiat)}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAEDFull(row.clientWithdrawalsFiat)}</TableCell>
+                            <TableCell className={`text-sm tabular-nums text-right font-medium ${(kpiData[i]?.netFiatFlow ?? (row.clientDepositsFiat - row.clientWithdrawalsFiat)) >= 0 ? "text-success" : "text-loss"}`}>
+                              {formatAEDFull(kpiData[i]?.netFiatFlow ?? (row.clientDepositsFiat - row.clientWithdrawalsFiat))}
+                            </TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAEDFull(row.clientDepositsVA)}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAEDFull(row.clientWithdrawalsVA)}</TableCell>
+                            <TableCell className={`text-sm tabular-nums text-right font-medium ${(kpiData[i]?.netVAFlow ?? (row.clientDepositsVA - row.clientWithdrawalsVA)) >= 0 ? "text-success" : "text-loss"}`}>
+                              {formatAEDFull(kpiData[i]?.netVAFlow ?? (row.clientDepositsVA - row.clientWithdrawalsVA))}
+                            </TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAEDFull(row.tradingVolume)}</TableCell>
+                          </TableRow>
                         );
                       })}
                     </TableBody>
