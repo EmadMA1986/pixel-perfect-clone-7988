@@ -768,7 +768,7 @@ const MkxDashboard = () => {
                   <Shield className="h-5 w-5 text-primary" />
                   <div>
                     <CardTitle className="text-lg font-serif text-foreground">VARA Required Ratios — Compliance Assessment</CardTitle>
-                    <p className="text-xs text-muted-foreground mt-1">Current values as of {latestKPI.month} vs UAE VARA Standards</p>
+                    <p className="text-xs text-muted-foreground mt-1">Current values as of {activeKPI.month} vs UAE VARA Standards</p>
                   </div>
                 </div>
               </CardHeader>
