@@ -134,9 +134,12 @@ const MkxDashboard = () => {
               </p>
             </div>
           </div>
-          <Badge variant="secondary" className="text-xs">
-            Currency: AED
-          </Badge>
+          <div className="flex items-center gap-3">
+            <MonthFilter months={allMonths} value={selectedMonth} onChange={setSelectedMonth} />
+            <Badge variant="secondary" className="text-xs">
+              Currency: AED
+            </Badge>
+          </div>
         </div>
       </header>
 
