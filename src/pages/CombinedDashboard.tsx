@@ -278,6 +278,27 @@ const CombinedDashboard = () => {
   const largestExposure = [...companies].sort((a, b) => b.investment - a.investment)[0];
   const largestExposurePct = (largestExposure.investment / totalInvestment) * 100;
 
+  // Executive Summary
+  const executiveSummary = useMemo(() => {
+    const period = selectedMonth === "all" ? "across all time" : `in ${selectedMonth}`;
+    const profitLine = totalProfit >= 0
+      ? `Portfolio generated ${fmt(toDisplay(totalProfit))} net profit ${period}`
+      : `Portfolio recorded a net loss of ${fmt(toDisplay(Math.abs(totalProfit)))} ${period}`;
+    
+    const drivers = [...companies].sort((a, b) => Math.abs(b.profit) - Math.abs(a.profit)).slice(0, 2);
+    const driverLine = drivers.map(d => `${d.name} (${d.profit >= 0 ? "+" : ""}${fmt(toDisplay(d.profit))})`).join(" and ");
+    
+    const momLine = prevTotalProfit !== null
+      ? totalProfit > prevTotalProfit!
+        ? ` Performance improved vs previous month by ${fmt(toDisplay(Math.abs(totalProfit - prevTotalProfit!)))}.`
+        : totalProfit < prevTotalProfit!
+        ? ` Performance declined vs previous month by ${fmt(toDisplay(Math.abs(totalProfit - prevTotalProfit!)))}.`
+        : ""
+      : "";
+
+    return `${profitLine}, driven by ${driverLine}.${momLine}`;
+  }, [companies, totalProfit, selectedMonth, prevTotalProfit, currency]);
+
   const roiChartData = companies.map(c => ({
     name: c.name,
     roi: parseFloat(c.roi.toFixed(1)),
