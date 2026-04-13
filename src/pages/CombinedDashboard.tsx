@@ -223,36 +223,36 @@ const CombinedDashboard = () => {
   };
   const companies = [
     {
-      name: "RYA Gold", icon: Gem, route: "/", share: "100%",
+      name: "RYA Gold", icon: Gem, route: "/", share: "100%", key: "rya" as const,
       investment: d.rya.investment, profit: d.rya.profit, netPosition: d.rya.netPosition, roi: d.rya.roi,
       color: "hsl(43, 74%, 52%)", subtitle: "Gold trading", updatedTo: "Mar 2026",
     },
     {
-      name: "OTC Trading", icon: DollarSign, route: "/otc", share: "50%",
+      name: "OTC Trading", icon: DollarSign, route: "/otc", share: "50%", key: "otc" as const,
       investment: d.otc.investment, profit: d.otc.profit, netPosition: d.otc.netPosition, roi: d.otc.roi,
       color: "hsl(var(--chart-1))", updatedTo: "Mar 2026",
     },
     {
-      name: "MK Autos (Company)", icon: Building2, route: "/mk-autos-company",
+      name: "MK Autos (Company)", icon: Building2, route: "/mk-autos-company", key: "mkAutosCompany" as const,
       share: `${mkAutosAhmad.sharePercentage}%`,
       investment: d.mkAutosCompany.investment, profit: d.mkAutosCompany.profit,
       netPosition: d.mkAutosCompany.netPosition, roi: d.mkAutosCompany.roi,
       color: "hsl(var(--chart-2))", subtitle: "Share Capital & P&L", updatedTo: "Feb 2026",
     },
     {
-      name: "MK Autos (Cars)", icon: Car, route: "/mk-autos", share: "100%",
+      name: "MK Autos (Cars)", icon: Car, route: "/mk-autos", share: "100%", key: "mkAutosCars" as const,
       investment: d.mkAutosCars.investment, profit: d.mkAutosCars.profit,
       netPosition: d.mkAutosCars.netPosition, roi: d.mkAutosCars.roi,
       color: "hsl(var(--chart-5))", subtitle: "Fleet rental income", updatedTo: "Mar 2026",
     },
     {
-      name: "MKX Crypto", icon: Bitcoin, route: "/mkx", share: "50%",
+      name: "MKX Crypto", icon: Bitcoin, route: "/mkx", share: "50%", key: "mkx" as const,
       investment: d.mkx.investment, profit: d.mkx.profit,
       netPosition: d.mkx.netPosition, roi: d.mkx.roi,
       color: "hsl(var(--chart-3))", updatedTo: "Mar 2026",
     },
     {
-      name: "MK Garage", icon: Wrench, route: "/garage", share: "40%",
+      name: "MK Garage", icon: Wrench, route: "/garage", share: "40%", key: "garage" as const,
       investment: d.garage.investment, profit: d.garage.profit,
       netPosition: d.garage.netPosition, roi: d.garage.roi,
       color: "hsl(var(--chart-4))", updatedTo: "Feb 2026",
@@ -263,6 +263,12 @@ const CombinedDashboard = () => {
   const totalProfit = companies.reduce((s, c) => s + c.profit, 0);
   const totalNetPosition = companies.reduce((s, c) => s + c.netPosition, 0);
   const overallROI = (totalProfit / totalInvestment) * 100;
+
+  // Previous month totals for MoM
+  const prevTotalProfit = pd ? Object.values(pd).reduce((s, v) => s + v.profit, 0) : null;
+  const prevTotalNetPosition = pd ? Object.values(pd).reduce((s, v) => s + v.netPosition, 0) : null;
+  const prevTotalInvestment = pd ? Object.values(pd).reduce((s, v) => s + v.investment, 0) : null;
+  const prevOverallROI = pd && prevTotalInvestment ? (prevTotalProfit! / prevTotalInvestment) * 100 : null;
 
   // Derived analytics
   const bestPerformer = [...companies].sort((a, b) => b.roi - a.roi)[0];
