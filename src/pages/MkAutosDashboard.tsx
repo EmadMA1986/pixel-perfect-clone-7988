@@ -279,6 +279,7 @@ const MkAutosDashboard = () => {
           <TabsList className="bg-secondary/50">
             <TabsTrigger value="fleet">Vehicle Fleet</TabsTrigger>
             <TabsTrigger value="monthly">Monthly Income</TabsTrigger>
+            <TabsTrigger value="scorecard">Performance Scorecard</TabsTrigger>
           </TabsList>
 
           {/* Fleet Overview */}
