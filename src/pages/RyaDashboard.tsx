@@ -403,6 +403,94 @@ const RyaDashboard = () => {
           </div>
         )}
 
+        {/* Operational Insights */}
+        {!isClientView && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Client Concentration Risk */}
+            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Client Concentration</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {clientData.slice(0, 5).map((c) => {
+                  const pct = totalRevenue > 0 ? (c.revenue / totalRevenue) * 100 : 0;
+                  return (
+                    <div key={c.name} className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">{c.name}</span>
+                        <span className={`font-medium ${pct > 40 ? "text-loss" : "text-foreground"}`}>{pct.toFixed(1)}%</span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-muted/50 overflow-hidden">
+                        <div className={`h-full rounded-full ${pct > 40 ? "bg-loss" : "bg-primary"}`} style={{ width: `${Math.min(pct, 100)}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+                {clientData.length > 0 && clientData[0].revenue / totalRevenue > 0.4 && (
+                  <p className="text-[10px] text-loss mt-2">⚠ Top client &gt; 40% of revenue — concentration risk</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Broker Exposure */}
+            <Card className={`border-border/50 backdrop-blur-sm ${goldCapital.brokerZHOU > 300000 ? "bg-amber-500/5 border-amber-500/20" : "bg-card/80"}`}>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Broker Balance Exposure</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs p-2 rounded bg-muted/30">
+                    <span className="text-muted-foreground">PY Broker</span>
+                    <span className="font-bold text-foreground">{formatCurrency(brokerBalances.brokerPY.usd)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs p-2 rounded bg-muted/30">
+                    <span className="text-muted-foreground">ZHOU (USD)</span>
+                    <span className="font-bold text-foreground">{formatCurrency(brokerBalances.brokerZHOU.usd)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs p-2 rounded bg-muted/30">
+                    <span className="text-muted-foreground">ZHOU (AED)</span>
+                    <span className="font-bold text-foreground">{formatCurrency(brokerBalances.brokerZHOU.aed, "AED")}</span>
+                  </div>
+                </div>
+                <div className="pt-2 border-t border-border/30">
+                  <p className="text-xs text-muted-foreground">Total Broker Exposure</p>
+                  <p className="text-xl font-bold font-serif text-foreground">{formatCurrency(goldCapital.totalBrokers)}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {((goldCapital.totalBrokers / goldCapital.totalCurrentPosition) * 100).toFixed(0)}% of total position at brokers
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Profit Efficiency */}
+            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Profit Efficiency</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="p-2 rounded bg-muted/30 text-xs">
+                    <p className="text-muted-foreground">Avg Profit/Sale</p>
+                    <p className="text-lg font-bold font-serif text-success">{formatCurrency(filteredSales.length > 0 ? totalProfit / filteredSales.length : 0)}</p>
+                  </div>
+                  <div className="p-2 rounded bg-muted/30 text-xs">
+                    <p className="text-muted-foreground">Avg Profit/Gram</p>
+                    <p className="text-lg font-bold font-serif text-success">{formatCurrency(totalSalesQty > 0 ? totalProfit / totalSalesQty : 0)}</p>
+                  </div>
+                  <div className="p-2 rounded bg-muted/30 text-xs">
+                    <p className="text-muted-foreground">Profit Margin</p>
+                    <p className="text-lg font-bold font-serif text-foreground">{totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(2) : 0}%</p>
+                  </div>
+                  <div className="p-2 rounded bg-muted/30 text-xs">
+                    <p className="text-muted-foreground">Total Melting Loss</p>
+                    <p className="text-lg font-bold font-serif text-loss">{formatNumber(goldInventory.totalMeltingLossGrams, 3)}g</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Charts Row */}
         <div className={`grid grid-cols-1 ${isClientView ? "" : "lg:grid-cols-2"} gap-6`}>
           {/* Profit by Sale */}
