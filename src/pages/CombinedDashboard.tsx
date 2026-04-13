@@ -84,12 +84,12 @@ const CombinedDashboard = () => {
   const fmtFull = (v: number) => currency === "AED" ? formatAED(v) : formatUSD(v);
   const navigate = useNavigate();
 
-  // === Compute per-company profit for selected month ===
-  const companyData = useMemo(() => {
-    const isAll = selectedMonth === "all";
-    const norm = isAll ? "" : selectedMonth;
+  // === Helper to compute per-company data for any month ===
+  const computeForMonth = (month: string) => {
+    const isAll = month === "all";
+    const norm = isAll ? "" : month;
 
-    // RYA Gold - aggregate by month from sales/expenses
+    // RYA Gold
     let ryaProfitUSD: number;
     let ryaInvestmentUSD = Math.abs(goldCapital.initialCapital);
     let ryaNetPositionUSD: number;
@@ -97,30 +97,23 @@ const CombinedDashboard = () => {
       ryaProfitUSD = ryaPL.netProfit;
       ryaNetPositionUSD = goldCapital.totalCurrentPosition;
     } else {
-      // Parse month for comparison
       const salesInMonth = goldSales.filter(s => {
         const d = new Date(s.date);
         if (isNaN(d.getTime())) return false;
-        const label = `${d.toLocaleString("en-US", { month: "short" })}-${String(d.getFullYear()).slice(2)}`;
-        return label === norm;
+        return `${d.toLocaleString("en-US", { month: "short" })}-${String(d.getFullYear()).slice(2)}` === norm;
       });
       const expInMonth = goldExpenses.filter(e => {
         const d = new Date(e.date);
         if (isNaN(d.getTime())) return false;
-        const label = `${d.toLocaleString("en-US", { month: "short" })}-${String(d.getFullYear()).slice(2)}`;
-        return label === norm;
+        return `${d.toLocaleString("en-US", { month: "short" })}-${String(d.getFullYear()).slice(2)}` === norm;
       });
       const discInMonth = goldDiscounts.filter(e => {
         const d = new Date(e.date);
         if (isNaN(d.getTime())) return false;
-        const label = `${d.toLocaleString("en-US", { month: "short" })}-${String(d.getFullYear()).slice(2)}`;
-        return label === norm;
+        return `${d.toLocaleString("en-US", { month: "short" })}-${String(d.getFullYear()).slice(2)}` === norm;
       });
-      const salesProfit = salesInMonth.reduce((s, t) => s + t.profitUSD, 0);
-      const expTotal = expInMonth.reduce((s, t) => s + t.amount, 0);
-      const discTotal = discInMonth.reduce((s, t) => s + t.amount, 0);
-      ryaProfitUSD = salesProfit - expTotal - discTotal;
-      ryaNetPositionUSD = ryaInvestmentUSD + ryaProfitUSD; // simplified for monthly
+      ryaProfitUSD = salesInMonth.reduce((s, t) => s + t.profitUSD, 0) - expInMonth.reduce((s, t) => s + t.amount, 0) - discInMonth.reduce((s, t) => s + t.amount, 0);
+      ryaNetPositionUSD = ryaInvestmentUSD + ryaProfitUSD;
     }
     const ryaInvestment = ryaInvestmentUSD * AED_TO_USD_RATE;
     const ryaProfit = ryaProfitUSD * AED_TO_USD_RATE;
@@ -139,20 +132,20 @@ const CombinedDashboard = () => {
     const otcNetPosition = isAll ? partnerCapital.ahmad.netPosition : otcInvestment + otcProfitShare;
     const otcROI = (otcProfitShare / otcInvestment) * 100;
 
-    // MK Autos Company (45% share) - no monthly P&L available, show cumulative
+    // MK Autos Company (45%)
     const mkAutosShareInvestment = mkAutosAhmad.shareCapital;
     const mkAutosCompanyPL = mkAutosBS.profitLoss.total;
     const mkAutosShareProfit = mkAutosCompanyPL * (mkAutosAhmad.sharePercentage / 100);
     const mkAutosSharePosition = mkAutosShareInvestment + mkAutosShareProfit;
     const mkAutosShareROI = (mkAutosShareProfit / mkAutosShareInvestment) * 100;
 
-    // MK Autos Cars (100%) - monthly income available
+    // MK Autos Cars (100%)
     let mkAutosCarsProfit: number;
     if (isAll) {
       mkAutosCarsProfit = mkAutosSummary.netProfit;
     } else {
       const row = mkAutosMonthlyIncome.find(r => normalizeMonth(r.month) === norm);
-      mkAutosCarsProfit = row ? row.total : 0; // monthly income (no expense breakdown)
+      mkAutosCarsProfit = row ? row.total : 0;
     }
     const mkAutosCarsInvestment = mkAutosSummary.totalNBV;
     const mkAutosCarsPosition = isAll ? mkAutosAhmad.positionAgainstCars : mkAutosCarsInvestment + mkAutosCarsProfit;
@@ -192,6 +185,16 @@ const CombinedDashboard = () => {
       mkx: { investment: mkxShareCapital, profit: mkxTotalPL, netPosition: mkxNetPosition, roi: mkxROI },
       garage: { investment: garageInvestment, profit: garageProfitShare, netPosition: garageNetPosition, roi: garageROI },
     };
+  };
+
+  const companyData = useMemo(() => computeForMonth(selectedMonth), [selectedMonth]);
+
+  // === Compute previous month data for MoM comparison ===
+  const prevMonthData = useMemo(() => {
+    if (selectedMonth === "all") return null;
+    const idx = ALL_MONTHS.indexOf(selectedMonth);
+    if (idx <= 0) return null;
+    return computeForMonth(ALL_MONTHS[idx - 1]);
   }, [selectedMonth]);
 
   const d = companyData;
