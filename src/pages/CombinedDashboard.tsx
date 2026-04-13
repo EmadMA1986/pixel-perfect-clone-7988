@@ -392,6 +392,17 @@ const CombinedDashboard = () => {
           </div>
         )}
 
+        {/* Executive Summary */}
+        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-transparent backdrop-blur-sm">
+          <CardContent className="p-4 flex items-start gap-3">
+            <FileText className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-1">Executive Summary</p>
+              <p className="text-sm text-foreground leading-relaxed">{executiveSummary}</p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Overall Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
@@ -409,7 +420,10 @@ const CombinedDashboard = () => {
                 {selectedMonth !== "all" ? "Monthly P/L" : "Total Profit/Loss"}
               </p>
               <p className={`text-xl font-bold font-serif ${totalProfit >= 0 ? "text-success" : "text-loss"}`}>{fmt(toDisplay(totalProfit))}</p>
-              <p className="text-[10px] text-muted-foreground">{profitableCompanies.length} profitable · {losingCompanies.length} losing</p>
+              <div className="flex items-center gap-1">
+                <p className="text-[10px] text-muted-foreground">{profitableCompanies.length} profitable · {losingCompanies.length} losing</p>
+                <TrendBadge current={totalProfit} previous={prevTotalProfit ?? undefined} />
+              </div>
             </CardContent>
           </Card>
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
@@ -417,7 +431,10 @@ const CombinedDashboard = () => {
             <CardContent className="p-4 relative">
               <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground">Net Position</p>
               <p className={`text-xl font-bold font-serif ${totalNetPosition >= 0 ? "text-success" : "text-loss"}`}>{fmt(toDisplay(totalNetPosition))}</p>
-              <p className="text-[10px] text-muted-foreground">Current portfolio value</p>
+              <div className="flex items-center gap-1">
+                <p className="text-[10px] text-muted-foreground">Current portfolio value</p>
+                <TrendBadge current={totalNetPosition} previous={prevTotalNetPosition ?? undefined} />
+              </div>
             </CardContent>
           </Card>
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
@@ -427,7 +444,10 @@ const CombinedDashboard = () => {
                 {selectedMonth !== "all" ? "Monthly ROI" : "Overall ROI"}
               </p>
               <p className={`text-xl font-bold font-serif ${overallROI >= 0 ? "text-success" : "text-loss"}`}>{overallROI.toFixed(1)}%</p>
-              <p className="text-[10px] text-muted-foreground">Weighted average</p>
+              <div className="flex items-center gap-1">
+                <p className="text-[10px] text-muted-foreground">Weighted average</p>
+                {prevOverallROI !== null && <TrendBadge current={overallROI} previous={prevOverallROI} isCurrency={false} />}
+              </div>
             </CardContent>
           </Card>
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
