@@ -472,6 +472,7 @@ const CombinedDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           {companies.map((c) => {
             const Icon = c.icon;
+            const prevCompany = pd ? pd[c.key] : null;
             return (
               <Card
                 key={c.name}
