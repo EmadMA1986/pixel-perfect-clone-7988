@@ -11,7 +11,7 @@ import MonthFilter from "@/components/MonthFilter";
 // Import data from all companies
 import { partnerCapital, otcSummary, monthlyPL as otcMonthlyPL } from "@/data/otcData";
 import { ahmadCapital as mkAutosAhmad, mkAutosSummary, balanceSheet as mkAutosBS, monthlyIncome as mkAutosMonthlyIncome } from "@/data/mkAutosData";
-import { mkxSummary, balanceSheet as mkxBS, monthlyData as mkxMonthlyData } from "@/data/mkxData";
+import { mkxSummary, balanceSheet as mkxBS, monthlyData as mkxMonthlyData, ahmadCapitalByMonth as mkxAhmadCapital } from "@/data/mkxData";
 import { monthlyPL as garagePL, balanceSheet as garageBS, ahmadGarage } from "@/data/garageData";
 import { goldCapital, profitLoss as ryaPL, AED_TO_USD_RATE, sales as goldSales, expenses as goldExpenses, salesDiscounts as goldDiscounts } from "@/data/goldData";
 
