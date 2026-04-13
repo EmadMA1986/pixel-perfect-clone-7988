@@ -159,7 +159,7 @@ const CombinedDashboard = () => {
     const mkAutosCarsROI = isAll ? mkAutosSummary.overallROI : (mkAutosCarsProfit / mkAutosCarsInvestment) * 100;
 
     // MKX Crypto (50%)
-    const mkxShareCapital = 5788933.98;
+    const mkxShareCapital = isAll ? 5788933.98 : (mkxAhmadCapital[norm] ?? 5329871.48);
     let mkxTotalPL: number;
     if (isAll) {
       const mkxRetainedEarnings = -7261014.27;
