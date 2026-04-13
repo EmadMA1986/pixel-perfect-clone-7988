@@ -96,11 +96,14 @@ const MkxDashboard = () => {
     return formatAEDFull(v);
   };
 
-  // Latest KPI for VARA assessment
-  const latestKPI = kpiData[kpiData.length - 1];
+  // KPI for VARA assessment — use selected month or latest
+  const activeKPI = useMemo(() => {
+    if (selectedMonth !== "all" && filteredKPI.length > 0) return filteredKPI[0];
+    return kpiData[kpiData.length - 1];
+  }, [selectedMonth, filteredKPI]);
 
   const getVARAStatus = (kpiKey: string): { value: string; status: "healthy" | "warning" | "risky" } => {
-    const k = latestKPI;
+    const k = activeKPI;
     switch (kpiKey) {
       case "revenuePerTradingVolume": {
         const v = k.revenuePerTradingVolume * 100;
@@ -765,7 +768,7 @@ const MkxDashboard = () => {
                   <Shield className="h-5 w-5 text-primary" />
                   <div>
                     <CardTitle className="text-lg font-serif text-foreground">VARA Required Ratios — Compliance Assessment</CardTitle>
-                    <p className="text-xs text-muted-foreground mt-1">Current values as of {latestKPI.month} vs UAE VARA Standards</p>
+                    <p className="text-xs text-muted-foreground mt-1">Current values as of {activeKPI.month} vs UAE VARA Standards</p>
                   </div>
                 </div>
               </CardHeader>
