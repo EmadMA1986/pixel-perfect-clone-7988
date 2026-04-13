@@ -13,7 +13,7 @@ import {
   Building2,
 } from "lucide-react";
 import SummaryCard from "@/components/SummaryCard";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import MonthFilter from "@/components/MonthFilter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -50,6 +50,22 @@ import {
 } from "@/data/mkxData";
 
 const MkxDashboard = () => {
+  const [selectedMonth, setSelectedMonth] = useState("all");
+
+  const allMonths = useMemo(() => monthlyData.map((m) => m.month), []);
+
+  const filteredMonthly = useMemo(
+    () => selectedMonth === "all" ? monthlyData : monthlyData.filter((m) => m.month === selectedMonth),
+    [selectedMonth]
+  );
+
+  const filteredKPI = useMemo(
+    () => selectedMonth === "all" ? kpiData : kpiData.filter((k) => k.month === selectedMonth),
+    [selectedMonth]
+  );
+
+  const isFiltered = selectedMonth !== "all";
+
   const revenueChartData = useMemo(
     () =>
       monthlyData.map((m) => ({
