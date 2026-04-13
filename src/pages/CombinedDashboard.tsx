@@ -70,13 +70,13 @@ const CombinedDashboard = () => {
   const mkAutosCarsROI = mkAutosSummary.overallROI;
 
   // 3. MKX Crypto (50%)
-  const mkxShareCapital = 5329871.48;
+  const mkxShareCapital = 5788933.98; // Ahmad's share capital as of Mar 2026
   const mkxCryptoInjection = 1688442;
   const mkxTotalInvestment = mkxShareCapital + mkxCryptoInjection;
-  const mkxTotalLoss = mkxSummary.fullYearNetEarnings; // -4,603,995
+  const mkxTotalLoss = mkxSummary.fullYearNetEarnings;
   const mkxLossShare = mkxTotalLoss * 0.5;
   const mkxRetainedEarnings = -7261014.27;
-  const mkxNetIncome = -698389.49;
+  const mkxNetIncome = -865195.22; // 2026 YTD net income as of Mar 2026
   const mkxTotalPL = (mkxRetainedEarnings + mkxNetIncome) * 0.5;
   const mkxNetPosition = mkxShareCapital + mkxTotalPL;
   const mkxROI = (mkxTotalPL / mkxShareCapital) * 100;
@@ -156,7 +156,7 @@ const CombinedDashboard = () => {
       netPosition: mkxNetPosition,
       roi: mkxROI,
       color: "hsl(var(--chart-3))",
-      updatedTo: "Feb 2026",
+      updatedTo: "Mar 2026",
     },
     {
       name: "MK Garage",
