@@ -946,7 +946,9 @@ const MkxDashboard = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {monthlyData.map((row, i) => (
+                      {filteredMonthly.map((row) => {
+                        const i = monthlyData.indexOf(row);
+                        return (
                         <TableRow key={row.month} className="border-border/30 hover:bg-secondary/30">
                           <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">{row.month}</TableCell>
                           <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAEDFull(row.clientDepositsFiat)}</TableCell>
