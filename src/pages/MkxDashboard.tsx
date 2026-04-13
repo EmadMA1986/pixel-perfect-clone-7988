@@ -204,6 +204,7 @@ const MkxDashboard = () => {
             </CardContent>
           </Card>
         </div>
+        )}
 
         {/* MKX Crypto Assets */}
         <Card className="border-border/50 bg-gradient-to-r from-emerald-500/10 to-violet-500/5 backdrop-blur-sm">
