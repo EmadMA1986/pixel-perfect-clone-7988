@@ -177,6 +177,64 @@ const OtcDashboard = () => {
           </Card>
         </div>
 
+        {/* Operational Insights */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Expense Ratio Trend */}
+          <Card className="border-border/50 bg-card/80 backdrop-blur-sm lg:col-span-2">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Expense Ratio Trend (Expenses as % of Gross Profit)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={monthlyPL.filter(m => !m.month.includes("Dec 2024")).map(m => ({
+                  name: m.month.replace("Jan-Dec 2024", "2024"),
+                  ratio: m.grossProfit > 0 ? parseFloat(((m.cashExpenses / m.grossProfit) * 100).toFixed(1)) : 0,
+                  grossProfit: m.grossProfit,
+                }))} margin={{ top: 5, right: 20, bottom: 30, left: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 18%)" />
+                  <XAxis dataKey="name" tick={{ fill: "hsl(220 10% 50%)", fontSize: 9 }} angle={-45} textAnchor="end" />
+                  <YAxis tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} tickFormatter={(v) => `${v}%`} />
+                  <Tooltip contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }} formatter={(value: number) => [`${value}%`, "Expense Ratio"]} />
+                  <Line type="monotone" dataKey="ratio" stroke="hsl(43, 74%, 52%)" strokeWidth={2} dot={{ r: 3, fill: "hsl(43, 74%, 52%)" }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Scam Loss Tracker */}
+          <Card className="border-loss/20 bg-loss/5 backdrop-blur-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-loss" />
+                Scam Loss Tracker
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <p className="text-xs text-muted-foreground">Total Scam Losses</p>
+                <p className="text-2xl font-bold font-serif text-loss">{formatAED(otcSummary.scamYTD)}</p>
+              </div>
+              <div className="space-y-2">
+                {monthlyPL.filter(m => m.scam > 0).map(m => (
+                  <div key={m.month} className="flex justify-between items-center text-xs p-2 rounded bg-loss/10">
+                    <span className="text-muted-foreground">{m.month}</span>
+                    <span className="font-bold text-loss">{formatAED(m.scam)}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="pt-2 border-t border-border/30">
+                <p className="text-xs text-muted-foreground">Impact on Net Profit</p>
+                <p className="text-sm font-semibold text-foreground">
+                  Without scam: {formatAED(otcSummary.netProfitYTD + otcSummary.scamYTD)} net profit
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Scam represents {((otcSummary.scamYTD / otcSummary.grossProfitYTD) * 100).toFixed(1)}% of gross profit
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Tabs */}
         <Tabs defaultValue="monthly" className="space-y-4">
           <TabsList className="bg-secondary/50">
