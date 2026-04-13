@@ -53,7 +53,7 @@ import {
 const MkxDashboard = () => {
   const [selectedMonth, setSelectedMonth] = useState("all");
 
-  const allMonths = useMemo(() => monthlyData.map((m) => m.month), []);
+  const allMonths = useMemo(() => plMonths, []);
 
   const filteredMonthly = useMemo(
     () => selectedMonth === "all" ? monthlyData : monthlyData.filter((m) => m.month === selectedMonth),
