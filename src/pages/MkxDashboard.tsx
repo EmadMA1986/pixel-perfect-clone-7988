@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import SummaryCard from "@/components/SummaryCard";
 import MonthFilter from "@/components/MonthFilter";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
