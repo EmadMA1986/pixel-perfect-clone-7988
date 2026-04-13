@@ -283,7 +283,31 @@ const RyaDashboard = () => {
                 Filters
               </div>
 
-              {/* Date From */}
+              {/* Quick Month Preset */}
+              <Select value="custom" onValueChange={(v) => {
+                if (v === "custom") return;
+                if (v === "all") { setDateFrom(undefined); setDateTo(undefined); return; }
+                const [monthStr, yearStr] = v.split("-");
+                const monthMap: Record<string, number> = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
+                const year = 2000 + parseInt(yearStr);
+                const month = monthMap[monthStr];
+                const from = new Date(year, month, 1);
+                const to = new Date(year, month + 1, 0);
+                setDateFrom(from);
+                setDateTo(to);
+              }}>
+                <SelectTrigger className="w-[130px] h-8 text-xs">
+                  <SelectValue placeholder="Quick Month" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="custom">Quick Month</SelectItem>
+                  <SelectItem value="all">All Time</SelectItem>
+                  {["Oct-24","Nov-24","Dec-24","Jan-25","Feb-25","Mar-25","Apr-25","May-25","Jun-25","Jul-25","Aug-25","Sep-25","Oct-25","Nov-25","Dec-25","Jan-26","Feb-26","Mar-26"].map((m) => (
+                    <SelectItem key={m} value={m}>{m}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className={cn("text-xs gap-1.5", !dateFrom && "text-muted-foreground")}>

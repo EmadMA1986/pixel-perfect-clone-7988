@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
   TrendingUp,
@@ -13,6 +13,7 @@ import {
   Building2,
 } from "lucide-react";
 import SummaryCard from "@/components/SummaryCard";
+import MonthFilter from "@/components/MonthFilter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -50,43 +51,60 @@ import {
 } from "@/data/mkxData";
 
 const MkxDashboard = () => {
+  const [selectedMonth, setSelectedMonth] = useState("all");
+
+  const allMonths = useMemo(() => plMonths, []);
+
+  const filteredMonthly = useMemo(
+    () => selectedMonth === "all" ? monthlyData : monthlyData.filter((m) => m.month === selectedMonth),
+    [selectedMonth]
+  );
+
+  const filteredKPI = useMemo(
+    () => selectedMonth === "all" ? kpiData : kpiData.filter((k) => k.month === selectedMonth),
+    [selectedMonth]
+  );
+
+  const isFiltered = selectedMonth !== "all";
+  const hasMonthlyData = filteredMonthly.length > 0;
+
   const revenueChartData = useMemo(
     () =>
-      monthlyData.map((m) => ({
+      filteredMonthly.map((m) => ({
         name: m.month,
         revenue: Math.round(m.revenue),
         grossProfit: Math.round(m.grossProfit),
         expenses: Math.round(m.totalExpenses),
       })),
-    []
+    [filteredMonthly]
   );
 
   const profitChartData = useMemo(
     () =>
-      monthlyData.map((m) => ({
+      filteredMonthly.map((m) => ({
         name: m.month,
         netProfit: Math.round(m.netProfit),
       })),
-    []
+    [filteredMonthly]
   );
 
   const volumeChartData = useMemo(
     () =>
-      monthlyData.map((m) => ({
+      filteredMonthly.map((m) => ({
         name: m.month,
         volume: Math.round(m.tradingVolume),
       })),
-    []
+    [filteredMonthly]
   );
 
   const liquidityChartData = useMemo(
     () =>
-      kpiData.map((k) => ({
+      filteredKPI.map((k) => ({
         name: k.month,
         buffer: Math.round(k.liquidityBuffer),
         coverage: k.assetCoverageRatio,
       })),
-    []
+    [filteredKPI]
   );
 
   const formatPLValue = (v: number) => {
@@ -117,15 +135,19 @@ const MkxDashboard = () => {
               </p>
             </div>
           </div>
-          <Badge variant="secondary" className="text-xs">
-            Currency: AED
-          </Badge>
+          <div className="flex items-center gap-3">
+            <MonthFilter months={allMonths} value={selectedMonth} onChange={setSelectedMonth} />
+            <Badge variant="secondary" className="text-xs">
+              Currency: AED
+            </Badge>
+          </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-6">
         {/* Partners' Capital Position */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Partners' Capital Position - only in All Time */}
+        {!isFiltered && (<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Ahmad */}
           <Card className="border-border/50 bg-gradient-to-r from-violet-500/10 to-violet-700/5 backdrop-blur-sm">
             <CardContent className="p-5 space-y-3">
@@ -183,8 +205,10 @@ const MkxDashboard = () => {
             </CardContent>
           </Card>
         </div>
+        )}
 
-        {/* MKX Crypto Assets */}
+        {/* MKX Crypto Assets - only in All Time */}
+        {!isFiltered && (
         <Card className="border-border/50 bg-gradient-to-r from-emerald-500/10 to-violet-500/5 backdrop-blur-sm">
           <CardContent className="p-5">
             <div className="flex flex-wrap items-center justify-between gap-4">
@@ -233,8 +257,10 @@ const MkxDashboard = () => {
             </div>
           </CardContent>
         </Card>
+        )}
 
         {/* Client Liabilities vs Assets */}
+        {!isFiltered && (
         <Card className="border-border/50 bg-gradient-to-r from-amber-500/10 to-amber-700/5 backdrop-blur-sm">
           <CardContent className="p-5">
             <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 items-end">
@@ -267,6 +293,7 @@ const MkxDashboard = () => {
             </div>
           </CardContent>
         </Card>
+        )}
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -637,7 +664,8 @@ const MkxDashboard = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {plMonths.map((month, i) => {
+                      {plMonths.filter((m) => selectedMonth === "all" || m === selectedMonth).map((month) => {
+                        const i = plMonths.indexOf(month);
                         const income = plData.find(r => r.label === "Total Income");
                         const cogs = plData.find(r => r.label === "Total Cost of Sales");
                         const gp = plData.find(r => r.label === "Gross Profit");
@@ -819,7 +847,7 @@ const MkxDashboard = () => {
                     <TableHeader>
                       <TableRow className="border-border/50 hover:bg-transparent">
                         <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">KPI</TableHead>
-                        {kpiData.map((k) => (
+                        {filteredKPI.map((k) => (
                           <TableHead key={k.month} className="text-xs text-muted-foreground uppercase tracking-wider text-right">{k.month}</TableHead>
                         ))}
                       </TableRow>
@@ -827,19 +855,19 @@ const MkxDashboard = () => {
                     <TableBody>
                       <TableRow className="border-border/30 hover:bg-secondary/30">
                         <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Gross Margin</TableCell>
-                        {kpiData.map((k) => (
+                        {filteredKPI.map((k) => (
                           <TableCell key={k.month} className="text-sm tabular-nums text-right text-success">{k.grossMarginPct.toFixed(1)}%</TableCell>
                         ))}
                       </TableRow>
                       <TableRow className="border-border/30 hover:bg-secondary/30">
                         <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Net Margin</TableCell>
-                        {kpiData.map((k) => (
+                        {filteredKPI.map((k) => (
                           <TableCell key={k.month} className="text-sm tabular-nums text-right text-loss">{k.netMarginPct.toFixed(1)}%</TableCell>
                         ))}
                       </TableRow>
                       <TableRow className="border-border/30 hover:bg-secondary/30">
                         <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Asset Coverage Ratio</TableCell>
-                        {kpiData.map((k) => (
+                        {filteredKPI.map((k) => (
                           <TableCell key={k.month} className="text-sm tabular-nums text-right">
                             <Badge variant={k.assetCoverageRatio >= 1.5 ? "default" : "destructive"} className="text-xs">
                               {k.assetCoverageRatio.toFixed(2)}x
@@ -849,25 +877,25 @@ const MkxDashboard = () => {
                       </TableRow>
                       <TableRow className="border-border/30 hover:bg-secondary/30">
                         <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Liquidity Buffer</TableCell>
-                        {kpiData.map((k) => (
+                        {filteredKPI.map((k) => (
                           <TableCell key={k.month} className="text-sm tabular-nums text-right text-foreground">{formatAED(k.liquidityBuffer)}</TableCell>
                         ))}
                       </TableRow>
                       <TableRow className="border-border/30 hover:bg-secondary/30">
                         <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Trading Vol / Deposits</TableCell>
-                        {kpiData.map((k) => (
+                        {filteredKPI.map((k) => (
                           <TableCell key={k.month} className="text-sm tabular-nums text-right text-muted-foreground">{k.tradingVolumePerTotalDeposits.toFixed(3)}</TableCell>
                         ))}
                       </TableRow>
                       <TableRow className="border-border/30 hover:bg-secondary/30">
                         <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Revenue / Trading Vol</TableCell>
-                        {kpiData.map((k) => (
+                        {filteredKPI.map((k) => (
                           <TableCell key={k.month} className="text-sm tabular-nums text-right text-muted-foreground">{(k.revenuePerTradingVolume * 100).toFixed(2)}%</TableCell>
                         ))}
                       </TableRow>
                       <TableRow className="border-border/30 hover:bg-secondary/30">
                         <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Asset Valuation Diff</TableCell>
-                        {kpiData.map((k) => (
+                        {filteredKPI.map((k) => (
                           <TableCell key={k.month} className={`text-sm tabular-nums text-right ${k.assetValuationDiff >= 0 ? "text-success" : "text-loss"}`}>
                             {formatAED(k.assetValuationDiff)}
                           </TableCell>
@@ -875,13 +903,13 @@ const MkxDashboard = () => {
                       </TableRow>
                       <TableRow className="border-border/30 hover:bg-secondary/30">
                         <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Break-even Trading Vol</TableCell>
-                        {kpiData.map((k) => (
+                        {filteredKPI.map((k) => (
                           <TableCell key={k.month} className="text-sm tabular-nums text-right text-muted-foreground">{formatAED(k.breakEvenTradingVolume)}</TableCell>
                         ))}
                       </TableRow>
                       <TableRow className="border-border/30 hover:bg-secondary/30">
                         <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">Net Profit / Trading Vol</TableCell>
-                        {kpiData.map((k) => (
+                        {filteredKPI.map((k) => (
                           <TableCell key={k.month} className={`text-sm tabular-nums text-right ${k.netProfitPerTradingVolume >= 0 ? "text-success" : "text-loss"}`}>
                             {(k.netProfitPerTradingVolume * 100).toFixed(2)}%
                           </TableCell>
@@ -918,7 +946,9 @@ const MkxDashboard = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {monthlyData.map((row, i) => (
+                      {filteredMonthly.map((row) => {
+                        const i = monthlyData.indexOf(row);
+                        return (
                         <TableRow key={row.month} className="border-border/30 hover:bg-secondary/30">
                           <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">{row.month}</TableCell>
                           <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAEDFull(row.clientDepositsFiat)}</TableCell>
@@ -933,7 +963,8 @@ const MkxDashboard = () => {
                           </TableCell>
                           <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAEDFull(row.tradingVolume)}</TableCell>
                         </TableRow>
-                      ))}
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>
