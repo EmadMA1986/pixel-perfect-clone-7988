@@ -388,7 +388,7 @@ export const mkxSummary = {
   latestAssetBookValue: monthlyData[monthlyData.length - 1].assetBookValue,
   latestAssetCoverage: kpiData[kpiData.length - 1].assetCoverageRatio,
   totalTradingVolume: monthlyData.reduce((s, m) => s + m.tradingVolume, 0),
-  fullYearNetEarnings: -4770800.75,
+  fullYearNetEarnings: -8126209.49, // cumulative retained loss + 2026 YTD net income
   fullYearTotalIncome: 538208.48,
   fullYearTotalExpenses: 5308221.32,
   fullYearGrossProfit: 504125.83,
