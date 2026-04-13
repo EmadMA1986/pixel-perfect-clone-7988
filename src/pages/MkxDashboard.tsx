@@ -145,7 +145,8 @@ const MkxDashboard = () => {
 
       <main className="container mx-auto px-4 py-6 space-y-6">
         {/* Partners' Capital Position */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Partners' Capital Position - only in All Time */}
+        {!isFiltered && (<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Ahmad */}
           <Card className="border-border/50 bg-gradient-to-r from-violet-500/10 to-violet-700/5 backdrop-blur-sm">
             <CardContent className="p-5 space-y-3">
