@@ -275,150 +275,145 @@ const MkAutosDashboard = () => {
         </div>
 
         {/* Tabs */}
-        {/* Two tables side by side */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-          {/* Table 1: Investment & NBV */}
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-serif text-foreground">Investment & Book Value</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-border/50 hover:bg-transparent">
-                      <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">Vehicle</TableHead>
-                      <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Investment</TableHead>
-                      <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Maint.</TableHead>
-                      <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Depr.</TableHead>
-                      <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">NBV</TableHead>
-                      <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Sale Value</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {vehicles.map((v) => (
-                      <TableRow key={v.name} className="border-border/30 hover:bg-secondary/30">
-                        <TableCell className="text-sm font-medium text-foreground">{v.name}</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-foreground">{v.initialInvestment ? formatAED(v.initialInvestment) : "-"}</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{v.maintenanceExpenses ? formatAED(v.maintenanceExpenses) : "-"}</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{v.totalDepreciation ? formatAED(v.totalDepreciation) : "-"}</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-foreground">{v.nbv ? formatAED(v.nbv) : "-"}</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-foreground">{v.saleValue ? formatAED(v.saleValue) : "-"}</TableCell>
-                      </TableRow>
-                    ))}
-                    <TableRow className="border-border/50 bg-secondary/30 font-semibold">
-                      <TableCell className="text-sm text-foreground">Total</TableCell>
-                      <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(mkAutosSummary.totalInitialInvestment)}</TableCell>
-                      <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAED(mkAutosSummary.totalMaintenanceExpenses)}</TableCell>
-                      <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAED(mkAutosSummary.totalDepreciation)}</TableCell>
-                      <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(mkAutosSummary.totalNBV)}</TableCell>
-                      <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(mkAutosSummary.totalSaleValue)}</TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
+        <Tabs defaultValue="fleet" className="space-y-4">
+          <TabsList className="bg-secondary/50">
+            <TabsTrigger value="fleet">Vehicle Fleet</TabsTrigger>
+            <TabsTrigger value="monthly">Monthly Income</TabsTrigger>
+          </TabsList>
 
-          {/* Table 2: Performance & Scorecard */}
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-serif text-foreground">Performance & Scorecard</CardTitle>
-              <p className="text-[10px] text-muted-foreground">Ranked by Real ROI — Keep / Hold / Watch / Sell</p>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-border/50 hover:bg-transparent">
-                      <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">Vehicle</TableHead>
-                      <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Income</TableHead>
-                      <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Net Profit</TableHead>
-                      <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Real ROI</TableHead>
-                      <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Avg/Mo</TableHead>
-                      <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-center">Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {vehicles
-                      .filter(v => v.initialInvestment > 0)
-                      .sort((a, b) => b.realROI - a.realROI)
-                      .map((v) => {
-                        const rec = v.realROI >= 5 ? "Keep" : v.realROI >= 0 ? "Hold" : v.realROI >= -10 ? "Watch" : "Sell";
+          {/* Fleet Overview */}
+          <TabsContent value="fleet">
+            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-serif text-foreground">Vehicle Fleet Overview</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-border/50 hover:bg-transparent">
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">Vehicle</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Investment</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Maintenance</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Depreciation</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">NBV</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Income</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Net Profit</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Real Profit</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Cash ROI</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Real ROI</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Sale Value</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Final ROI</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Avg/Month</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-center">Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {vehicles.map((v) => {
+                        const rec = v.initialInvestment > 0 ? (v.realROI >= 5 ? "Keep" : v.realROI >= 0 ? "Hold" : v.realROI >= -10 ? "Watch" : "Sell") : null;
                         const recColor = rec === "Keep" ? "default" : rec === "Hold" ? "secondary" : rec === "Watch" ? "outline" : "destructive";
                         const recIcon = rec === "Keep" ? "⭐" : rec === "Hold" ? "✋" : rec === "Watch" ? "👁" : "🔻";
                         return (
                           <TableRow key={v.name} className="border-border/30 hover:bg-secondary/30">
                             <TableCell className="text-sm font-medium text-foreground">{v.name}</TableCell>
-                            <TableCell className="text-sm tabular-nums text-right font-medium text-success">{formatAED(v.totalProfit)}</TableCell>
-                            <TableCell className={`text-sm tabular-nums text-right ${v.netProfit >= 0 ? "text-success" : "text-destructive"}`}>{formatAED(v.netProfit)}</TableCell>
-                            <TableCell className={`text-sm tabular-nums text-right font-bold ${v.realROI >= 0 ? "text-success" : "text-destructive"}`}>{v.realROI}%</TableCell>
-                            <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(v.avgMonthlyProfit)}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-foreground">{v.initialInvestment ? formatAED(v.initialInvestment) : "-"}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{v.maintenanceExpenses ? formatAED(v.maintenanceExpenses) : "-"}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{v.totalDepreciation ? formatAED(v.totalDepreciation) : "-"}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-foreground">{v.nbv ? formatAED(v.nbv) : "-"}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right font-medium text-success">{v.totalProfit ? formatAED(v.totalProfit) : "-"}</TableCell>
+                            <TableCell className={`text-sm tabular-nums text-right font-medium ${v.netProfit >= 0 ? "text-success" : "text-destructive"}`}>{formatAED(v.netProfit)}</TableCell>
+                            <TableCell className={`text-sm tabular-nums text-right ${v.realProfit >= 0 ? "text-success" : "text-destructive"}`}>{formatAED(v.realProfit)}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right">
+                              {v.roiOnInvestment ? <Badge variant="secondary" className="text-xs">{v.roiOnInvestment}%</Badge> : "-"}
+                            </TableCell>
+                            <TableCell className={`text-sm tabular-nums text-right ${v.realROI >= 0 ? "text-success" : "text-destructive"}`}>
+                              {v.realROI ? `${v.realROI}%` : "-"}
+                            </TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-foreground">{v.saleValue ? formatAED(v.saleValue) : "-"}</TableCell>
+                            <TableCell className={`text-sm tabular-nums text-right ${v.finalROI >= 0 ? "text-success" : "text-destructive"}`}>
+                              {v.finalROI ? `${v.finalROI}%` : "-"}
+                            </TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-foreground">{v.avgMonthlyProfit ? formatAED(v.avgMonthlyProfit) : "-"}</TableCell>
                             <TableCell className="text-center">
-                              <Badge variant={recColor as any} className="text-xs">
-                                {recIcon} {rec}
-                              </Badge>
+                              {rec ? (
+                                <Badge variant={recColor as any} className="text-xs">
+                                  {recIcon} {rec}
+                                </Badge>
+                              ) : "-"}
                             </TableCell>
                           </TableRow>
                         );
                       })}
-                    <TableRow className="border-border/50 bg-secondary/30 font-semibold">
-                      <TableCell className="text-sm text-foreground">Total</TableCell>
-                      <TableCell className="text-sm tabular-nums text-right font-bold text-success">{formatAED(mkAutosSummary.totalGrossProfit)}</TableCell>
-                      <TableCell className="text-sm tabular-nums text-right font-bold text-success">{formatAED(mkAutosSummary.netProfit)}</TableCell>
-                      <TableCell className="text-sm tabular-nums text-right text-destructive">{mkAutosSummary.realROI}%</TableCell>
-                      <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(mkAutosSummary.avgMonthlyIncome)}</TableCell>
-                      <TableCell />
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                      <TableRow className="border-border/50 bg-secondary/30 font-semibold">
+                        <TableCell className="text-sm text-foreground">Total</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(mkAutosSummary.totalInitialInvestment)}</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAED(mkAutosSummary.totalMaintenanceExpenses)}</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAED(mkAutosSummary.totalDepreciation)}</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(mkAutosSummary.totalNBV)}</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right font-bold text-success">{formatAED(mkAutosSummary.totalGrossProfit)}</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right font-bold text-success">{formatAED(mkAutosSummary.netProfit)}</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right text-destructive">{formatAED(-355470.15)}</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right">
+                          <Badge variant="secondary" className="text-xs">{mkAutosSummary.overallROI}%</Badge>
+                        </TableCell>
+                        <TableCell className="text-sm tabular-nums text-right text-destructive">{mkAutosSummary.realROI}%</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(mkAutosSummary.totalSaleValue)}</TableCell>
+                        <TableCell className={`text-sm tabular-nums text-right ${mkAutosSummary.finalROI >= 0 ? "text-success" : "text-destructive"}`}>{mkAutosSummary.finalROI}%</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(mkAutosSummary.avgMonthlyIncome)}</TableCell>
+                        <TableCell />
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        {/* Monthly Income - full width */}
-        <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg font-serif text-foreground">Monthly Income by Vehicle</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-border/50 hover:bg-transparent">
-                    <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">Month</TableHead>
-                    <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">G63</TableHead>
-                    <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Lambo</TableHead>
-                    <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Corvette</TableHead>
-                    <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Cadillac</TableHead>
-                    <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Patrol</TableHead>
-                    <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">BMW</TableHead>
-                    <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">GLE 53</TableHead>
-                    <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">C 200</TableHead>
-                    <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right font-bold">Total</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {monthlyIncome.map((row) => (
-                    <TableRow key={row.month} className="border-border/30 hover:bg-secondary/30">
-                      <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">{row.month}</TableCell>
-                      <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{row.g63 > 0 ? formatAED(row.g63) : "—"}</TableCell>
-                      <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{row.lamborghini > 0 ? formatAED(row.lamborghini) : "—"}</TableCell>
-                      <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{row.corvette > 0 ? formatAED(row.corvette) : "—"}</TableCell>
-                      <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{row.cadillac > 0 ? formatAED(row.cadillac) : "—"}</TableCell>
-                      <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{row.patrol > 0 ? formatAED(row.patrol) : "—"}</TableCell>
-                      <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{row.bmw440i > 0 ? formatAED(row.bmw440i) : "—"}</TableCell>
-                      <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{row.gle53 > 0 ? formatAED(row.gle53) : "—"}</TableCell>
-                      <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{row.c200 > 0 ? formatAED(row.c200) : "—"}</TableCell>
-                      <TableCell className="text-sm tabular-nums text-right font-medium text-success">{row.total > 0 ? formatAED(row.total) : "—"}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+          {/* Monthly Income */}
+          <TabsContent value="monthly">
+            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-serif text-foreground">Monthly Income by Vehicle</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-border/50 hover:bg-transparent">
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">Month</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">G63</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Lambo</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Corvette</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Cadillac</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Patrol</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">BMW</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">GLE 53</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">C 200</TableHead>
+                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right font-bold">Total</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {monthlyIncome.map((row) => (
+                        <TableRow key={row.month} className="border-border/30 hover:bg-secondary/30">
+                          <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">{row.month}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{row.g63 > 0 ? formatAED(row.g63) : "—"}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{row.lamborghini > 0 ? formatAED(row.lamborghini) : "—"}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{row.corvette > 0 ? formatAED(row.corvette) : "—"}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{row.cadillac > 0 ? formatAED(row.cadillac) : "—"}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{row.patrol > 0 ? formatAED(row.patrol) : "—"}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{row.bmw440i > 0 ? formatAED(row.bmw440i) : "—"}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{row.gle53 > 0 ? formatAED(row.gle53) : "—"}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{row.c200 > 0 ? formatAED(row.c200) : "—"}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right font-medium text-success">{row.total > 0 ? formatAED(row.total) : "—"}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
         {/* Balance Sheet Summary */}
         <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
