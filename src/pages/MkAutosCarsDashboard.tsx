@@ -181,6 +181,7 @@ const MkAutosCarsDashboard = () => {
           <TabsList className="bg-secondary/50">
             {!isFiltered && <TabsTrigger value="fleet">Vehicle Fleet</TabsTrigger>}
             <TabsTrigger value="monthly">Monthly Income</TabsTrigger>
+            {!isFiltered && <TabsTrigger value="scorecard">Performance Scorecard</TabsTrigger>}
           </TabsList>
 
           {!isFiltered && (
