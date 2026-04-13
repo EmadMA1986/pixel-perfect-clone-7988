@@ -66,6 +66,7 @@ const MkxDashboard = () => {
   );
 
   const isFiltered = selectedMonth !== "all";
+  const hasMonthlyData = filteredMonthly.length > 0;
 
   const revenueChartData = useMemo(
     () =>
