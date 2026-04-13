@@ -373,6 +373,18 @@ export const varaStandards: VARAStandard[] = [
   { ratio: "Asset Valuation Ratio (%)", kpiKey: "assetValuationRatio", healthy: "0% to +10%", risky: "-5% or worse" },
 ];
 
+// Ahmad's share capital by month (capital injections tracked over time)
+export const ahmadCapitalByMonth: Record<string, number> = {
+  "Aug-25": 5329871.48,
+  "Sep-25": 5329871.48,
+  "Oct-25": 5329871.48,
+  "Nov-25": 5329871.48,
+  "Dec-25": 5329871.48,
+  "Jan-26": 5329871.48,
+  "Feb-26": 5329871.48,
+  "Mar-26": 5788933.98,
+};
+
 // Summary / averages
 export const mkxSummary = {
   totalRevenue: monthlyData.reduce((s, m) => s + m.revenue, 0),
