@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
   TrendingUp,
@@ -12,6 +12,7 @@ import {
   Wrench,
 } from "lucide-react";
 import SummaryCard from "@/components/SummaryCard";
+import MonthFilter from "@/components/MonthFilter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -44,31 +45,43 @@ import {
 } from "@/data/garageData";
 
 const GarageDashboard = () => {
-  const totalSales = useMemo(() => monthlyPL.reduce((s, m) => s + m.sales, 0), []);
-  const totalRevenue = useMemo(() => monthlyPL.reduce((s, m) => s + m.totalRevenue, 0), []);
-  const totalGrossProfit = useMemo(() => monthlyPL.reduce((s, m) => s + m.grossProfit, 0), []);
-  const totalNetProfit = useMemo(() => monthlyPL.reduce((s, m) => s + m.netProfit, 0), []);
+  const [selectedMonth, setSelectedMonth] = useState("all");
+
+  const months = useMemo(() => monthlyPL.map((m) => m.month), []);
+
+  const filteredPL = useMemo(
+    () => selectedMonth === "all" ? monthlyPL : monthlyPL.filter((m) => m.month === selectedMonth),
+    [selectedMonth]
+  );
+
+  const isFiltered = selectedMonth !== "all";
+  const periodLabel = isFiltered ? selectedMonth : "Nov 24 – Feb 26";
+
+  const totalSales = filteredPL.reduce((s, m) => s + m.sales, 0);
+  const totalRevenue = filteredPL.reduce((s, m) => s + m.totalRevenue, 0);
+  const totalGrossProfit = filteredPL.reduce((s, m) => s + m.grossProfit, 0);
+  const totalNetProfit = filteredPL.reduce((s, m) => s + m.netProfit, 0);
 
   const revenueChartData = useMemo(
     () =>
-      monthlyPL.map((m) => ({
+      filteredPL.map((m) => ({
         name: m.month,
         revenue: Math.round(m.totalRevenue),
         grossProfit: Math.round(m.grossProfit),
         netProfit: Math.round(m.netProfit),
       })),
-    []
+    [filteredPL]
   );
 
   const expenseChartData = useMemo(
     () =>
-      monthlyPL.map((m) => ({
+      filteredPL.map((m) => ({
         name: m.month,
         payroll: Math.round(m.payroll),
         rent: Math.round(m.rent),
         other: Math.round(m.indirectExpenses - m.payroll - m.rent),
       })),
-    []
+    [filteredPL]
   );
 
   const ahmadShareOfLoss = balanceSheet.profitAndLoss * (ahmadGarage.sharePercent / 100);
@@ -97,64 +110,69 @@ const GarageDashboard = () => {
               </p>
             </div>
           </div>
-          <Badge variant="secondary" className="text-xs">
-            Currency: AED
-          </Badge>
+          <div className="flex items-center gap-3">
+            <MonthFilter months={months} value={selectedMonth} onChange={setSelectedMonth} />
+            <Badge variant="secondary" className="text-xs">
+              Currency: AED
+            </Badge>
+          </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-6">
         {/* Ahmad's Capital Position */}
-        <Card className="border-border/50 bg-gradient-to-r from-orange-500/10 to-orange-700/5 backdrop-blur-sm">
-          <CardContent className="p-5 space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Wallet className="h-5 w-5 text-primary" />
+        {!isFiltered && (
+          <Card className="border-border/50 bg-gradient-to-r from-orange-500/10 to-orange-700/5 backdrop-blur-sm">
+            <CardContent className="p-5 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Wallet className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">
+                    Ahmad's Capital Position (40%)
+                  </p>
+                  <p className="text-2xl font-bold font-serif text-foreground">
+                    {formatAEDFull(ahmadGarage.shareCapital)}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">
-                  Ahmad's Capital Position (40%)
-                </p>
-                <p className="text-2xl font-bold font-serif text-foreground">
-                  {formatAEDFull(ahmadGarage.shareCapital)}
-                </p>
+              <div className="grid grid-cols-4 gap-2">
+                <div>
+                  <p className="text-xs text-muted-foreground">Total Company Capital</p>
+                  <p className="text-lg font-bold font-serif text-foreground">
+                    {formatAEDFull(ahmadGarage.totalCapital)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Ahmad's Share (40%)</p>
+                  <p className="text-lg font-bold font-serif text-foreground">
+                    {formatAEDFull(ahmadGarage.shareCapital)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">P&L Share (40%)</p>
+                  <p className={`text-lg font-bold font-serif ${ahmadShareOfLoss < 0 ? "text-loss" : "text-success"}`}>
+                    {formatAEDFull(ahmadShareOfLoss)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Net Position</p>
+                  <p className={`text-lg font-bold font-serif ${ahmadNetPosition >= 0 ? "text-success" : "text-loss"}`}>
+                    {formatAEDFull(ahmadNetPosition)}
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="grid grid-cols-4 gap-2">
-              <div>
-                <p className="text-xs text-muted-foreground">Total Company Capital</p>
-                <p className="text-lg font-bold font-serif text-foreground">
-                  {formatAEDFull(ahmadGarage.totalCapital)}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Ahmad's Share (40%)</p>
-                <p className="text-lg font-bold font-serif text-foreground">
-                  {formatAEDFull(ahmadGarage.shareCapital)}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">P&L Share (40%)</p>
-                <p className={`text-lg font-bold font-serif ${ahmadShareOfLoss < 0 ? "text-loss" : "text-success"}`}>
-                  {formatAEDFull(ahmadShareOfLoss)}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Net Position</p>
-                <p className={`text-lg font-bold font-serif ${ahmadNetPosition >= 0 ? "text-success" : "text-loss"}`}>
-                  {formatAEDFull(ahmadNetPosition)}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <SummaryCard
             title="Total Revenue"
             value={formatAED(totalRevenue)}
-            subtitle="Nov 24 – Feb 26"
+            subtitle={periodLabel}
             icon={DollarSign}
           />
           <SummaryCard
@@ -173,160 +191,166 @@ const GarageDashboard = () => {
           <SummaryCard
             title="Net Profit"
             value={formatAED(totalNetProfit)}
-            subtitle="Cumulative"
+            subtitle={isFiltered ? selectedMonth : "Cumulative"}
             icon={TrendingDown}
             trend="down"
           />
-          <SummaryCard
-            title="Fixed Assets"
-            value={formatAED(balanceSheet.fixedAssets.total)}
-            subtitle="incl. Goodwill 600K"
-            icon={Building2}
-          />
-          <SummaryCard
-            title="Current Assets"
-            value={formatAED(balanceSheet.currentAssets.total)}
-            subtitle={`AR: ${formatAED(balanceSheet.currentAssets.accountsReceivable)}`}
-            icon={FileText}
-          />
+          {!isFiltered && (
+            <>
+              <SummaryCard
+                title="Fixed Assets"
+                value={formatAED(balanceSheet.fixedAssets.total)}
+                subtitle="incl. Goodwill 600K"
+                icon={Building2}
+              />
+              <SummaryCard
+                title="Current Assets"
+                value={formatAED(balanceSheet.currentAssets.total)}
+                subtitle={`AR: ${formatAED(balanceSheet.currentAssets.accountsReceivable)}`}
+                icon={FileText}
+              />
+            </>
+          )}
         </div>
 
-        {/* Balance Sheet Overview */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Liabilities */}
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-                Liabilities & Equity — as of Feb 28, 2026
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <p className="text-xs font-semibold text-muted-foreground mb-1">Capital Account</p>
-                {[
-                  { label: "Manal Mussa", value: balanceSheet.capital.manalMussa },
-                  { label: "Mr. Ahmed", value: balanceSheet.capital.mrAhmed },
-                  { label: "Mr. Jamal", value: balanceSheet.capital.mrJamal },
-                  { label: "Mr. Laavan", value: balanceSheet.capital.mrLaavan },
-                ].map((i) => (
-                  <div key={i.label} className="flex justify-between text-xs py-0.5">
-                    <span className="text-muted-foreground">{i.label}</span>
-                    <span className="font-medium text-foreground">{formatAEDFull(i.value)}</span>
+        {/* Balance Sheet Overview - only in All Time */}
+        {!isFiltered && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Liabilities */}
+            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+                  Liabilities & Equity — as of Feb 28, 2026
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground mb-1">Capital Account</p>
+                  {[
+                    { label: "Manal Mussa", value: balanceSheet.capital.manalMussa },
+                    { label: "Mr. Ahmed", value: balanceSheet.capital.mrAhmed },
+                    { label: "Mr. Jamal", value: balanceSheet.capital.mrJamal },
+                    { label: "Mr. Laavan", value: balanceSheet.capital.mrLaavan },
+                  ].map((i) => (
+                    <div key={i.label} className="flex justify-between text-xs py-0.5">
+                      <span className="text-muted-foreground">{i.label}</span>
+                      <span className="font-medium text-foreground">{formatAEDFull(i.value)}</span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between text-xs py-0.5 border-t border-border/50 mt-1 pt-1">
+                    <span className="font-bold text-foreground">Total Capital</span>
+                    <span className="font-bold text-foreground">{formatAEDFull(balanceSheet.capital.total)}</span>
                   </div>
-                ))}
-                <div className="flex justify-between text-xs py-0.5 border-t border-border/50 mt-1 pt-1">
-                  <span className="font-bold text-foreground">Total Capital</span>
-                  <span className="font-bold text-foreground">{formatAEDFull(balanceSheet.capital.total)}</span>
                 </div>
-              </div>
 
-              <div>
-                <p className="text-xs font-semibold text-muted-foreground mb-1">Loans</p>
-                {[
-                  { label: "Manal Mussa Current A/C", value: balanceSheet.loans.manalMussaCurrent },
-                  { label: "Mr. Ahmed Current A/C", value: balanceSheet.loans.mrAhmedCurrent },
-                  { label: "Sister Co. MK Autos", value: balanceSheet.loans.sisterCompanyMkAutos },
-                  { label: "Employee Loan", value: balanceSheet.loans.employeeLoan },
-                ].map((i) => (
-                  <div key={i.label} className="flex justify-between text-xs py-0.5">
-                    <span className="text-muted-foreground">{i.label}</span>
-                    <span className="font-medium text-foreground">{formatAEDFull(i.value)}</span>
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground mb-1">Loans</p>
+                  {[
+                    { label: "Manal Mussa Current A/C", value: balanceSheet.loans.manalMussaCurrent },
+                    { label: "Mr. Ahmed Current A/C", value: balanceSheet.loans.mrAhmedCurrent },
+                    { label: "Sister Co. MK Autos", value: balanceSheet.loans.sisterCompanyMkAutos },
+                    { label: "Employee Loan", value: balanceSheet.loans.employeeLoan },
+                  ].map((i) => (
+                    <div key={i.label} className="flex justify-between text-xs py-0.5">
+                      <span className="text-muted-foreground">{i.label}</span>
+                      <span className="font-medium text-foreground">{formatAEDFull(i.value)}</span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between text-xs py-0.5 border-t border-border/50 mt-1 pt-1">
+                    <span className="font-bold text-foreground">Total Loans</span>
+                    <span className="font-bold text-foreground">{formatAEDFull(balanceSheet.loans.total)}</span>
                   </div>
-                ))}
-                <div className="flex justify-between text-xs py-0.5 border-t border-border/50 mt-1 pt-1">
-                  <span className="font-bold text-foreground">Total Loans</span>
-                  <span className="font-bold text-foreground">{formatAEDFull(balanceSheet.loans.total)}</span>
                 </div>
-              </div>
 
-              <div>
-                <p className="text-xs font-semibold text-muted-foreground mb-1">Current Liabilities</p>
-                {[
-                  { label: "Accounts Payable", value: balanceSheet.currentLiabilities.accountsPayable },
-                  { label: "Employee Salary", value: balanceSheet.currentLiabilities.employeeSalary },
-                  { label: "Rent Liability", value: balanceSheet.currentLiabilities.rentLiability },
-                  { label: "Duties & Taxes", value: balanceSheet.currentLiabilities.dutiesAndTaxes },
-                ].map((i) => (
-                  <div key={i.label} className="flex justify-between text-xs py-0.5">
-                    <span className="text-muted-foreground">{i.label}</span>
-                    <span className="font-medium text-foreground">{formatAEDFull(i.value)}</span>
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground mb-1">Current Liabilities</p>
+                  {[
+                    { label: "Accounts Payable", value: balanceSheet.currentLiabilities.accountsPayable },
+                    { label: "Employee Salary", value: balanceSheet.currentLiabilities.employeeSalary },
+                    { label: "Rent Liability", value: balanceSheet.currentLiabilities.rentLiability },
+                    { label: "Duties & Taxes", value: balanceSheet.currentLiabilities.dutiesAndTaxes },
+                  ].map((i) => (
+                    <div key={i.label} className="flex justify-between text-xs py-0.5">
+                      <span className="text-muted-foreground">{i.label}</span>
+                      <span className="font-medium text-foreground">{formatAEDFull(i.value)}</span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between text-xs py-0.5 border-t border-border/50 mt-1 pt-1">
+                    <span className="font-bold text-foreground">Total Current Liabilities</span>
+                    <span className="font-bold text-loss">{formatAEDFull(balanceSheet.currentLiabilities.total)}</span>
                   </div>
-                ))}
-                <div className="flex justify-between text-xs py-0.5 border-t border-border/50 mt-1 pt-1">
-                  <span className="font-bold text-foreground">Total Current Liabilities</span>
-                  <span className="font-bold text-loss">{formatAEDFull(balanceSheet.currentLiabilities.total)}</span>
                 </div>
-              </div>
 
-              <div className="flex justify-between text-xs py-1">
-                <span className="text-muted-foreground">P&L Account</span>
-                <span className="font-bold text-loss">{formatAEDFull(balanceSheet.profitAndLoss)}</span>
-              </div>
+                <div className="flex justify-between text-xs py-1">
+                  <span className="text-muted-foreground">P&L Account</span>
+                  <span className="font-bold text-loss">{formatAEDFull(balanceSheet.profitAndLoss)}</span>
+                </div>
 
-              <div className="flex justify-between text-sm pt-2 border-t border-border">
-                <span className="font-bold text-foreground">Total Liabilities + Equity</span>
-                <span className="font-bold text-foreground">{formatAEDFull(balanceSheet.totalLiabilities)}</span>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="flex justify-between text-sm pt-2 border-t border-border">
+                  <span className="font-bold text-foreground">Total Liabilities + Equity</span>
+                  <span className="font-bold text-foreground">{formatAEDFull(balanceSheet.totalLiabilities)}</span>
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Assets */}
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-                Assets — as of Feb 28, 2026
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <p className="text-xs font-semibold text-muted-foreground mb-1">Fixed Assets</p>
-                {[
-                  { label: "Goodwill (Ignite Garage)", value: balanceSheet.fixedAssets.goodwill },
-                  { label: "Garage Tools", value: balanceSheet.fixedAssets.garageTools },
-                  { label: "PPE", value: balanceSheet.fixedAssets.ppe },
-                  { label: "Software", value: balanceSheet.fixedAssets.software },
-                  { label: "Laptop", value: balanceSheet.fixedAssets.laptop },
-                  { label: "Mobile", value: balanceSheet.fixedAssets.mobile },
-                ].map((i) => (
-                  <div key={i.label} className="flex justify-between text-xs py-0.5">
-                    <span className="text-muted-foreground">{i.label}</span>
-                    <span className="font-medium text-foreground">{formatAEDFull(i.value)}</span>
+            {/* Assets */}
+            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+                  Assets — as of Feb 28, 2026
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground mb-1">Fixed Assets</p>
+                  {[
+                    { label: "Goodwill (Ignite Garage)", value: balanceSheet.fixedAssets.goodwill },
+                    { label: "Garage Tools", value: balanceSheet.fixedAssets.garageTools },
+                    { label: "PPE", value: balanceSheet.fixedAssets.ppe },
+                    { label: "Software", value: balanceSheet.fixedAssets.software },
+                    { label: "Laptop", value: balanceSheet.fixedAssets.laptop },
+                    { label: "Mobile", value: balanceSheet.fixedAssets.mobile },
+                  ].map((i) => (
+                    <div key={i.label} className="flex justify-between text-xs py-0.5">
+                      <span className="text-muted-foreground">{i.label}</span>
+                      <span className="font-medium text-foreground">{formatAEDFull(i.value)}</span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between text-xs py-0.5 border-t border-border/50 mt-1 pt-1">
+                    <span className="font-bold text-foreground">Total Fixed Assets</span>
+                    <span className="font-bold text-foreground">{formatAEDFull(balanceSheet.fixedAssets.total)}</span>
                   </div>
-                ))}
-                <div className="flex justify-between text-xs py-0.5 border-t border-border/50 mt-1 pt-1">
-                  <span className="font-bold text-foreground">Total Fixed Assets</span>
-                  <span className="font-bold text-foreground">{formatAEDFull(balanceSheet.fixedAssets.total)}</span>
                 </div>
-              </div>
 
-              <div>
-                <p className="text-xs font-semibold text-muted-foreground mb-1">Current Assets</p>
-                {[
-                  { label: "Accounts Receivable", value: balanceSheet.currentAssets.accountsReceivable },
-                  { label: "Prepaid Rent", value: balanceSheet.currentAssets.prepaidRent },
-                  { label: "Bank Accounts", value: balanceSheet.currentAssets.bankAccounts },
-                  { label: "Cash-in-Hand", value: balanceSheet.currentAssets.cashInHand },
-                ].map((i) => (
-                  <div key={i.label} className="flex justify-between text-xs py-0.5">
-                    <span className="text-muted-foreground">{i.label}</span>
-                    <span className={`font-medium ${i.value < 0 ? "text-loss" : "text-foreground"}`}>
-                      {i.value < 0 ? `(${formatAEDFull(Math.abs(i.value))})` : formatAEDFull(i.value)}
-                    </span>
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground mb-1">Current Assets</p>
+                  {[
+                    { label: "Accounts Receivable", value: balanceSheet.currentAssets.accountsReceivable },
+                    { label: "Prepaid Rent", value: balanceSheet.currentAssets.prepaidRent },
+                    { label: "Bank Accounts", value: balanceSheet.currentAssets.bankAccounts },
+                    { label: "Cash-in-Hand", value: balanceSheet.currentAssets.cashInHand },
+                  ].map((i) => (
+                    <div key={i.label} className="flex justify-between text-xs py-0.5">
+                      <span className="text-muted-foreground">{i.label}</span>
+                      <span className={`font-medium ${i.value < 0 ? "text-loss" : "text-foreground"}`}>
+                        {i.value < 0 ? `(${formatAEDFull(Math.abs(i.value))})` : formatAEDFull(i.value)}
+                      </span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between text-xs py-0.5 border-t border-border/50 mt-1 pt-1">
+                    <span className="font-bold text-foreground">Total Current Assets</span>
+                    <span className="font-bold text-foreground">{formatAEDFull(balanceSheet.currentAssets.total)}</span>
                   </div>
-                ))}
-                <div className="flex justify-between text-xs py-0.5 border-t border-border/50 mt-1 pt-1">
-                  <span className="font-bold text-foreground">Total Current Assets</span>
-                  <span className="font-bold text-foreground">{formatAEDFull(balanceSheet.currentAssets.total)}</span>
                 </div>
-              </div>
 
-              <div className="flex justify-between text-sm pt-2 border-t border-border">
-                <span className="font-bold text-foreground">Total Assets</span>
-                <span className="font-bold text-foreground">{formatAEDFull(balanceSheet.totalAssets)}</span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                <div className="flex justify-between text-sm pt-2 border-t border-border">
+                  <span className="font-bold text-foreground">Total Assets</span>
+                  <span className="font-bold text-foreground">{formatAEDFull(balanceSheet.totalAssets)}</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -369,18 +393,21 @@ const GarageDashboard = () => {
           </Card>
         </div>
 
-        {/* Financial Ratios */}
-        {(() => {
+        {/* Financial Ratios - only in All Time */}
+        {!isFiltered && (() => {
+          const allTotalRevenue = monthlyPL.reduce((s, m) => s + m.totalRevenue, 0);
+          const allTotalGrossProfit = monthlyPL.reduce((s, m) => s + m.grossProfit, 0);
+          const allTotalNetProfit = monthlyPL.reduce((s, m) => s + m.netProfit, 0);
           const totalCostOfSales = monthlyPL.reduce((s, m) => s + m.costOfSales, 0);
           const totalIndirectExp = monthlyPL.reduce((s, m) => s + m.indirectExpenses, 0);
           const totalEquity = balanceSheet.capital.total;
           const totalAssets = balanceSheet.totalAssets;
-          const grossMargin = (totalGrossProfit / totalRevenue) * 100;
-          const netMargin = (totalNetProfit / totalRevenue) * 100;
-          const roe = (totalNetProfit / totalEquity) * 100;
-          const roa = (totalNetProfit / totalAssets) * 100;
-          const costToRevenueRatio = ((totalCostOfSales + totalIndirectExp) / totalRevenue) * 100;
-          const operatingExpRatio = (totalIndirectExp / totalRevenue) * 100;
+          const grossMargin = (allTotalGrossProfit / allTotalRevenue) * 100;
+          const netMargin = (allTotalNetProfit / allTotalRevenue) * 100;
+          const roe = (allTotalNetProfit / totalEquity) * 100;
+          const roa = (allTotalNetProfit / totalAssets) * 100;
+          const costToRevenueRatio = ((totalCostOfSales + totalIndirectExp) / allTotalRevenue) * 100;
+          const operatingExpRatio = (totalIndirectExp / allTotalRevenue) * 100;
           const currentRatio = balanceSheet.currentAssets.total / balanceSheet.currentLiabilities.total;
 
           const ratioItems = [
@@ -434,7 +461,7 @@ const GarageDashboard = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {monthlyPL.map((m) => (
+                  {filteredPL.map((m) => (
                     <TableRow key={m.month}>
                       <TableCell className="text-xs font-medium">{m.month}</TableCell>
                       <TableCell className="text-xs text-right">{formatAEDFull(m.sales)}</TableCell>
@@ -448,18 +475,20 @@ const GarageDashboard = () => {
                       </TableCell>
                     </TableRow>
                   ))}
-                  <TableRow className="border-t-2 border-border">
-                    <TableCell className="text-xs font-bold">TOTAL</TableCell>
-                    <TableCell className="text-xs text-right font-bold">{formatAEDFull(monthlyPL.reduce((s, m) => s + m.sales, 0))}</TableCell>
-                    <TableCell className="text-xs text-right font-bold">{formatAEDFull(monthlyPL.reduce((s, m) => s + m.directIncome, 0))}</TableCell>
-                    <TableCell className="text-xs text-right font-bold">{formatAEDFull(totalRevenue)}</TableCell>
-                    <TableCell className="text-xs text-right font-bold text-loss">{formatAEDFull(monthlyPL.reduce((s, m) => s + m.costOfSales, 0))}</TableCell>
-                    <TableCell className="text-xs text-right font-bold text-success">{formatAEDFull(totalGrossProfit)}</TableCell>
-                    <TableCell className="text-xs text-right font-bold text-loss">{formatAEDFull(monthlyPL.reduce((s, m) => s + m.indirectExpenses, 0))}</TableCell>
-                    <TableCell className={`text-xs text-right font-bold ${totalNetProfit >= 0 ? "text-success" : "text-loss"}`}>
-                      {formatAEDFull(totalNetProfit)}
-                    </TableCell>
-                  </TableRow>
+                  {filteredPL.length > 1 && (
+                    <TableRow className="border-t-2 border-border">
+                      <TableCell className="text-xs font-bold">TOTAL</TableCell>
+                      <TableCell className="text-xs text-right font-bold">{formatAEDFull(totalSales)}</TableCell>
+                      <TableCell className="text-xs text-right font-bold">{formatAEDFull(filteredPL.reduce((s, m) => s + m.directIncome, 0))}</TableCell>
+                      <TableCell className="text-xs text-right font-bold">{formatAEDFull(totalRevenue)}</TableCell>
+                      <TableCell className="text-xs text-right font-bold text-loss">{formatAEDFull(filteredPL.reduce((s, m) => s + m.costOfSales, 0))}</TableCell>
+                      <TableCell className="text-xs text-right font-bold text-success">{formatAEDFull(totalGrossProfit)}</TableCell>
+                      <TableCell className="text-xs text-right font-bold text-loss">{formatAEDFull(filteredPL.reduce((s, m) => s + m.indirectExpenses, 0))}</TableCell>
+                      <TableCell className={`text-xs text-right font-bold ${totalNetProfit >= 0 ? "text-success" : "text-loss"}`}>
+                        {formatAEDFull(totalNetProfit)}
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>

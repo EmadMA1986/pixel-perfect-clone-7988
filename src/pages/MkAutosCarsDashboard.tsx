@@ -1,7 +1,8 @@
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { TrendingUp, DollarSign, Wallet, Car, ArrowLeft, BarChart3, User } from "lucide-react";
 import SummaryCard from "@/components/SummaryCard";
+import MonthFilter from "@/components/MonthFilter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -11,9 +12,22 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pi
 import { mkAutosSummary, vehicles, monthlyIncome, formatAED, ahmadCapital } from "@/data/mkAutosData";
 
 const MkAutosCarsDashboard = () => {
+  const [selectedMonth, setSelectedMonth] = useState("all");
+
+  const months = useMemo(() => monthlyIncome.map((m) => m.month), []);
+
+  const filteredIncome = useMemo(
+    () => selectedMonth === "all" ? monthlyIncome : monthlyIncome.filter((m) => m.month === selectedMonth),
+    [selectedMonth]
+  );
+
+  const isFiltered = selectedMonth !== "all";
+
+  const filteredTotal = filteredIncome.reduce((s, m) => s + m.total, 0);
+
   const incomeChartData = useMemo(
-    () => monthlyIncome.filter((m) => m.total > 0).map((m) => ({ name: m.month, total: Math.round(m.total) })),
-    []
+    () => filteredIncome.filter((m) => m.total > 0).map((m) => ({ name: m.month, total: Math.round(m.total) })),
+    [filteredIncome]
   );
 
   const vehicleProfitData = useMemo(
@@ -45,6 +59,7 @@ const MkAutosCarsDashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <MonthFilter months={months} value={selectedMonth} onChange={setSelectedMonth} />
             <Link to="/mk-autos-company">
               <Button variant="outline" size="sm" className="text-xs">Company Dashboard →</Button>
             </Link>
@@ -55,43 +70,60 @@ const MkAutosCarsDashboard = () => {
 
       <main className="container mx-auto px-4 py-6 space-y-6">
         {/* Ahmad's Capital Position Bar */}
-        <Card className="border-border/50 bg-gradient-to-r from-emerald-500/10 to-emerald-700/5 backdrop-blur-sm">
-          <CardContent className="p-5 flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Wallet className="h-5 w-5 text-primary" />
+        {!isFiltered && (
+          <Card className="border-border/50 bg-gradient-to-r from-emerald-500/10 to-emerald-700/5 backdrop-blur-sm">
+            <CardContent className="p-5 flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Wallet className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Ahmad's Initial Investment</p>
+                  <p className="text-2xl font-bold font-serif text-foreground">{formatAED(ahmadCapital.totalCarsInvestment)}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Ahmad's Initial Investment</p>
-                <p className="text-2xl font-bold font-serif text-foreground">{formatAED(ahmadCapital.totalCarsInvestment)}</p>
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground">Net Profit</p>
+                <p className="text-xl font-bold font-serif text-success">{formatAED(ahmadCapital.totalCarsProfit)}</p>
               </div>
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground">Net Profit</p>
-              <p className="text-xl font-bold font-serif text-success">{formatAED(ahmadCapital.totalCarsProfit)}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground">Cash Withdrawal</p>
-              <p className="text-xl font-bold font-serif text-loss">{formatAED(ahmadCapital.cashWithdrawal)}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground">ROI / ROI on NBV</p>
-              <p className="text-xl font-bold font-serif text-foreground">{mkAutosSummary.overallROI}% / {mkAutosSummary.overallROINBV}%</p>
-            </div>
-            <div className="text-right">
-              <p className="text-xs text-muted-foreground">Ahmad's Net Position</p>
-              <p className="text-xl font-bold font-serif text-success">{formatAED(ahmadCapital.positionAgainstCars)}</p>
-              <p className="text-[10px] text-muted-foreground">MK Autos owes Ahmad</p>
-            </div>
-          </CardContent>
-        </Card>
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground">Cash Withdrawal</p>
+                <p className="text-xl font-bold font-serif text-loss">{formatAED(ahmadCapital.cashWithdrawal)}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground">ROI / ROI on NBV</p>
+                <p className="text-xl font-bold font-serif text-foreground">{mkAutosSummary.overallROI}% / {mkAutosSummary.overallROINBV}%</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-muted-foreground">Ahmad's Net Position</p>
+                <p className="text-xl font-bold font-serif text-success">{formatAED(ahmadCapital.positionAgainstCars)}</p>
+                <p className="text-[10px] text-muted-foreground">MK Autos owes Ahmad</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          <SummaryCard title="Maintenance" value={formatAED(ahmadCapital.carsMaintenance)} subtitle="Cars upkeep" icon={DollarSign} />
-          <SummaryCard title="Depreciation" value={formatAED(mkAutosSummary.totalDepreciation)} subtitle="Total depreciation" icon={TrendingUp} trend="down" />
-          <SummaryCard title="NBV" value={formatAED(mkAutosSummary.totalNBV)} subtitle="Net book value" icon={Car} />
-          <SummaryCard title="Avg Monthly" value={formatAED(mkAutosSummary.avgMonthlyIncome)} subtitle="Monthly income" icon={BarChart3} />
+          {isFiltered ? (
+            <>
+              <SummaryCard title="Monthly Income" value={formatAED(filteredTotal)} subtitle={selectedMonth} icon={DollarSign} />
+              <SummaryCard title="Active Vehicles" value={`${filteredIncome.reduce((count, m) => {
+                let c = 0;
+                if (m.g63 > 0) c++; if (m.lamborghini > 0) c++; if (m.corvette > 0) c++; if (m.cadillac > 0) c++;
+                if (m.patrol > 0) c++; if (m.bmw440i > 0) c++; if (m.gle53 > 0) c++; if (m.c200 > 0) c++;
+                if (m.q8 > 0) c++; if (m.cayenne > 0) c++;
+                return count + c;
+              }, 0)}`} subtitle="Earning income" icon={Car} />
+            </>
+          ) : (
+            <>
+              <SummaryCard title="Maintenance" value={formatAED(ahmadCapital.carsMaintenance)} subtitle="Cars upkeep" icon={DollarSign} />
+              <SummaryCard title="Depreciation" value={formatAED(mkAutosSummary.totalDepreciation)} subtitle="Total depreciation" icon={TrendingUp} trend="down" />
+              <SummaryCard title="NBV" value={formatAED(mkAutosSummary.totalNBV)} subtitle="Net book value" icon={Car} />
+              <SummaryCard title="Avg Monthly" value={formatAED(mkAutosSummary.avgMonthlyIncome)} subtitle="Monthly income" icon={BarChart3} />
+            </>
+          )}
         </div>
 
         {/* Charts Row */}
@@ -112,115 +144,119 @@ const MkAutosCarsDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-serif text-foreground">Profit by Vehicle</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col lg:flex-row items-center gap-4">
-                <ResponsiveContainer width="100%" height={220}>
-                  <PieChart>
-                    <Pie data={vehicleProfitData} cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={3} dataKey="value" stroke="none">
-                      {vehicleProfitData.map((_, i) => (
-                        <Cell key={i} fill={pieColors[i % pieColors.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }} formatter={(value: number) => [formatAED(value), ""]} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="space-y-2 w-full lg:w-auto">
-                  {vehicleProfitData.map((item, i) => (
-                    <div key={item.name} className="flex items-center gap-2 text-xs">
-                      <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: pieColors[i % pieColors.length] }} />
-                      <span className="text-muted-foreground whitespace-nowrap">{item.name}</span>
-                      <span className="ml-auto tabular-nums font-medium text-foreground">{formatAED(item.value)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Tabs */}
-        <Tabs defaultValue="fleet" className="space-y-4">
-          <TabsList className="bg-secondary/50">
-            <TabsTrigger value="fleet">Vehicle Fleet</TabsTrigger>
-            <TabsTrigger value="monthly">Monthly Income</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="fleet">
+          {!isFiltered && (
             <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-serif text-foreground">Vehicle Fleet Overview</CardTitle>
+                <CardTitle className="text-lg font-serif text-foreground">Profit by Vehicle</CardTitle>
               </CardHeader>
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-border/50 hover:bg-transparent">
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">Vehicle</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Investment</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Maintenance</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Depreciation</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">NBV</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Income</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Net Profit</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Real Profit</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Cash ROI</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Real ROI</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Sale Value</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Final ROI</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Avg/Month</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {vehicles.map((v) => (
-                        <TableRow key={v.name} className="border-border/30 hover:bg-secondary/30">
-                          <TableCell className="text-sm font-medium text-foreground">{v.name}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">{v.initialInvestment ? formatAED(v.initialInvestment) : "-"}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{v.maintenanceExpenses ? formatAED(v.maintenanceExpenses) : "-"}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{v.totalDepreciation ? formatAED(v.totalDepreciation) : "-"}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">{v.nbv ? formatAED(v.nbv) : "-"}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right font-medium text-success">{v.totalProfit ? formatAED(v.totalProfit) : "-"}</TableCell>
-                          <TableCell className={`text-sm tabular-nums text-right font-medium ${v.netProfit >= 0 ? "text-success" : "text-destructive"}`}>{formatAED(v.netProfit)}</TableCell>
-                          <TableCell className={`text-sm tabular-nums text-right ${v.realProfit >= 0 ? "text-success" : "text-destructive"}`}>{formatAED(v.realProfit)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right">
-                            {v.roiOnInvestment ? <Badge variant="secondary" className="text-xs">{v.roiOnInvestment}%</Badge> : "-"}
-                          </TableCell>
-                          <TableCell className={`text-sm tabular-nums text-right ${v.realROI >= 0 ? "text-success" : "text-destructive"}`}>
-                            {v.realROI ? `${v.realROI}%` : "-"}
-                          </TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">{v.saleValue ? formatAED(v.saleValue) : "-"}</TableCell>
-                          <TableCell className={`text-sm tabular-nums text-right ${v.finalROI >= 0 ? "text-success" : "text-destructive"}`}>
-                            {v.finalROI ? `${v.finalROI}%` : "-"}
-                          </TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">{v.avgMonthlyProfit ? formatAED(v.avgMonthlyProfit) : "-"}</TableCell>
-                        </TableRow>
-                      ))}
-                      <TableRow className="border-border/50 bg-secondary/30 font-semibold">
-                        <TableCell className="text-sm text-foreground">Total</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(mkAutosSummary.totalInitialInvestment)}</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAED(mkAutosSummary.totalMaintenanceExpenses)}</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAED(mkAutosSummary.totalDepreciation)}</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(mkAutosSummary.totalNBV)}</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right font-bold text-success">{formatAED(mkAutosSummary.totalGrossProfit)}</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right font-bold text-success">{formatAED(mkAutosSummary.netProfit)}</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-destructive">{formatAED(-355470.15)}</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right">
-                          <Badge variant="secondary" className="text-xs">{mkAutosSummary.overallROI}%</Badge>
-                        </TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-destructive">{mkAutosSummary.realROI}%</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(mkAutosSummary.totalSaleValue)}</TableCell>
-                        <TableCell className={`text-sm tabular-nums text-right ${mkAutosSummary.finalROI >= 0 ? "text-success" : "text-destructive"}`}>{mkAutosSummary.finalROI}%</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(mkAutosSummary.avgMonthlyIncome)}</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
+              <CardContent>
+                <div className="flex flex-col lg:flex-row items-center gap-4">
+                  <ResponsiveContainer width="100%" height={220}>
+                    <PieChart>
+                      <Pie data={vehicleProfitData} cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={3} dataKey="value" stroke="none">
+                        {vehicleProfitData.map((_, i) => (
+                          <Cell key={i} fill={pieColors[i % pieColors.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }} formatter={(value: number) => [formatAED(value), ""]} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="space-y-2 w-full lg:w-auto">
+                    {vehicleProfitData.map((item, i) => (
+                      <div key={item.name} className="flex items-center gap-2 text-xs">
+                        <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: pieColors[i % pieColors.length] }} />
+                        <span className="text-muted-foreground whitespace-nowrap">{item.name}</span>
+                        <span className="ml-auto tabular-nums font-medium text-foreground">{formatAED(item.value)}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+          )}
+        </div>
+
+        {/* Tabs */}
+        <Tabs defaultValue={isFiltered ? "monthly" : "fleet"} className="space-y-4">
+          <TabsList className="bg-secondary/50">
+            {!isFiltered && <TabsTrigger value="fleet">Vehicle Fleet</TabsTrigger>}
+            <TabsTrigger value="monthly">Monthly Income</TabsTrigger>
+          </TabsList>
+
+          {!isFiltered && (
+            <TabsContent value="fleet">
+              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-serif text-foreground">Vehicle Fleet Overview</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-border/50 hover:bg-transparent">
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">Vehicle</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Investment</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Maintenance</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Depreciation</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">NBV</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Income</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Net Profit</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Real Profit</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Cash ROI</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Real ROI</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Sale Value</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Final ROI</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Avg/Month</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {vehicles.map((v) => (
+                          <TableRow key={v.name} className="border-border/30 hover:bg-secondary/30">
+                            <TableCell className="text-sm font-medium text-foreground">{v.name}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-foreground">{v.initialInvestment ? formatAED(v.initialInvestment) : "-"}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{v.maintenanceExpenses ? formatAED(v.maintenanceExpenses) : "-"}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{v.totalDepreciation ? formatAED(v.totalDepreciation) : "-"}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-foreground">{v.nbv ? formatAED(v.nbv) : "-"}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right font-medium text-success">{v.totalProfit ? formatAED(v.totalProfit) : "-"}</TableCell>
+                            <TableCell className={`text-sm tabular-nums text-right font-medium ${v.netProfit >= 0 ? "text-success" : "text-destructive"}`}>{formatAED(v.netProfit)}</TableCell>
+                            <TableCell className={`text-sm tabular-nums text-right ${v.realProfit >= 0 ? "text-success" : "text-destructive"}`}>{formatAED(v.realProfit)}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right">
+                              {v.roiOnInvestment ? <Badge variant="secondary" className="text-xs">{v.roiOnInvestment}%</Badge> : "-"}
+                            </TableCell>
+                            <TableCell className={`text-sm tabular-nums text-right ${v.realROI >= 0 ? "text-success" : "text-destructive"}`}>
+                              {v.realROI ? `${v.realROI}%` : "-"}
+                            </TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-foreground">{v.saleValue ? formatAED(v.saleValue) : "-"}</TableCell>
+                            <TableCell className={`text-sm tabular-nums text-right ${v.finalROI >= 0 ? "text-success" : "text-destructive"}`}>
+                              {v.finalROI ? `${v.finalROI}%` : "-"}
+                            </TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-foreground">{v.avgMonthlyProfit ? formatAED(v.avgMonthlyProfit) : "-"}</TableCell>
+                          </TableRow>
+                        ))}
+                        <TableRow className="border-border/50 bg-secondary/30 font-semibold">
+                          <TableCell className="text-sm text-foreground">Total</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(mkAutosSummary.totalInitialInvestment)}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAED(mkAutosSummary.totalMaintenanceExpenses)}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAED(mkAutosSummary.totalDepreciation)}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(mkAutosSummary.totalNBV)}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right font-bold text-success">{formatAED(mkAutosSummary.totalGrossProfit)}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right font-bold text-success">{formatAED(mkAutosSummary.netProfit)}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-destructive">{formatAED(-355470.15)}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right">
+                            <Badge variant="secondary" className="text-xs">{mkAutosSummary.overallROI}%</Badge>
+                          </TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-destructive">{mkAutosSummary.realROI}%</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(mkAutosSummary.totalSaleValue)}</TableCell>
+                          <TableCell className={`text-sm tabular-nums text-right ${mkAutosSummary.finalROI >= 0 ? "text-success" : "text-destructive"}`}>{mkAutosSummary.finalROI}%</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(mkAutosSummary.avgMonthlyIncome)}</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
 
           <TabsContent value="monthly">
             <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
@@ -245,7 +281,7 @@ const MkAutosCarsDashboard = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {monthlyIncome.map((row) => (
+                      {filteredIncome.map((row) => (
                         <TableRow key={row.month} className="border-border/30 hover:bg-secondary/30">
                           <TableCell className="text-sm font-medium text-foreground whitespace-nowrap">{row.month}</TableCell>
                           <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{row.g63 > 0 ? formatAED(row.g63) : "—"}</TableCell>

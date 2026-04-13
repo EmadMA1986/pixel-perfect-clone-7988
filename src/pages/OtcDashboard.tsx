@@ -1,7 +1,8 @@
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { TrendingUp, TrendingDown, DollarSign, Wallet, Users, AlertTriangle, Building, ArrowLeft } from "lucide-react";
 import SummaryCard from "@/components/SummaryCard";
+import MonthFilter from "@/components/MonthFilter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -11,20 +12,31 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pi
 import { otcSummary, monthlyPL, expenseBreakdown, partnerCapital, formatAED } from "@/data/otcData";
 
 const OtcDashboard = () => {
-  const totalGrossProfit = monthlyPL.reduce((s, m) => s + m.grossProfit, 0);
-  const totalNetProfit = monthlyPL.reduce((s, m) => s + m.netProfit, 0);
-  const profitableMonths = monthlyPL.filter((m) => m.netProfit > 0).length;
+  const [selectedMonth, setSelectedMonth] = useState("all");
+
+  const months = useMemo(() => monthlyPL.map((m) => m.month), []);
+
+  const filteredPL = useMemo(
+    () => selectedMonth === "all" ? monthlyPL : monthlyPL.filter((m) => m.month === selectedMonth),
+    [selectedMonth]
+  );
+
+  const totalGrossProfit = filteredPL.reduce((s, m) => s + m.grossProfit, 0);
+  const totalNetProfit = filteredPL.reduce((s, m) => s + m.netProfit, 0);
+  const totalExpenses = filteredPL.reduce((s, m) => s + m.cashExpenses, 0);
+  const totalScam = filteredPL.reduce((s, m) => s + m.scam, 0);
+  const profitableMonths = filteredPL.filter((m) => m.netProfit > 0).length;
 
   const chartData = useMemo(
     () =>
-      monthlyPL.map((m) => ({
+      filteredPL.map((m) => ({
         name: m.month.replace("Jan-Dec 2024", "2024"),
         gross: Math.round(m.grossProfit),
         expenses: Math.round(m.cashExpenses),
         scam: Math.round(m.scam),
         net: Math.round(m.netProfit),
       })),
-    []
+    [filteredPL]
   );
 
   const expensePieData = useMemo(
@@ -41,6 +53,9 @@ const OtcDashboard = () => {
     "hsl(43, 40%, 30%)",
     "hsl(0, 50%, 50%)",
   ];
+
+  const isFiltered = selectedMonth !== "all";
+  const periodLabel = isFiltered ? selectedMonth : "YTD";
 
   return (
     <div className="min-h-screen bg-background">
@@ -61,64 +76,72 @@ const OtcDashboard = () => {
               <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Financial Dashboard</p>
             </div>
           </div>
-          <Badge variant="secondary" className="text-xs">Currency: AED</Badge>
+          <div className="flex items-center gap-3">
+            <MonthFilter months={months} value={selectedMonth} onChange={setSelectedMonth} />
+            <Badge variant="secondary" className="text-xs">Currency: AED</Badge>
+          </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-6">
-        {/* Ahmad's Capital Position */}
-        <Card className="border-border/50 bg-gradient-to-r from-blue-500/10 to-blue-700/5 backdrop-blur-sm">
-          <CardContent className="p-5 flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Wallet className="h-5 w-5 text-primary" />
+        {/* Ahmad's Capital Position - only show in All Time */}
+        {!isFiltered && (
+          <Card className="border-border/50 bg-gradient-to-r from-blue-500/10 to-blue-700/5 backdrop-blur-sm">
+            <CardContent className="p-5 flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Wallet className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Ahmad's Capital Position</p>
+                  <p className="text-2xl font-bold font-serif text-foreground">{formatAED(partnerCapital.ahmad.funding)}</p>
+                  <p className="text-[10px] text-muted-foreground">Capital Funding</p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Ahmad's Capital Position</p>
-                <p className="text-2xl font-bold font-serif text-foreground">{formatAED(partnerCapital.ahmad.funding)}</p>
-                <p className="text-[10px] text-muted-foreground">Capital Funding</p>
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground">Withdrawals</p>
+                <p className="text-lg font-bold font-serif text-loss">{formatAED(partnerCapital.ahmad.withdrawal)}</p>
               </div>
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground">Withdrawals</p>
-              <p className="text-lg font-bold font-serif text-loss">{formatAED(partnerCapital.ahmad.withdrawal)}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground">Scam Loss (50%)</p>
-              <p className="text-lg font-bold font-serif text-loss">{formatAED(partnerCapital.ahmad.scamLoss)}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground">Expenses (50%)</p>
-              <p className="text-lg font-bold font-serif text-loss">{formatAED(partnerCapital.ahmad.expenses)}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground">Capital Position</p>
-              <p className={`text-lg font-bold font-serif ${partnerCapital.ahmad.capitalPosition >= 0 ? "text-success" : "text-loss"}`}>{formatAED(partnerCapital.ahmad.capitalPosition)}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground">Profit Share (50%)</p>
-              <p className="text-lg font-bold font-serif text-success">{formatAED(partnerCapital.ahmad.profitShare)}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-xs text-muted-foreground font-semibold">Net Position</p>
-              <p className={`text-xl font-bold font-serif ${partnerCapital.ahmad.netPosition >= 0 ? "text-success" : "text-loss"}`}>{formatAED(partnerCapital.ahmad.netPosition)}</p>
-            </div>
-          </CardContent>
-        </Card>
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground">Scam Loss (50%)</p>
+                <p className="text-lg font-bold font-serif text-loss">{formatAED(partnerCapital.ahmad.scamLoss)}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground">Expenses (50%)</p>
+                <p className="text-lg font-bold font-serif text-loss">{formatAED(partnerCapital.ahmad.expenses)}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground">Capital Position</p>
+                <p className={`text-lg font-bold font-serif ${partnerCapital.ahmad.capitalPosition >= 0 ? "text-success" : "text-loss"}`}>{formatAED(partnerCapital.ahmad.capitalPosition)}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground">Profit Share (50%)</p>
+                <p className="text-lg font-bold font-serif text-success">{formatAED(partnerCapital.ahmad.profitShare)}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-muted-foreground font-semibold">Net Position</p>
+                <p className={`text-xl font-bold font-serif ${partnerCapital.ahmad.netPosition >= 0 ? "text-success" : "text-loss"}`}>{formatAED(partnerCapital.ahmad.netPosition)}</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <SummaryCard title="Net Profit (YTD)" value={formatAED(otcSummary.netProfitYTD)} subtitle={`${profitableMonths}/${monthlyPL.length} profitable months`} icon={TrendingUp} trend="up" />
-          <SummaryCard title="Gross Profit" value={formatAED(otcSummary.grossProfitYTD)} subtitle="Total YTD" icon={DollarSign} />
-          <SummaryCard title="Cash Expenses" value={formatAED(otcSummary.cashExpensesYTD)} subtitle="Total YTD" icon={Wallet} />
-          <SummaryCard title="Scam Loss" value={formatAED(otcSummary.scamYTD)} subtitle="Robbery + Scam" icon={AlertTriangle} trend="down" />
-          <SummaryCard title="Net Capital" value={formatAED(otcSummary.netCapital)} subtitle={`Initial: ${formatAED(otcSummary.initialCapital)}`} icon={Users} />
-          <SummaryCard title="Cash Position" value={formatAED(otcSummary.cashPosition)} subtitle="Current balance" icon={DollarSign} />
+          <SummaryCard title={`Net Profit (${periodLabel})`} value={formatAED(totalNetProfit)} subtitle={`${profitableMonths}/${filteredPL.length} profitable months`} icon={TrendingUp} trend="up" />
+          <SummaryCard title="Gross Profit" value={formatAED(totalGrossProfit)} subtitle={periodLabel} icon={DollarSign} />
+          <SummaryCard title="Cash Expenses" value={formatAED(totalExpenses)} subtitle={periodLabel} icon={Wallet} />
+          <SummaryCard title="Scam Loss" value={formatAED(totalScam)} subtitle="Robbery + Scam" icon={AlertTriangle} trend="down" />
+          {!isFiltered && (
+            <>
+              <SummaryCard title="Net Capital" value={formatAED(otcSummary.netCapital)} subtitle={`Initial: ${formatAED(otcSummary.initialCapital)}`} icon={Users} />
+              <SummaryCard title="Cash Position" value={formatAED(otcSummary.cashPosition)} subtitle="Current balance" icon={DollarSign} />
+            </>
+          )}
         </div>
 
         {/* Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Monthly P&L Bar Chart */}
           <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg font-serif text-foreground">Monthly Gross Profit vs Expenses</CardTitle>
@@ -136,7 +159,6 @@ const OtcDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Net Profit Trend */}
           <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg font-serif text-foreground">Net Profit Trend</CardTitle>
@@ -163,7 +185,6 @@ const OtcDashboard = () => {
             <TabsTrigger value="capital">Partners</TabsTrigger>
           </TabsList>
 
-          {/* Monthly P&L Table */}
           <TabsContent value="monthly">
             <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
               <CardHeader className="pb-3">
@@ -182,7 +203,7 @@ const OtcDashboard = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {monthlyPL.map((row) => (
+                      {filteredPL.map((row) => (
                         <TableRow key={row.month} className="border-border/30 hover:bg-secondary/30">
                           <TableCell className="text-sm font-medium text-foreground">{row.month}</TableCell>
                           <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(row.grossProfit)}</TableCell>
@@ -191,13 +212,15 @@ const OtcDashboard = () => {
                           <TableCell className={`text-sm tabular-nums text-right font-medium ${row.netProfit >= 0 ? "text-success" : "text-loss"}`}>{formatAED(row.netProfit)}</TableCell>
                         </TableRow>
                       ))}
-                      <TableRow className="border-border/50 bg-secondary/30 font-semibold">
-                        <TableCell className="text-sm text-foreground">Total</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(totalGrossProfit)}</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAED(monthlyPL.reduce((s, m) => s + m.cashExpenses, 0))}</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-loss">{formatAED(monthlyPL.reduce((s, m) => s + m.scam, 0))}</TableCell>
-                        <TableCell className={`text-sm tabular-nums text-right font-bold ${totalNetProfit >= 0 ? "text-success" : "text-loss"}`}>{formatAED(totalNetProfit)}</TableCell>
-                      </TableRow>
+                      {filteredPL.length > 1 && (
+                        <TableRow className="border-border/50 bg-secondary/30 font-semibold">
+                          <TableCell className="text-sm text-foreground">Total</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(totalGrossProfit)}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAED(totalExpenses)}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-right text-loss">{formatAED(totalScam)}</TableCell>
+                          <TableCell className={`text-sm tabular-nums text-right font-bold ${totalNetProfit >= 0 ? "text-success" : "text-loss"}`}>{formatAED(totalNetProfit)}</TableCell>
+                        </TableRow>
+                      )}
                     </TableBody>
                   </Table>
                 </div>
@@ -273,7 +296,6 @@ const OtcDashboard = () => {
           {/* Partners / Capital */}
           <TabsContent value="capital">
             <div className="space-y-6">
-              {/* Partner Summary Cards */}
               {[
                 { name: "Maria", ...partnerCapital.maria },
                 { name: "Ahmad", ...partnerCapital.ahmad },
@@ -322,8 +344,6 @@ const OtcDashboard = () => {
                 </Card>
               ))}
 
-
-              {/* Combined Summary */}
               <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
                 <CardContent className="p-4">
                   <div className="p-4 rounded-lg bg-primary/10 border border-primary/20 space-y-3">
