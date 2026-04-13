@@ -383,6 +383,56 @@ const MkxDashboard = () => {
             </Card>
           );
         })()}
+
+        {/* Revenue Productivity */}
+        {!isFiltered && (() => {
+          const totalPayroll = 1701479; // from plData
+          const totalRevenue = 538208.48;
+          const avgHeadcount = 10; // approximate based on payroll
+          const revenuePerEmployee = totalRevenue / avgHeadcount;
+          const payrollPerEmployee = totalPayroll / avgHeadcount;
+          const payrollToRevenueRatio = (totalPayroll / totalRevenue) * 100;
+
+          return (
+            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Shield className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Revenue Productivity & Cost Efficiency</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Total Payroll</p>
+                    <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(totalPayroll)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Total Revenue</p>
+                    <p className="text-xl font-bold font-serif text-foreground">{formatAEDFull(totalRevenue)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Payroll/Revenue Ratio</p>
+                    <p className={`text-xl font-bold font-serif ${payrollToRevenueRatio > 100 ? "text-loss" : "text-foreground"}`}>{payrollToRevenueRatio.toFixed(0)}%</p>
+                    <p className="text-[10px] text-loss">⚠ Payroll exceeds revenue</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Revenue/Employee</p>
+                    <p className="text-xl font-bold font-serif text-foreground">{formatAEDFull(revenuePerEmployee)}</p>
+                    <p className="text-[10px] text-muted-foreground">~{avgHeadcount} headcount est.</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Cost/Employee</p>
+                    <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(payrollPerEmployee)}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
+
         {/* Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
