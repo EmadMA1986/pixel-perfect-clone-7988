@@ -240,7 +240,12 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
     previous: sumRows(data.map(d => d.previous)),
   }), [data]);
 
-  const getRowValues = (metric: keyof PLRow | "grossMargin" | "netMargin" | "roi"): { values: number[]; total: number; prev: number[]; prevTotal: number; isPct: boolean } => {
+  const totalPortfolioInvestment = useMemo(
+    () => data.reduce((s, d) => s + d.current.investment, 0),
+    [data]
+  );
+
+  const getRowValues = (metric: keyof PLRow | "grossMargin" | "netMargin" | "roi" | "capitalShare"): { values: number[]; total: number; prev: number[]; prevTotal: number; isPct: boolean } => {
     const calc = (row: PLRow): number => {
       switch (metric) {
         case "grossMargin":
@@ -249,6 +254,8 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
           return row.revenue !== 0 ? (row.netProfit / row.revenue) * 100 : 0;
         case "roi":
           return row.investment !== 0 ? (row.netProfit / row.investment) * 100 : 0;
+        case "capitalShare":
+          return totalPortfolioInvestment !== 0 ? (row.investment / totalPortfolioInvestment) * 100 : 0;
         default:
           return row[metric];
       }
@@ -258,7 +265,7 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
       total: calc(totals.current),
       prev: data.map(d => calc(d.previous)),
       prevTotal: calc(totals.previous),
-      isPct: metric === "grossMargin" || metric === "netMargin" || metric === "roi",
+      isPct: metric === "grossMargin" || metric === "netMargin" || metric === "roi" || metric === "capitalShare",
     };
   };
 
@@ -271,6 +278,7 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
     { key: "netProfit", label: "Net Profit", positiveIsBetter: true },
     { key: "netMargin", label: "Net Margin %", positiveIsBetter: true },
     { key: "roi", label: "ROI", positiveIsBetter: true },
+    { key: "capitalShare", label: "% of Portfolio Capital", positiveIsBetter: true },
   ];
 
   const Trend = ({ curr, prev, positiveIsBetter }: { curr: number; prev: number; positiveIsBetter: boolean }) => {
