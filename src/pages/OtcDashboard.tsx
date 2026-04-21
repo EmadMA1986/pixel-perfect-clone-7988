@@ -311,6 +311,18 @@ const OtcDashboard = () => {
                     <Bar dataKey="volumeM" name="Volume (AED M)" fill="hsl(43, 74%, 52%)" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
+                <p className="text-[10px] text-muted-foreground mt-2">
+                  Note: <span className="text-foreground font-medium">"2024"</span> bar aggregates 12 months (Jan–Dec 2024) into a single period — that's why it appears as a spike vs individual monthly bars after.
+                </p>
+                <div className="mt-3 p-3 rounded-lg border border-primary/30 bg-primary/5 flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Break-even Volume / Month</p>
+                    <p className="text-base font-bold font-serif text-primary">{formatAEDCompact(breakEvenVolume)}</p>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground text-right max-w-[55%]">
+                    Min monthly volume to cover {formatAEDCompact(avgMonthlyBurn)} avg costs @ {(ASSUMED_SPREAD * 100).toFixed(2)}% spread
+                  </p>
+                </div>
               </CardContent>
             </Card>
 
