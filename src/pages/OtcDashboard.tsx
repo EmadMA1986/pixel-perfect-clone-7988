@@ -646,7 +646,7 @@ const OtcDashboard = () => {
                   {negativeMonths} <span className="text-sm text-muted-foreground font-normal">/ {last12.length}</span>
                 </p>
                 <p className="text-[10px] text-muted-foreground mt-1">
-                  Months with negative net profit (last {last12.length} months)
+                  Months with negative net profit · {last12.length}-month window {isFiltered ? `ending ${selectedMonth}` : "(latest)"}
                 </p>
               </CardContent>
             </Card>
