@@ -10,11 +10,29 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { mkAutosSummary, vehicles, monthlyIncome, formatAED, ahmadCapital } from "@/data/mkAutosData";
+import ExecutiveSummary, { ExecMonthInput } from "@/components/ExecutiveSummary";
 
 const MkAutosCarsDashboard = () => {
-  const [selectedMonth, setSelectedMonth] = useState("all");
-
   const months = useMemo(() => monthlyIncome.map((m) => m.month), []);
+  // Default to latest month so MoM executive comparison renders on load
+  const [selectedMonth, setSelectedMonth] = useState(months[months.length - 1] ?? "all");
+
+  // Approximate per-month operating cost (maintenance + depreciation prorated across active months)
+  const activeMonths = monthlyIncome.filter((m) => m.total > 0).length || 1;
+  const avgMonthlyCost = (mkAutosSummary.totalMaintenanceExpenses + mkAutosSummary.totalDepreciation) / activeMonths;
+
+  const execHistory: ExecMonthInput[] = useMemo(
+    () =>
+      monthlyIncome
+        .filter((m) => m.total > 0)
+        .map((m) => {
+          const revenue = m.total;
+          const costs = avgMonthlyCost;
+          const grossProfit = revenue - costs;
+          return { month: m.month, revenue, costs, grossProfit, netProfit: grossProfit };
+        }),
+    [avgMonthlyCost]
+  );
 
   const filteredIncome = useMemo(
     () => selectedMonth === "all" ? monthlyIncome : monthlyIncome.filter((m) => m.month === selectedMonth),
@@ -69,6 +87,25 @@ const MkAutosCarsDashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-6">
+        {/* Executive Summary — top-of-page decision view */}
+        <ExecutiveSummary
+          businessName="MK Autos — Cars"
+          format={formatAED}
+          currentMonth={selectedMonth === "all" ? undefined : selectedMonth}
+          history={execHistory}
+          reasons={{
+            revenueUp: "Higher fleet utilization / longer rental contracts",
+            revenueDown: "Idle vehicles or shorter rental periods",
+            costsContext: "Operating cost = avg monthly maintenance + depreciation run-rate",
+          }}
+          extraIssues={(cur) => {
+            const out: string[] = [];
+            if (cur.netProfit < 0) out.push("Monthly revenue below run-rate operating cost — fleet under-utilized.");
+            if (cur.revenue < avgMonthlyCost * 0.6) out.push("Revenue <60% of break-even — review idle vehicles.");
+            return out;
+          }}
+        />
+
         {/* Ahmad's Capital Position Bar */}
         {!isFiltered && (
           <Card className="border-border/50 bg-gradient-to-r from-emerald-500/10 to-emerald-700/5 backdrop-blur-sm">
