@@ -15,7 +15,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell,
   LineChart, Line, CartesianGrid, Legend, ComposedChart, Area, AreaChart,
 } from "recharts";
-import { otcSummary, monthlyPL, expenseBreakdown, partnerCapital, formatAED } from "@/data/otcData";
+import { otcSummary, monthlyPL, expenseBreakdown, partnerCapital, formatAED, getExpensesForMonth } from "@/data/otcData";
 import ExecutiveSummary, { ExecMonthInput } from "@/components/ExecutiveSummary";
 
 // Estimated average spread for OTC USDT/AED trades. Used to back-calculate
