@@ -24,6 +24,7 @@ const ASSUMED_SPREAD = 0.004; // 0.4%
 
 const OtcDashboard = () => {
   const [selectedMonth, setSelectedMonth] = useState("all");
+  const [showAllMonths, setShowAllMonths] = useState(false);
 
   const months = useMemo(() => monthlyPL.map((m) => m.month), []);
 
