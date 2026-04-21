@@ -612,8 +612,8 @@ const OtcDashboard = () => {
                   </div>
                 )}
 
-                <p className="text-[10px] italic text-muted-foreground">
-                  Own capital figures reflect each partner's net position after profit share and withdrawals as at March 2026 closing. Client float represents AR obligations and is not distributable capital.
+                <p className="text-[11px] italic text-muted-foreground">
+                  Working capital = net capital injected after withdrawals + cumulative profit share. Client float of {formatAEDWhole(arFloat)} is excluded as it represents client obligations not distributable capital.
                 </p>
 
                 {/* Supplementary: Capital deployment metrics retained */}
