@@ -57,6 +57,16 @@ const OtcDashboard = () => {
     ? Math.round((otcSummary.cashPosition / avgMonthlyBurn) * 30)
     : 999;
 
+  // Break-even: minimum monthly volume needed to cover average monthly costs at current spread
+  const breakEvenVolume = avgMonthlyBurn / ASSUMED_SPREAD;
+
+  // Risk Dashboard metrics
+  const last12 = monthlyPL.slice(-12);
+  const negativeMonths = last12.filter((m) => m.netProfit < 0).length;
+  const MIN_LIQUIDITY = 500_000; // AED 500K minimum
+  const liquidityHealthy = otcSummary.cashPosition >= MIN_LIQUIDITY;
+  const liquidityRatio = (otcSummary.cashPosition / MIN_LIQUIDITY) * 100;
+
   const chartData = useMemo(
     () =>
       filteredPL.map((m) => {
