@@ -10,11 +10,29 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { mkAutosSummary, vehicles, monthlyIncome, formatAED, ahmadCapital } from "@/data/mkAutosData";
+import ExecutiveSummary, { ExecMonthInput } from "@/components/ExecutiveSummary";
 
 const MkAutosCarsDashboard = () => {
-  const [selectedMonth, setSelectedMonth] = useState("all");
-
   const months = useMemo(() => monthlyIncome.map((m) => m.month), []);
+  // Default to latest month so MoM executive comparison renders on load
+  const [selectedMonth, setSelectedMonth] = useState(months[months.length - 1] ?? "all");
+
+  // Approximate per-month operating cost (maintenance + depreciation prorated across active months)
+  const activeMonths = monthlyIncome.filter((m) => m.total > 0).length || 1;
+  const avgMonthlyCost = (mkAutosSummary.totalMaintenanceExpenses + mkAutosSummary.totalDepreciation) / activeMonths;
+
+  const execHistory: ExecMonthInput[] = useMemo(
+    () =>
+      monthlyIncome
+        .filter((m) => m.total > 0)
+        .map((m) => {
+          const revenue = m.total;
+          const costs = avgMonthlyCost;
+          const grossProfit = revenue - costs;
+          return { month: m.month, revenue, costs, grossProfit, netProfit: grossProfit };
+        }),
+    [avgMonthlyCost]
+  );
 
   const filteredIncome = useMemo(
     () => selectedMonth === "all" ? monthlyIncome : monthlyIncome.filter((m) => m.month === selectedMonth),
