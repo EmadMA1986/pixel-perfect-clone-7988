@@ -24,6 +24,7 @@ const ASSUMED_SPREAD = 0.004; // 0.4%
 
 const OtcDashboard = () => {
   const [selectedMonth, setSelectedMonth] = useState("all");
+  const [showAllMonths, setShowAllMonths] = useState(false);
 
   const months = useMemo(() => monthlyPL.map((m) => m.month), []);
 
@@ -60,16 +61,26 @@ const OtcDashboard = () => {
   // Break-even: minimum monthly volume needed to cover average monthly costs at current spread
   const breakEvenVolume = avgMonthlyBurn / ASSUMED_SPREAD;
 
-  // Risk Dashboard metrics
-  const last12 = monthlyPL.slice(-12);
+  // Risk Dashboard metrics — when a month is selected, look back over the
+  // 12-month window ending at that month; otherwise the most recent 12.
+  const selectedIdx = selectedMonth === "all"
+    ? monthlyPL.length - 1
+    : Math.max(0, monthlyPL.findIndex((m) => m.month === selectedMonth));
+  const last12 = useMemo(
+    () => monthlyPL.slice(Math.max(0, selectedIdx - 11), selectedIdx + 1),
+    [selectedIdx]
+  );
   const negativeMonths = last12.filter((m) => m.netProfit < 0).length;
   const MIN_LIQUIDITY = 500_000; // AED 500K minimum
   const liquidityHealthy = otcSummary.cashPosition >= MIN_LIQUIDITY;
   const liquidityRatio = (otcSummary.cashPosition / MIN_LIQUIDITY) * 100;
 
-  // === Trend data: ALWAYS last 12 months, independent of selected filter ===
-  // Charts show full context; selected month is highlighted via `isSelected` flag.
-  const trendMonths = useMemo(() => monthlyPL.slice(-12), []);
+  // === Trend data: last 6 months ending at the selected month (or last 6 overall when "all") ===
+  const trendMonths = useMemo(() => {
+    const end = selectedIdx + 1;
+    const start = Math.max(0, end - 6);
+    return monthlyPL.slice(start, end);
+  }, [selectedIdx]);
 
   const chartData = useMemo(
     () =>
@@ -537,8 +548,8 @@ const OtcDashboard = () => {
                           <span className="tabular-nums font-medium text-foreground">{formatAEDCompact(p.funding)}</span>
                         </div>
                         <div className="flex justify-between text-xs">
-                          <span className="text-muted-foreground">Profit Contribution (50%)</span>
-                          <span className="tabular-nums font-medium text-success">{formatAEDCompact(totalNetProfit / 2)}</span>
+                          <span className="text-muted-foreground">Profit Contribution (50%) · {periodLabel}</span>
+                          <span className={`tabular-nums font-medium ${totalNetProfit >= 0 ? "text-success" : "text-loss"}`}>{formatAEDCompact(totalNetProfit / 2)}</span>
                         </div>
                         <div className="flex justify-between text-xs pt-1.5 border-t border-border/30">
                           <span className="text-muted-foreground">Net Position</span>
@@ -566,8 +577,8 @@ const OtcDashboard = () => {
                       <span className="tabular-nums font-medium text-foreground">~100%</span>
                     </div>
                     <div className="flex justify-between text-xs pt-1.5 border-t border-border/30">
-                      <span className="text-muted-foreground">Source of Trading Income</span>
-                      <span className="tabular-nums font-bold text-success">{formatAEDCompact(totalTradingIncome)}</span>
+                      <span className="text-muted-foreground">Trading Income · {periodLabel}</span>
+                      <span className={`tabular-nums font-bold ${totalTradingIncome >= 0 ? "text-success" : "text-loss"}`}>{formatAEDCompact(totalTradingIncome)}</span>
                     </div>
                   </div>
                   <p className="text-[10px] text-muted-foreground mt-2 leading-tight">
@@ -635,7 +646,7 @@ const OtcDashboard = () => {
                   {negativeMonths} <span className="text-sm text-muted-foreground font-normal">/ {last12.length}</span>
                 </p>
                 <p className="text-[10px] text-muted-foreground mt-1">
-                  Months with negative net profit (last {last12.length} months)
+                  Months with negative net profit · {last12.length}-month window {isFiltered ? `ending ${selectedMonth}` : "(latest)"}
                 </p>
               </CardContent>
             </Card>
@@ -716,16 +727,12 @@ const OtcDashboard = () => {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={220}>
-                <LineChart data={monthlyPL.filter(m => !m.month.includes("Dec 2024")).map(m => ({
-                  name: m.month.replace("Jan-Dec 2024", "2024"),
-                  ratio: m.grossProfit > 0 ? parseFloat(((m.cashExpenses / m.grossProfit) * 100).toFixed(1)) : 0,
-                  grossProfit: m.grossProfit,
-                }))} margin={{ top: 5, right: 20, bottom: 30, left: 5 }}>
+                <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 30, left: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 18%)" />
                   <XAxis dataKey="name" tick={{ fill: "hsl(220 10% 50%)", fontSize: 9 }} angle={-45} textAnchor="end" />
                   <YAxis tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} tickFormatter={(v) => `${v}%`} />
                   <Tooltip contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }} formatter={(value: number) => [`${value}%`, "Cost-to-Revenue"]} />
-                  <Line type="monotone" dataKey="ratio" stroke="hsl(43, 74%, 52%)" strokeWidth={2} dot={{ r: 3, fill: "hsl(43, 74%, 52%)" }} />
+                  <Line type="monotone" dataKey="ratio" stroke={COLOR_GOLD} strokeWidth={2} dot={makeHighlightDot(COLOR_GOLD)} />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
@@ -740,27 +747,42 @@ const OtcDashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div>
-                <p className="text-xs text-muted-foreground">Total Counterparty Losses <span className="text-[9px]">(figures in AED, thousands separators)</span></p>
-                <p className="text-2xl font-bold font-serif text-loss">{formatAED(otcSummary.scamYTD)}</p>
-              </div>
-              <div className="space-y-2">
-                {monthlyPL.filter(m => m.scam > 0).map(m => (
-                  <div key={m.month} className="flex justify-between items-center text-xs p-2 rounded bg-loss/10">
-                    <span className="text-muted-foreground">{m.month}</span>
-                    <span className="font-bold text-loss">{formatAED(m.scam)}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="pt-2 border-t border-border/30">
-                <p className="text-xs text-muted-foreground">Impact on Net Profit</p>
-                <p className="text-sm font-semibold text-foreground">
-                  Without losses: {formatAED(otcSummary.netProfitYTD + otcSummary.scamYTD)} net profit
-                </p>
-                <p className="text-[10px] text-muted-foreground mt-1">
-                  Losses represent {((otcSummary.scamYTD / otcSummary.grossProfitYTD) * 100).toFixed(1)}% of trading income
-                </p>
-              </div>
+              {(() => {
+                const lossesUpTo = monthlyPL.slice(0, selectedIdx + 1).filter((m) => m.scam > 0);
+                const lossesTotal = lossesUpTo.reduce((s, m) => s + m.scam, 0);
+                const incomeUpTo = monthlyPL.slice(0, selectedIdx + 1).reduce((s, m) => s + m.grossProfit, 0);
+                const netUpTo = monthlyPL.slice(0, selectedIdx + 1).reduce((s, m) => s + m.netProfit, 0);
+                return (
+                  <>
+                    <div>
+                      <p className="text-xs text-muted-foreground">
+                        Total Counterparty Losses {isFiltered ? `(through ${selectedMonth})` : "(YTD)"}
+                        <span className="text-[9px]"> · figures in AED, thousands separators</span>
+                      </p>
+                      <p className="text-2xl font-bold font-serif text-loss">{formatAED(lossesTotal)}</p>
+                    </div>
+                    <div className="space-y-2">
+                      {lossesUpTo.length === 0 ? (
+                        <p className="text-xs text-muted-foreground italic p-2">No counterparty losses recorded in this period.</p>
+                      ) : lossesUpTo.map((m) => (
+                        <div key={m.month} className="flex justify-between items-center text-xs p-2 rounded bg-loss/10">
+                          <span className="text-muted-foreground">{m.month}</span>
+                          <span className="font-bold text-loss">{formatAED(m.scam)}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="pt-2 border-t border-border/30">
+                      <p className="text-xs text-muted-foreground">Impact on Net Profit</p>
+                      <p className="text-sm font-semibold text-foreground">
+                        Without losses: {formatAED(netUpTo + lossesTotal)} net profit
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        Losses represent {incomeUpTo > 0 ? ((lossesTotal / incomeUpTo) * 100).toFixed(1) : "0.0"}% of trading income
+                      </p>
+                    </div>
+                  </>
+                );
+              })()}
             </CardContent>
           </Card>
         </div>
@@ -775,8 +797,18 @@ const OtcDashboard = () => {
 
           <TabsContent value="monthly">
             <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-              <CardHeader className="pb-3">
+              <CardHeader className="pb-3 flex flex-row items-center justify-between">
                 <CardTitle className="text-lg font-serif text-foreground">Monthly Profit & Loss</CardTitle>
+                {isFiltered && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => setShowAllMonths((v) => !v)}
+                  >
+                    {showAllMonths ? "Show Selected Only" : "Show All Months"}
+                  </Button>
+                )}
               </CardHeader>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
@@ -791,7 +823,10 @@ const OtcDashboard = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {monthlyPL.map((row) => {
+                      {(isFiltered && !showAllMonths
+                        ? monthlyPL.filter((m) => m.month === selectedMonth)
+                        : monthlyPL
+                      ).map((row) => {
                         const isSel = selectedMonth !== "all" && row.month === selectedMonth;
                         return (
                           <TableRow
@@ -808,13 +843,24 @@ const OtcDashboard = () => {
                           </TableRow>
                         );
                       })}
-                      <TableRow className="border-border/50 bg-secondary/30 font-semibold">
-                        <TableCell className="text-sm text-foreground">{isFiltered ? `Selected: ${selectedMonth}` : "Total (YTD)"}</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(totalTradingIncome)}</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAED(totalDirectCosts)}</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-loss">{formatAED(totalScam)}</TableCell>
-                        <TableCell className={`text-sm tabular-nums text-right font-bold ${totalNetProfit >= 0 ? "text-success" : "text-loss"}`}>{formatAED(totalNetProfit)}</TableCell>
-                      </TableRow>
+                      {(() => {
+                        const upTo = monthlyPL.slice(0, selectedIdx + 1);
+                        const tIncome = upTo.reduce((s, m) => s + m.grossProfit, 0);
+                        const tCosts = upTo.reduce((s, m) => s + m.cashExpenses, 0);
+                        const tScam = upTo.reduce((s, m) => s + m.scam, 0);
+                        const tNet = upTo.reduce((s, m) => s + m.netProfit, 0);
+                        return (
+                          <TableRow className="border-border/50 bg-secondary/30 font-semibold">
+                            <TableCell className="text-sm text-foreground">
+                              {isFiltered ? `Running Total (through ${selectedMonth})` : "Total (YTD)"}
+                            </TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(tIncome)}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAED(tCosts)}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-loss">{formatAED(tScam)}</TableCell>
+                            <TableCell className={`text-sm tabular-nums text-right font-bold ${tNet >= 0 ? "text-success" : "text-loss"}`}>{formatAED(tNet)}</TableCell>
+                          </TableRow>
+                        );
+                      })()}
                     </TableBody>
                   </Table>
                 </div>
