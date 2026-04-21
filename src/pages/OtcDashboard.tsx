@@ -388,52 +388,180 @@ const OtcDashboard = () => {
         {/* Gold divider */}
         <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
-        {/* === Liquidity Position === */}
+        {/* === Liquidity & Capital Position === */}
         <section className="space-y-4">
           <div className="flex items-center gap-2">
             <Banknote className="h-4 w-4 text-primary" />
-            <h2 className="text-sm font-serif font-semibold uppercase tracking-wider text-foreground">Liquidity Position</h2>
+            <h2 className="text-sm font-serif font-semibold uppercase tracking-wider text-foreground">Liquidity & Capital Position</h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-              <CardContent className="p-4">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">AED Cash Available</p>
-                <p className="text-2xl font-bold font-serif text-foreground mt-1">{formatAEDCompact(otcSummary.cashPosition)}</p>
-                <p className="text-[10px] text-muted-foreground mt-1">Total cash incl. AR: {formatAEDCompact(otcSummary.totalCash)}</p>
-              </CardContent>
-            </Card>
-            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-              <CardContent className="p-4">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Capital Deployed</p>
-                <p className={`text-2xl font-bold font-serif mt-1 ${capitalDeployed >= 0 ? "text-foreground" : "text-loss"}`}>
-                  {formatAEDCompact(capitalDeployed)}
-                </p>
-                <p className="text-[10px] text-muted-foreground mt-1">Total funding − cash on hand</p>
-              </CardContent>
-            </Card>
-            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-              <CardContent className="p-4">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Capital Utilization</p>
-                <p className="text-2xl font-bold font-serif text-foreground mt-1">{utilizationPct.toFixed(1)}%</p>
-                <div className="mt-2 h-1.5 w-full rounded-full bg-secondary/40 overflow-hidden">
-                  <div
-                    className="h-full bg-primary transition-all"
-                    style={{ width: `${Math.min(100, utilizationPct)}%` }}
-                  />
+
+          {(() => {
+            const mariaCap = partnerCapital.maria.netPosition;
+            const ahmadCap = partnerCapital.ahmad.netPosition;
+            const ownCapital = mariaCap + ahmadCap;
+            const arFloat = Math.abs(otcSummary.ar);
+            const totalFunds = ownCapital + arFloat;
+            const floatPct = totalFunds > 0 ? (arFloat / totalFunds) * 100 : 0;
+            const ownRunwayDays = avgMonthlyBurn > 0
+              ? Math.round((ownCapital / avgMonthlyBurn) * 30)
+              : 999;
+
+            const floatBadge = floatPct > 50
+              ? { label: "Critical", cls: "border-loss/40 bg-loss/10 text-loss" }
+              : floatPct > 30
+              ? { label: "Elevated", cls: "border-amber-500/40 bg-amber-500/10 text-amber-400" }
+              : { label: "Healthy", cls: "border-success/40 bg-success/10 text-success" };
+
+            const imbalancePct = Math.max(mariaCap, ahmadCap) > 0
+              ? Math.abs(mariaCap - ahmadCap) / Math.max(mariaCap, ahmadCap) * 100
+              : 0;
+            const lowerPartner = mariaCap < ahmadCap ? "Maria" : "Ahmad";
+
+            const alerts: { tone: "warn" | "danger"; text: string }[] = [];
+            if (imbalancePct > 20) {
+              alerts.push({
+                tone: "warn",
+                text: `Capital imbalance between partners (${lowerPartner} ${imbalancePct.toFixed(1)}% lower) — review profit distribution`,
+              });
+            }
+            if (floatPct > 35) {
+              alerts.push({
+                tone: "danger",
+                text: `High client float dependency (${floatPct.toFixed(1)}% of total funds) — liquidity risk`,
+              });
+            }
+
+            return (
+              <>
+                {/* ROW 1 — Partner capital cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <Card className="border-success/30 bg-success/5 backdrop-blur-sm">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider">Maria</p>
+                        <Badge variant="secondary" className="text-[10px]">50% Partner</Badge>
+                      </div>
+                      <p className="text-2xl font-bold font-serif text-success mt-2">{formatAEDCompact(mariaCap)}</p>
+                      <p className="text-[10px] text-muted-foreground mt-1">Capital Position (net of withdrawals & profit share)</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-primary/30 bg-primary/5 backdrop-blur-sm">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider">Ahmad</p>
+                        <Badge variant="secondary" className="text-[10px]">50% Partner</Badge>
+                      </div>
+                      <p className="text-2xl font-bold font-serif text-primary mt-2">{formatAEDCompact(ahmadCap)}</p>
+                      <p className="text-[10px] text-muted-foreground mt-1">Capital Position (net of withdrawals & profit share)</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-foreground/30 bg-foreground/5 backdrop-blur-sm">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider">Total Own Capital</p>
+                        <Badge variant="outline" className="text-[10px]">Maria + Ahmad</Badge>
+                      </div>
+                      <p className="text-2xl font-extrabold font-serif text-foreground mt-2">{formatAEDCompact(ownCapital)}</p>
+                      <p className="text-[10px] text-muted-foreground mt-1">Distributable partner equity</p>
+                    </CardContent>
+                  </Card>
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-1">Of {formatAEDCompact(capitalBasis)} total partner funding</p>
-              </CardContent>
-            </Card>
-            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-              <CardContent className="p-4">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Cash Runway</p>
-                <p className={`text-2xl font-bold font-serif mt-1 ${daysRunway > 365 ? "text-success" : daysRunway > 90 ? "text-foreground" : "text-loss"}`}>
-                  {daysRunway > 999 ? "999+" : daysRunway} days
+
+                {/* ROW 2 — Funding structure */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <Card className="border-amber-500/40 bg-amber-500/5 backdrop-blur-sm">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider">Client Funds in Use</p>
+                        <AlertTriangle className="h-4 w-4 text-amber-400" />
+                      </div>
+                      <p className="text-2xl font-bold font-serif text-amber-400 mt-2">{formatAEDCompact(arFloat)}</p>
+                      <p className="text-[10px] text-muted-foreground mt-1">AR float — owed to clients, not own capital</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                    <CardContent className="p-4">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider">Total Funds Available</p>
+                      <p className="text-2xl font-bold font-serif text-foreground mt-2">{formatAEDCompact(totalFunds)}</p>
+                      <p className="text-[10px] text-muted-foreground mt-1">Own Capital + Client Float</p>
+                    </CardContent>
+                  </Card>
+                  <Card className={`backdrop-blur-sm border ${floatBadge.cls}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider">Client Float % of Total</p>
+                        <Badge variant="outline" className={`text-[10px] ${floatBadge.cls}`}>{floatBadge.label}</Badge>
+                      </div>
+                      <p className="text-2xl font-bold font-serif mt-2">{floatPct.toFixed(1)}%</p>
+                      <p className="text-[10px] text-muted-foreground mt-1">Thresholds: amber &gt;30% · red &gt;50%</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                    <CardContent className="p-4">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider">Cash Runway (Own Capital)</p>
+                      <p className={`text-2xl font-bold font-serif mt-2 ${ownRunwayDays > 365 ? "text-success" : ownRunwayDays > 90 ? "text-foreground" : "text-loss"}`}>
+                        {ownRunwayDays > 999 ? "999+" : ownRunwayDays} days
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1">@ {formatAEDCompact(avgMonthlyBurn)}/mo burn · excludes client float</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* ROW 3 — Alert bar */}
+                {alerts.length > 0 && (
+                  <div className="space-y-2">
+                    {alerts.map((a, i) => (
+                      <div
+                        key={i}
+                        className={`w-full rounded-lg border p-3 flex items-start gap-2 ${
+                          a.tone === "danger"
+                            ? "border-loss/40 bg-loss/10 text-loss"
+                            : "border-amber-500/40 bg-amber-500/10 text-amber-400"
+                        }`}
+                      >
+                        <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+                        <p className="text-xs font-medium">{a.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <p className="text-[10px] italic text-muted-foreground">
+                  Own capital figures reflect each partner's net position after profit share and withdrawals as at March 2026 closing. Client float represents AR obligations and is not distributable capital.
                 </p>
-                <p className="text-[10px] text-muted-foreground mt-1">@ {formatAEDCompact(avgMonthlyBurn)}/mo burn (last 6mo)</p>
-              </CardContent>
-            </Card>
-          </div>
+
+                {/* Supplementary: Capital deployment metrics retained */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                  <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                    <CardContent className="p-4">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider">AED Cash on Hand</p>
+                      <p className="text-2xl font-bold font-serif text-foreground mt-1">{formatAEDCompact(otcSummary.cashPosition)}</p>
+                      <p className="text-[10px] text-muted-foreground mt-1">Total incl. AR: {formatAEDCompact(otcSummary.totalCash)}</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                    <CardContent className="p-4">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider">Capital Deployed</p>
+                      <p className={`text-2xl font-bold font-serif mt-1 ${capitalDeployed >= 0 ? "text-foreground" : "text-loss"}`}>
+                        {formatAEDCompact(capitalDeployed)}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1">Total funding − cash on hand</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                    <CardContent className="p-4">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider">Capital Utilization</p>
+                      <p className="text-2xl font-bold font-serif text-foreground mt-1">{utilizationPct.toFixed(1)}%</p>
+                      <div className="mt-2 h-1.5 w-full rounded-full bg-secondary/40 overflow-hidden">
+                        <div className="h-full bg-primary transition-all" style={{ width: `${Math.min(100, utilizationPct)}%` }} />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-1">Of {formatAEDCompact(capitalBasis)} total partner funding</p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </>
+            );
+          })()}
         </section>
 
         {/* Gold divider */}
