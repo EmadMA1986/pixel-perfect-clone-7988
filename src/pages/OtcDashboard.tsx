@@ -363,7 +363,7 @@ const OtcDashboard = () => {
                       contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }}
                       formatter={(value: number) => [formatAED(value), "Per AED 1M"]}
                     />
-                    <Line type="monotone" dataKey="revPerM" stroke="hsl(160, 60%, 45%)" strokeWidth={2} dot={{ r: 3 }} />
+                    <Line type="monotone" dataKey="revPerM" stroke={COLOR_GREEN} strokeWidth={2} dot={makeHighlightDot(COLOR_GREEN)} />
                   </LineChart>
                 </ResponsiveContainer>
                 <p className="text-[10px] text-muted-foreground mt-2">
