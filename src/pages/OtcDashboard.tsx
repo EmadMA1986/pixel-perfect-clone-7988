@@ -61,16 +61,26 @@ const OtcDashboard = () => {
   // Break-even: minimum monthly volume needed to cover average monthly costs at current spread
   const breakEvenVolume = avgMonthlyBurn / ASSUMED_SPREAD;
 
-  // Risk Dashboard metrics
-  const last12 = monthlyPL.slice(-12);
+  // Risk Dashboard metrics — when a month is selected, look back over the
+  // 12-month window ending at that month; otherwise the most recent 12.
+  const selectedIdx = selectedMonth === "all"
+    ? monthlyPL.length - 1
+    : Math.max(0, monthlyPL.findIndex((m) => m.month === selectedMonth));
+  const last12 = useMemo(
+    () => monthlyPL.slice(Math.max(0, selectedIdx - 11), selectedIdx + 1),
+    [selectedIdx]
+  );
   const negativeMonths = last12.filter((m) => m.netProfit < 0).length;
   const MIN_LIQUIDITY = 500_000; // AED 500K minimum
   const liquidityHealthy = otcSummary.cashPosition >= MIN_LIQUIDITY;
   const liquidityRatio = (otcSummary.cashPosition / MIN_LIQUIDITY) * 100;
 
-  // === Trend data: ALWAYS last 12 months, independent of selected filter ===
-  // Charts show full context; selected month is highlighted via `isSelected` flag.
-  const trendMonths = useMemo(() => monthlyPL.slice(-12), []);
+  // === Trend data: last 6 months ending at the selected month (or last 6 overall when "all") ===
+  const trendMonths = useMemo(() => {
+    const end = selectedIdx + 1;
+    const start = Math.max(0, end - 6);
+    return monthlyPL.slice(start, end);
+  }, [selectedIdx]);
 
   const chartData = useMemo(
     () =>
