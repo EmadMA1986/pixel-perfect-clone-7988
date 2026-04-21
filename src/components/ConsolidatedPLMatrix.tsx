@@ -17,7 +17,7 @@ import {
   AED_TO_USD_RATE,
 } from "@/data/goldData";
 
-type Period = "MTD" | "YTD" | "L6M";
+type Period = "MTD" | "YTD" | "ALL";
 
 interface PLRow {
   revenue: number;
@@ -206,13 +206,11 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
         prevMonths: idx > 0 ? [sorted[idx - 1]] : [],
       };
     }
-    if (period === "L6M") {
-      const start = Math.max(0, idx - 5);
-      const prevStart = Math.max(0, start - 6);
-      const prevEnd = Math.max(0, start);
+    if (period === "ALL") {
+      // All time = every month, prev period = none (no comparison)
       return {
-        currentMonths: sorted.slice(start, idx + 1),
-        prevMonths: sorted.slice(prevStart, prevEnd),
+        currentMonths: sorted,
+        prevMonths: [],
       };
     }
     // YTD: all months in same year as anchor up to anchor
