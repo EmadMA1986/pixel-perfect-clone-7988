@@ -261,7 +261,7 @@ const OtcDashboard = () => {
           <SummaryCard
             title="Cost-to-Revenue"
             value={`${costToRevenue.toFixed(1)}%`}
-            subtitle="Direct costs ÷ income"
+            subtitle={costToRevenue < 25 ? "Target: <25% ✅ Excellent" : costToRevenue < 40 ? "Target: <25% ⚠ Acceptable" : "Target: <25% ❌ High"}
             icon={Gauge}
             trend={costToRevenue < 30 ? "up" : "down"}
           />
