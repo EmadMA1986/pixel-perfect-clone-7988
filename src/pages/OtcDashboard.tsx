@@ -885,9 +885,8 @@ const OtcDashboard = () => {
                     <div>
                       <p className="text-xs text-muted-foreground">
                         Total Counterparty Losses {isFiltered ? `(through ${selectedMonth})` : "(YTD)"}
-                        <span className="text-[9px]"> · figures in AED, thousands separators</span>
                       </p>
-                      <p className="text-2xl font-bold font-serif text-loss">{formatAED(lossesTotal)}</p>
+                      <p className="text-2xl font-bold font-serif text-loss">{formatAEDWhole(lossesTotal)}</p>
                     </div>
                     <div className="space-y-2">
                       {lossesUpTo.length === 0 ? (
@@ -895,14 +894,14 @@ const OtcDashboard = () => {
                       ) : lossesUpTo.map((m) => (
                         <div key={m.month} className="flex justify-between items-center text-xs p-2 rounded bg-loss/10">
                           <span className="text-muted-foreground">{m.month}</span>
-                          <span className="font-bold text-loss">{formatAED(m.scam)}</span>
+                          <span className="font-bold text-loss">{formatAEDWhole(m.scam)}</span>
                         </div>
                       ))}
                     </div>
                     <div className="pt-2 border-t border-border/30">
                       <p className="text-xs text-muted-foreground">Impact on Net Profit</p>
                       <p className="text-sm font-semibold text-foreground">
-                        Without losses: {formatAED(netUpTo + lossesTotal)} net profit
+                        Without losses: {formatAEDWhole(netUpTo + lossesTotal)} net profit
                       </p>
                       <p className="text-[10px] text-muted-foreground mt-1">
                         Losses represent {incomeUpTo > 0 ? ((lossesTotal / incomeUpTo) * 100).toFixed(1) : "0.0"}% of trading income
