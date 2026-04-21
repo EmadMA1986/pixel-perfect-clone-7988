@@ -342,12 +342,21 @@ const PortfolioInsights = ({
                     <TableCell>
                       <div className="h-8 w-24 ml-auto">
                         {sparkData.length > 1 ? (
-                          <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={sparkData} margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
-                              <YAxis hide domain={["dataMin", "dataMax"]} />
-                              <Line type="monotone" dataKey="v" stroke={sparkColor} strokeWidth={1.75} dot={false} isAnimationActive={false} />
-                            </LineChart>
-                          </ResponsiveContainer>
+                          (() => {
+                            const vals = sparkData.map(p => p.v);
+                            const min = Math.min(...vals);
+                            const max = Math.max(...vals);
+                            // Ensure flat lines remain visible by adding padding
+                            const pad = max === min ? Math.max(Math.abs(max) * 0.1, 1) : (max - min) * 0.1;
+                            return (
+                              <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={sparkData} margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
+                                  <YAxis hide domain={[min - pad, max + pad]} />
+                                  <Line type="monotone" dataKey="v" stroke={sparkColor} strokeWidth={1.75} dot={{ r: 1.5, fill: sparkColor }} isAnimationActive={false} />
+                                </LineChart>
+                              </ResponsiveContainer>
+                            );
+                          })()
                         ) : (
                           <span className="text-xs text-muted-foreground">—</span>
                         )}
