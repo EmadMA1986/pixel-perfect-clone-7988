@@ -942,24 +942,38 @@ const OtcDashboard = () => {
           </Card>
         </div>
 
-        {/* === YTD Expense Breakdown === */}
+        {/* === Expense Breakdown (period-aware) === */}
         {(() => {
-          const expenseCats = [
-            { name: "General Expenses", amount: 185574 },
-            { name: "Car Expenses", amount: 23470 },
-            { name: "Salaries", amount: 321800 },
-            { name: "TRX", amount: -14569 },
-            { name: "DFZ Rent", amount: 124000 },
-            { name: "Gate Pass", amount: 8884 },
-          ];
+          const periodExpenses = getExpensesForMonth(isFiltered ? selectedMonth : "all");
+          const labelMap: Record<string, string> = {
+            "General Exp": "General Expenses",
+            "Car Exp": "Car Expenses",
+            "Salaries": "Salaries",
+            "TRX": "TRX",
+            "DFZ Rent": "DFZ Rent",
+            "Gatepass": "Gate Pass",
+          };
+          const expenseCats = periodExpenses.map((c) => ({
+            name: labelMap[c.category] ?? c.category,
+            amount: c.amount,
+          }));
           const totalAbs = expenseCats.reduce((s, c) => s + Math.abs(c.amount), 0);
-          const maxAbs = Math.max(...expenseCats.map((c) => Math.abs(c.amount)));
-          const largest = expenseCats.reduce((m, c) => (Math.abs(c.amount) > Math.abs(m.amount) ? c : m));
+          const periodTotal = expenseCats.reduce((s, c) => s + c.amount, 0);
+          const maxAbs = Math.max(1, ...expenseCats.map((c) => Math.abs(c.amount)));
+          const largest = expenseCats.reduce(
+            (m, c) => (Math.abs(c.amount) > Math.abs(m.amount) ? c : m),
+            { name: "", amount: 0 }
+          );
+          const title = isFiltered
+            ? `Expense Breakdown — ${selectedMonth}`
+            : "YTD Expense Breakdown by Category";
           return (
             <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-serif text-foreground">YTD Expense Breakdown by Category</CardTitle>
-                <p className="text-xs text-muted-foreground">Source: Expenses tab · Total: {formatAEDWhole(totalAbs)}</p>
+                <CardTitle className="text-lg font-serif text-foreground">{title}</CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  Source: Expenses tab · {isFiltered ? `${selectedMonth} total` : "YTD total"}: {formatAEDWhole(periodTotal)}
+                </p>
               </CardHeader>
               <CardContent className="space-y-3">
                 {expenseCats
@@ -968,19 +982,23 @@ const OtcDashboard = () => {
                   .map((cat) => {
                     const pct = totalAbs > 0 ? (Math.abs(cat.amount) / totalAbs) * 100 : 0;
                     const widthPct = maxAbs > 0 ? (Math.abs(cat.amount) / maxAbs) * 100 : 0;
-                    const isLargest = cat.name === largest.name;
+                    const isZero = cat.amount === 0;
+                    const isLargest = !isZero && cat.name === largest.name && Math.abs(largest.amount) > 0;
                     const isNegative = cat.amount < 0;
-                    const barColor = isLargest
+                    const barColor = isZero
+                      ? "bg-muted-foreground/15"
+                      : isLargest
                       ? "bg-primary"
                       : isNegative
                       ? "bg-profit/60"
                       : "bg-muted-foreground/40";
                     return (
-                      <div key={cat.name} className="space-y-1">
+                      <div key={cat.name} className={`space-y-1 ${isZero ? "opacity-40" : ""}`}>
                         <div className="flex items-center justify-between text-xs">
                           <span className={`font-medium ${isLargest ? "text-primary" : "text-foreground"}`}>
                             {cat.name}
                             {isLargest && <span className="ml-2 text-[10px] uppercase tracking-wider">Largest cost</span>}
+                            {isZero && <span className="ml-2 text-[10px] uppercase tracking-wider text-muted-foreground">No activity</span>}
                           </span>
                           <span className="tabular-nums text-muted-foreground">
                             <span className={`font-semibold ${isNegative ? "text-profit" : "text-foreground"}`}>
