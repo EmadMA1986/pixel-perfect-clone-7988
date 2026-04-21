@@ -562,8 +562,8 @@ const OtcDashboard = () => {
                     </CardContent>
                   </Card>
                   {(() => {
-                    const netFreeCapital = ownCapital - arFloat;
-                    const coverage = arFloat > 0 ? ownCapital / arFloat : 999;
+                    const netFreeCapital = otcSummary.cashPosition;
+                    const coverage = arFloat > 0 ? netFreeCapital / arFloat : 999;
                     const tone = coverage >= 2 ? "text-success" : coverage >= 1 ? "text-primary" : "text-loss";
                     const badge = coverage >= 2
                       ? { label: "Healthy", cls: "border-success/40 text-success" }
