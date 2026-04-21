@@ -327,7 +327,11 @@ const OtcDashboard = () => {
                       contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }}
                       formatter={(value: number) => [`AED ${value.toFixed(2)}M`, "Volume"]}
                     />
-                    <Bar dataKey="volumeM" name="Volume (AED M)" fill="hsl(43, 74%, 52%)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="volumeM" name="Volume (AED M)" fill={COLOR_GOLD_DIM} radius={[4, 4, 0, 0]}>
+                      {chartData.map((d, i) => (
+                        <Cell key={i} fill={d.isSelected ? COLOR_GOLD : COLOR_GOLD_DIM} />
+                      ))}
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
                 <p className="text-[10px] text-muted-foreground mt-2">
