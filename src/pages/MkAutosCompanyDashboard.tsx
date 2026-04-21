@@ -62,6 +62,61 @@ const MkAutosCompanyDashboard = () => {
   const currentRatio = view.currentAssetsTotal / view.currentLiabilitiesTotal;
   const debtToEquity = view.loansTotal / view.capitalAccount;
 
+  // ===== Executive Summary: current vs previous month =====
+  const execSummary = useMemo(() => {
+    // Always anchor on a real month (use latest if "all" selected)
+    const anchorKey = allMode ? monthlyPL[monthlyPL.length - 1].month : selectedMonth;
+    const idx = monthlyPL.findIndex((m) => m.month === anchorKey);
+    if (idx <= 0) return null;
+    const cur = monthlyPL[idx];
+    const prev = monthlyPL[idx - 1];
+
+    const pct = (a: number, b: number) => (b === 0 ? 0 : ((a - b) / Math.abs(b)) * 100);
+    const revPct = pct(cur.directIncome, prev.directIncome);
+    const costTotalCur = cur.costOfSales + cur.indirectExpenses + cur.otherExpense;
+    const costTotalPrev = prev.costOfSales + prev.indirectExpenses + prev.otherExpense;
+    const costPct = pct(costTotalCur, costTotalPrev);
+    const npPct = pct(cur.netProfit, prev.netProfit);
+
+    // Driver detection
+    const drivers: string[] = [];
+    if (revPct >= 5) drivers.push(`revenue grew ${revPct.toFixed(1)}%`);
+    else if (revPct <= -5) drivers.push(`revenue dropped ${Math.abs(revPct).toFixed(1)}%`);
+    if (costPct >= 10) drivers.push(`total costs rose ${costPct.toFixed(1)}%`);
+    else if (costPct <= -10) drivers.push(`costs reduced ${Math.abs(costPct).toFixed(1)}%`);
+    if (cur.grossProfit > prev.grossProfit * 1.05) drivers.push("gross margin improved");
+    else if (cur.grossProfit < prev.grossProfit * 0.95) drivers.push("gross margin weakened");
+
+    // Risks
+    const risks: string[] = [];
+    if (cur.netProfit < 0) risks.push("Operating at a net loss");
+    if (cur.indirectExpenses > cur.grossProfit) risks.push("Overheads exceed gross profit");
+    if (cur.directIncome < prev.directIncome * 0.85) risks.push("Sharp revenue decline (>15%)");
+
+    // Verdict + recommendation
+    let verdict: "improving" | "stable" | "declining";
+    if (cur.netProfit > prev.netProfit && cur.netProfit >= 0) verdict = "improving";
+    else if (Math.abs(npPct) < 10) verdict = "stable";
+    else verdict = "declining";
+
+    const mainReason =
+      Math.abs(revPct) > Math.abs(costPct)
+        ? revPct >= 0 ? "stronger top-line revenue" : "weaker rental income"
+        : costPct >= 0 ? "rising operating costs" : "tighter cost control";
+
+    let recommendation = "Maintain current operations and monitor monthly trend.";
+    if (cur.netProfit < 0 && cur.indirectExpenses > prev.indirectExpenses)
+      recommendation = "Cut indirect expenses immediately and renegotiate fixed overheads.";
+    else if (revPct < -10)
+      recommendation = "Boost fleet utilization and re-activate idle vehicles to recover revenue.";
+    else if (costPct > 15)
+      recommendation = "Audit cost-of-sales spike and freeze non-essential spending.";
+    else if (verdict === "improving")
+      recommendation = "Reinvest surplus into highest-ROI vehicles and scale rental capacity.";
+
+    return { cur, prev, revPct, costPct, npPct, costTotalCur, costTotalPrev, drivers, risks, verdict, mainReason, recommendation };
+  }, [selectedMonth, allMode]);
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border/50 bg-card/30 backdrop-blur-sm sticky top-0 z-50">
@@ -91,6 +146,88 @@ const MkAutosCompanyDashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-6">
+        {/* Executive Summary — auto-generated MoM */}
+        {execSummary && (
+          <Card className="border-border/50 bg-card/80 backdrop-blur-sm overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <CardTitle className="text-lg font-serif text-foreground">Executive Summary</CardTitle>
+                  <p className="text-[10px] text-muted-foreground tracking-wider uppercase">
+                    {execSummary.cur.month} vs {execSummary.prev.month} · auto-generated
+                  </p>
+                </div>
+                <Badge
+                  variant="secondary"
+                  className={`text-xs ${
+                    execSummary.verdict === "improving"
+                      ? "bg-success/15 text-success"
+                      : execSummary.verdict === "declining"
+                      ? "bg-loss/15 text-loss"
+                      : ""
+                  }`}
+                >
+                  {execSummary.verdict === "improving" ? "▲ Improving" : execSummary.verdict === "declining" ? "▼ Declining" : "● Stable"}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {/* MoM metric strip */}
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { label: "Revenue", cur: execSummary.cur.directIncome, pct: execSummary.revPct },
+                  { label: "Total Costs", cur: execSummary.costTotalCur, pct: execSummary.costPct, inverse: true },
+                  { label: "Net Profit", cur: execSummary.cur.netProfit, pct: execSummary.npPct },
+                ].map((m) => {
+                  const good = m.inverse ? m.pct < 0 : m.pct >= 0;
+                  return (
+                    <div key={m.label} className="rounded-lg border border-border/40 bg-background/40 p-3">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{m.label}</p>
+                      <p className="text-base font-bold tabular-nums text-foreground mt-1">{formatAED(m.cur)}</p>
+                      <p className={`text-xs font-medium mt-0.5 ${good ? "text-success" : "text-loss"}`}>
+                        {m.pct >= 0 ? "▲" : "▼"} {Math.abs(m.pct).toFixed(1)}% MoM
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Drivers + risks */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                <div className="rounded-lg border border-border/40 bg-background/40 p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Key Drivers</p>
+                  {execSummary.drivers.length ? (
+                    <ul className="list-disc list-inside space-y-0.5 text-foreground capitalize">
+                      {execSummary.drivers.map((d) => <li key={d}>{d}</li>)}
+                    </ul>
+                  ) : (
+                    <p className="text-muted-foreground">No material movements vs prior month.</p>
+                  )}
+                </div>
+                <div className="rounded-lg border border-border/40 bg-background/40 p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Risks / Anomalies</p>
+                  {execSummary.risks.length ? (
+                    <ul className="list-disc list-inside space-y-0.5 text-loss">
+                      {execSummary.risks.map((r) => <li key={r}>{r}</li>)}
+                    </ul>
+                  ) : (
+                    <p className="text-success">No critical risks detected.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Conclusion */}
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs text-foreground leading-relaxed">
+                <span className="font-semibold">Conclusion: </span>
+                Performance is <span className="font-semibold capitalize">{execSummary.verdict}</span> in {execSummary.cur.month}, with net profit moving {execSummary.npPct >= 0 ? "up" : "down"} {Math.abs(execSummary.npPct).toFixed(1)}% vs {execSummary.prev.month}, driven by {execSummary.mainReason}.
+                <br />
+                <span className="font-semibold text-primary">Action: </span>{execSummary.recommendation}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Summary Cards */}
         <div>
           <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground mb-2">
