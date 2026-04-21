@@ -9,6 +9,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import MonthFilter from "@/components/MonthFilter";
 import PortfolioInsights, { CompanySnapshot } from "@/components/PortfolioInsights";
 import ConsolidatedPLMatrix from "@/components/ConsolidatedPLMatrix";
+import PortfolioVisualMap from "@/components/PortfolioVisualMap";
 
 // Import data from all companies
 import { partnerCapital, otcSummary, monthlyPL as otcMonthlyPL } from "@/data/otcData";
