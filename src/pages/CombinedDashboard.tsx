@@ -318,6 +318,45 @@ const CombinedDashboard = () => {
     color: c.color,
   }));
 
+  // === Build per-company snapshots with previous-month metrics for the insights component ===
+  const companySnapshots = useMemo<CompanySnapshot[]>(() => {
+    return companies.map(c => {
+      const prev = pd ? pd[c.key] : null;
+      return {
+        key: c.key,
+        name: c.name,
+        share: c.share,
+        current: { investment: c.investment, profit: c.profit, netPosition: c.netPosition, roi: c.roi },
+        previous: prev ? { investment: prev.investment, profit: prev.profit, netPosition: prev.netPosition, roi: prev.roi } : null,
+        trend: [],
+      };
+    });
+  }, [companies, pd]);
+
+  // === Portfolio trend across last 6 months (revenue proxy = sum of profits + investment turnover; here we use profits aggregated) ===
+  const portfolioTrend = useMemo(() => {
+    const idx = ALL_MONTHS.indexOf(selectedMonth);
+    const end = idx >= 0 ? idx : ALL_MONTHS.length - 1;
+    const start = Math.max(0, end - 5);
+    const slice = ALL_MONTHS.slice(start, end + 1);
+    return slice.map(m => {
+      const data = computeForMonth(m);
+      const profit = Object.values(data).reduce((s, v) => s + v.profit, 0);
+      const investment = Object.values(data).reduce((s, v) => s + v.investment, 0);
+      // Use abs profit as a proxy for "revenue activity" since true revenue isn't aggregated here
+      const revenue = Object.values(data).reduce((s, v) => s + Math.max(v.profit, 0), 0);
+      const roi = investment ? (profit / investment) * 100 : 0;
+      return { month: m, revenue, profit, roi };
+    });
+  }, [selectedMonth]);
+
+  const prevMonthLabel = useMemo(() => {
+    if (selectedMonth === "all") return null;
+    const idx = ALL_MONTHS.indexOf(selectedMonth);
+    return idx > 0 ? ALL_MONTHS[idx - 1] : null;
+  }, [selectedMonth]);
+
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
