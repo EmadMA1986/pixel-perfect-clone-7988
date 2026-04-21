@@ -22,6 +22,13 @@ import ExecutiveSummary, { ExecMonthInput } from "@/components/ExecutiveSummary"
 // trading volume from spread/commission revenue (gross profit).
 const ASSUMED_SPREAD = 0.004; // 0.4%
 
+// Whole-AED formatter — no decimals, comma separators. Used where decimals
+// would clutter large round figures (e.g. counterparty loss tracker).
+const formatAEDWhole = (value: number) => {
+  const prefix = value < 0 ? "-AED " : "AED ";
+  return `${prefix}${Math.abs(Math.round(value)).toLocaleString("en-US")}`;
+};
+
 const OtcDashboard = () => {
   const [selectedMonth, setSelectedMonth] = useState("all");
   const [showAllMonths, setShowAllMonths] = useState(false);
@@ -913,6 +920,70 @@ const OtcDashboard = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* === YTD Expense Breakdown === */}
+        {(() => {
+          const expenseCats = [
+            { name: "General Expenses", amount: 185574 },
+            { name: "Car Expenses", amount: 23470 },
+            { name: "Salaries", amount: 321800 },
+            { name: "TRX", amount: -14569 },
+            { name: "DFZ Rent", amount: 124000 },
+            { name: "Gate Pass", amount: 8884 },
+          ];
+          const totalAbs = expenseCats.reduce((s, c) => s + Math.abs(c.amount), 0);
+          const maxAbs = Math.max(...expenseCats.map((c) => Math.abs(c.amount)));
+          const largest = expenseCats.reduce((m, c) => (Math.abs(c.amount) > Math.abs(m.amount) ? c : m));
+          return (
+            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-serif text-foreground">YTD Expense Breakdown by Category</CardTitle>
+                <p className="text-xs text-muted-foreground">Source: Expenses tab · Total: {formatAEDWhole(totalAbs)}</p>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {expenseCats
+                  .slice()
+                  .sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount))
+                  .map((cat) => {
+                    const pct = totalAbs > 0 ? (Math.abs(cat.amount) / totalAbs) * 100 : 0;
+                    const widthPct = maxAbs > 0 ? (Math.abs(cat.amount) / maxAbs) * 100 : 0;
+                    const isLargest = cat.name === largest.name;
+                    const isNegative = cat.amount < 0;
+                    const barColor = isLargest
+                      ? "bg-primary"
+                      : isNegative
+                      ? "bg-profit/60"
+                      : "bg-muted-foreground/40";
+                    return (
+                      <div key={cat.name} className="space-y-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className={`font-medium ${isLargest ? "text-primary" : "text-foreground"}`}>
+                            {cat.name}
+                            {isLargest && <span className="ml-2 text-[10px] uppercase tracking-wider">Largest cost</span>}
+                          </span>
+                          <span className="tabular-nums text-muted-foreground">
+                            <span className={`font-semibold ${isNegative ? "text-profit" : "text-foreground"}`}>
+                              {formatAEDWhole(cat.amount)}
+                            </span>
+                            <span className="ml-2 text-[10px]">({pct.toFixed(1)}%)</span>
+                          </span>
+                        </div>
+                        <div className="h-2 w-full rounded bg-secondary/40 overflow-hidden">
+                          <div
+                            className={`h-full ${barColor} rounded transition-all`}
+                            style={{ width: `${widthPct}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                <p className="text-[10px] text-muted-foreground italic pt-2 border-t border-border/30">
+                  Negative TRX reflects net recoveries on transaction fees. Percentages calculated against absolute total.
+                </p>
+              </CardContent>
+            </Card>
+          );
+        })()}
 
         {/* === Tabs === */}
         <Tabs defaultValue="monthly" className="space-y-4">
