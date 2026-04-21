@@ -224,14 +224,36 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
     return { currentMonths: ytd, prevMonths: prev };
   }, [period, selectedMonth, allMonths]);
 
-  // Compute matrix data
+  // Compute matrix data. In MTD mode, if a company has no data for the anchor month
+  // (e.g., its books are not yet closed), fall back to the most recent prior month
+  // that DOES have data — so the column never shows a misleading all-zeros row.
+  const isRowEmpty = (r: PLRow) =>
+    r.revenue === 0 && r.cogs === 0 && r.grossProfit === 0 && r.indirect === 0 && r.netProfit === 0;
+  const sortedAll = useMemo(() => [...allMonths].sort(compareMonth), [allMonths]);
+
+  const resolveCurrent = (c: CompanyDef): PLRow => {
+    if (period !== "MTD") return sumRows(currentMonths.map(c.forMonth));
+    const anchor = currentMonths[0];
+    if (!anchor) return sumRows([]);
+    const direct = c.forMonth(anchor);
+    if (!isRowEmpty(direct)) return direct;
+    // walk back through prior months until we find data
+    const idx = sortedAll.indexOf(anchor);
+    for (let i = idx - 1; i >= 0; i--) {
+      const candidate = c.forMonth(sortedAll[i]);
+      if (!isRowEmpty(candidate)) return candidate;
+    }
+    return direct;
+  };
+
   const data = useMemo(() => {
     return COMPANIES.map(c => ({
       ...c,
-      current: sumRows(currentMonths.map(c.forMonth)),
+      current: resolveCurrent(c),
       previous: sumRows(prevMonths.map(c.forMonth)),
     }));
-  }, [currentMonths, prevMonths]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentMonths, prevMonths, period, sortedAll]);
 
   const totals = useMemo(() => ({
     current: sumRows(data.map(d => d.current)),
