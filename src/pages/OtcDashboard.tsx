@@ -397,7 +397,7 @@ const OtcDashboard = () => {
                 <p className={`text-2xl font-bold font-serif mt-1 ${capitalDeployed >= 0 ? "text-foreground" : "text-loss"}`}>
                   {formatAEDCompact(capitalDeployed)}
                 </p>
-                <p className="text-[10px] text-muted-foreground mt-1">Net capital − cash on hand</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Total funding − cash on hand</p>
               </CardContent>
             </Card>
             <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
@@ -410,7 +410,7 @@ const OtcDashboard = () => {
                     style={{ width: `${Math.min(100, utilizationPct)}%` }}
                   />
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-1">Of {formatAEDCompact(otcSummary.netCapital)} net capital</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Of {formatAEDCompact(capitalBasis)} total partner funding</p>
               </CardContent>
             </Card>
             <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
@@ -729,7 +729,7 @@ const OtcDashboard = () => {
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <p className="text-xs text-muted-foreground">Total Counterparty Losses</p>
+                <p className="text-xs text-muted-foreground">Total Counterparty Losses <span className="text-[9px]">(figures in AED, thousands separators)</span></p>
                 <p className="text-2xl font-bold font-serif text-loss">{formatAED(otcSummary.scamYTD)}</p>
               </div>
               <div className="space-y-2">
