@@ -385,7 +385,7 @@ const PortfolioInsights = ({
                     ? "hsl(var(--loss))"
                     : "hsl(var(--primary))";
                 return (
-                  <TableRow key={c.key}>
+                  <TableRow key={c.key} className="h-20 align-top">
                     <TableCell className="text-sm font-bold">#{i + 1}</TableCell>
                     <TableCell>
                       <div className="text-sm font-semibold text-foreground">{c.name}</div>
@@ -406,9 +406,9 @@ const PortfolioInsights = ({
                     <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
                       {share.toFixed(1)}%
                     </TableCell>
-                    <TableCell className="max-w-xs">
-                      <p className="text-xs text-foreground leading-snug">{sum.line1}</p>
-                      <p className="text-xs text-muted-foreground leading-snug">→ {sum.action}</p>
+                    <TableCell className="max-w-xs py-3">
+                      <p className="text-xs text-foreground leading-relaxed whitespace-normal">{sum.line1}</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed whitespace-normal mt-1">→ {sum.action}</p>
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge variant="outline" className={`gap-1 font-bold ${sig.color}`}>

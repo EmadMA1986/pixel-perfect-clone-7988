@@ -191,6 +191,10 @@ const CombinedDashboard = () => {
 
   const companyData = useMemo(() => computeForMonth(selectedMonth), [selectedMonth]);
 
+  // === All-time (cumulative) per-company snapshot — used for ROI/Signal so a single bad month
+  // does not flip a long-term winner like RYA Gold into "EXIT" territory. ===
+  const allTimeData = useMemo(() => computeForMonth("all"), []);
+
   // === Compute previous month data for MoM comparison ===
   const prevMonthData = useMemo(() => {
     if (selectedMonth === "all") return null;
@@ -272,11 +276,14 @@ const CombinedDashboard = () => {
   const prevTotalInvestment = pd ? Object.values(pd).reduce((s, v) => s + v.investment, 0) : null;
   const prevOverallROI = pd && prevTotalInvestment ? (prevTotalProfit! / prevTotalInvestment) * 100 : null;
 
-  // Derived analytics
-  const bestPerformer = [...companies].sort((a, b) => b.roi - a.roi)[0];
-  const worstPerformer = [...companies].sort((a, b) => a.roi - b.roi)[0];
-  const losingCompanies = companies.filter(c => c.profit < 0);
-  const profitableCompanies = companies.filter(c => c.profit >= 0);
+  // Derived analytics — use cumulative (all-time) ROI/profit so a single bad month
+  // doesn't misclassify a long-term winner (e.g., RYA Gold) as a "losing company".
+  const cumulative = allTimeData;
+  const cumulativeByKey = (k: keyof typeof cumulative) => cumulative[k];
+  const bestPerformer = [...companies].sort((a, b) => cumulativeByKey(b.key).roi - cumulativeByKey(a.key).roi)[0];
+  const worstPerformer = [...companies].sort((a, b) => cumulativeByKey(a.key).roi - cumulativeByKey(b.key).roi)[0];
+  const losingCompanies = companies.filter(c => cumulativeByKey(c.key).profit < 0);
+  const profitableCompanies = companies.filter(c => cumulativeByKey(c.key).profit >= 0);
   const largestExposure = [...companies].sort((a, b) => b.investment - a.investment)[0];
   const largestExposurePct = (largestExposure.investment / totalInvestment) * 100;
 
@@ -320,6 +327,10 @@ const CombinedDashboard = () => {
   }));
 
   // === Build per-company snapshots with previous-month metrics for the insights component ===
+  // current.roi is overridden with the CUMULATIVE (all-time) ROI so that the merged
+  // ranking table, signal logic and loss alerts reflect the long-term investment performance
+  // (matching each company's individual dashboard). current.profit/investment remain
+  // period-scoped for the Profit/Loss + MoM columns.
   const companySnapshots = useMemo<CompanySnapshot[]>(() => {
     const idx = ALL_MONTHS.indexOf(selectedMonth);
     const end = idx >= 0 ? idx : ALL_MONTHS.length - 1;
@@ -327,17 +338,18 @@ const CombinedDashboard = () => {
     const slice = ALL_MONTHS.slice(start, end + 1);
     return companies.map(c => {
       const prev = pd ? pd[c.key] : null;
+      const cum = allTimeData[c.key];
       const trend = slice.map(m => ({ month: m, profit: computeForMonth(m)[c.key].profit }));
       return {
         key: c.key,
         name: c.name,
         share: c.share,
-        current: { investment: c.investment, profit: c.profit, netPosition: c.netPosition, roi: c.roi },
+        current: { investment: c.investment, profit: c.profit, netPosition: c.netPosition, roi: cum.roi },
         previous: prev ? { investment: prev.investment, profit: prev.profit, netPosition: prev.netPosition, roi: prev.roi } : null,
         trend,
       };
     });
-  }, [companies, pd, selectedMonth]);
+  }, [companies, pd, selectedMonth, allTimeData]);
 
   // === Portfolio trend across last 6 months (revenue proxy = sum of profits + investment turnover; here we use profits aggregated) ===
   const portfolioTrend = useMemo(() => {
