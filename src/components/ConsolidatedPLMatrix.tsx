@@ -17,7 +17,7 @@ import {
   AED_TO_USD_RATE,
 } from "@/data/goldData";
 
-type Period = "MTD" | "YTD" | "L6M";
+type Period = "MTD" | "YTD" | "ALL";
 
 interface PLRow {
   revenue: number;
@@ -206,13 +206,11 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
         prevMonths: idx > 0 ? [sorted[idx - 1]] : [],
       };
     }
-    if (period === "L6M") {
-      const start = Math.max(0, idx - 5);
-      const prevStart = Math.max(0, start - 6);
-      const prevEnd = Math.max(0, start);
+    if (period === "ALL") {
+      // All time = every month, prev period = none (no comparison)
       return {
-        currentMonths: sorted.slice(start, idx + 1),
-        prevMonths: sorted.slice(prevStart, prevEnd),
+        currentMonths: sorted,
+        prevMonths: [],
       };
     }
     // YTD: all months in same year as anchor up to anchor
@@ -240,7 +238,12 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
     previous: sumRows(data.map(d => d.previous)),
   }), [data]);
 
-  const getRowValues = (metric: keyof PLRow | "grossMargin" | "netMargin" | "roi"): { values: number[]; total: number; prev: number[]; prevTotal: number; isPct: boolean } => {
+  const totalPortfolioInvestment = useMemo(
+    () => data.reduce((s, d) => s + d.current.investment, 0),
+    [data]
+  );
+
+  const getRowValues = (metric: keyof PLRow | "grossMargin" | "netMargin" | "roi" | "capitalShare"): { values: number[]; total: number; prev: number[]; prevTotal: number; isPct: boolean } => {
     const calc = (row: PLRow): number => {
       switch (metric) {
         case "grossMargin":
@@ -249,6 +252,8 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
           return row.revenue !== 0 ? (row.netProfit / row.revenue) * 100 : 0;
         case "roi":
           return row.investment !== 0 ? (row.netProfit / row.investment) * 100 : 0;
+        case "capitalShare":
+          return totalPortfolioInvestment !== 0 ? (row.investment / totalPortfolioInvestment) * 100 : 0;
         default:
           return row[metric];
       }
@@ -258,7 +263,7 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
       total: calc(totals.current),
       prev: data.map(d => calc(d.previous)),
       prevTotal: calc(totals.previous),
-      isPct: metric === "grossMargin" || metric === "netMargin" || metric === "roi",
+      isPct: metric === "grossMargin" || metric === "netMargin" || metric === "roi" || metric === "capitalShare",
     };
   };
 
@@ -271,6 +276,7 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
     { key: "netProfit", label: "Net Profit", positiveIsBetter: true },
     { key: "netMargin", label: "Net Margin %", positiveIsBetter: true },
     { key: "roi", label: "ROI", positiveIsBetter: true },
+    { key: "capitalShare", label: "% of Portfolio Capital", positiveIsBetter: true },
   ];
 
   const Trend = ({ curr, prev, positiveIsBetter }: { curr: number; prev: number; positiveIsBetter: boolean }) => {
@@ -287,7 +293,7 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
   const periodLabel: Record<Period, string> = {
     MTD: "Month-to-Date",
     YTD: "Year-to-Date",
-    L6M: "Last 6 Months",
+    ALL: "All Time",
   };
 
   return (
@@ -308,7 +314,7 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
           </div>
         </div>
         <div className="flex items-center border border-border rounded-lg overflow-hidden">
-          {(["MTD", "YTD", "L6M"] as Period[]).map(p => (
+          {(["MTD", "YTD", "ALL"] as Period[]).map(p => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
@@ -316,7 +322,7 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
                 period === p ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"
               }`}
             >
-              {p === "L6M" ? "Last 6M" : p}
+              {p === "ALL" ? "All Time" : p}
             </button>
           ))}
         </div>
@@ -354,9 +360,9 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
                     const isWorst = worst !== null && v === worst && nonZero.length > 1 && best !== worst;
                     const colorClass = v === 0 ? "text-muted-foreground" : v >= 0 ? "text-success" : "text-loss";
                     const bgClass = isBest
-                      ? "bg-primary/10"
+                      ? "border-2 border-primary"
                       : isWorst
-                      ? "bg-loss/10"
+                      ? "border-2 border-loss"
                       : "";
                     return (
                       <TableCell
@@ -382,7 +388,7 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
           </TableBody>
         </Table>
         <p className="text-[10px] text-muted-foreground mt-3">
-          Best performer highlighted in gold · Worst in red · Trend arrows compare vs prior {period === "MTD" ? "month" : period === "YTD" ? "year" : "6-month period"}.
+          Best value bordered in gold · Worst in red · Trend arrows compare vs prior {period === "MTD" ? "month" : period === "YTD" ? "year" : "period"}.
           OTC and Cars report rental/trading P&L without separate Revenue/COGS split.
         </p>
       </CardContent>
