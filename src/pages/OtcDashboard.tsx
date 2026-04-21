@@ -44,11 +44,11 @@ const OtcDashboard = () => {
   const avgSpreadPct = totalVolume > 0 ? (totalTradingIncome / totalVolume) * 100 : 0;
   const costToRevenue = totalTradingIncome > 0 ? (totalDirectCosts / totalTradingIncome) * 100 : 0;
 
-  // Capital deployment
-  const capitalDeployed = otcSummary.netCapital - otcSummary.cashPosition;
-  const utilizationPct = otcSummary.netCapital > 0
-    ? (Math.max(0, capitalDeployed) / otcSummary.netCapital) * 100
-    : 0;
+  // Capital deployment: how much of total partner capital is committed (not sitting as cash)
+  // Basis = total partner funding (gross capital injected), since net-capital can be skewed by withdrawals.
+  const capitalBasis = partnerCapital.totalFunding;
+  const capitalDeployed = Math.max(0, capitalBasis - otcSummary.cashPosition);
+  const utilizationPct = capitalBasis > 0 ? (capitalDeployed / capitalBasis) * 100 : 0;
 
   // Burn rate from last 6 closed months (excluding scam outliers)
   const last6 = monthlyPL.slice(-6);
@@ -397,7 +397,7 @@ const OtcDashboard = () => {
                 <p className={`text-2xl font-bold font-serif mt-1 ${capitalDeployed >= 0 ? "text-foreground" : "text-loss"}`}>
                   {formatAEDCompact(capitalDeployed)}
                 </p>
-                <p className="text-[10px] text-muted-foreground mt-1">Net capital − cash on hand</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Total funding − cash on hand</p>
               </CardContent>
             </Card>
             <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
@@ -410,7 +410,7 @@ const OtcDashboard = () => {
                     style={{ width: `${Math.min(100, utilizationPct)}%` }}
                   />
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-1">Of {formatAEDCompact(otcSummary.netCapital)} net capital</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Of {formatAEDCompact(capitalBasis)} total partner funding</p>
               </CardContent>
             </Card>
             <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
@@ -473,8 +473,20 @@ const OtcDashboard = () => {
                   <ComposedChart data={chartData} margin={{ top: 5, right: 5, bottom: 40, left: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 18%)" />
                     <XAxis dataKey="name" tick={{ fill: "hsl(220 10% 50%)", fontSize: 9 }} angle={-45} textAnchor="end" />
-                    <YAxis yAxisId="left" tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} tickFormatter={(v) => `${v}M`} />
-                    <YAxis yAxisId="right" orientation="right" tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} />
+                    <YAxis
+                      yAxisId="left"
+                      tick={{ fill: COLOR_BLUE, fontSize: 10 }}
+                      tickFormatter={(v) => `${v}M`}
+                      label={{ value: "Volume (AED M)", angle: -90, position: "insideLeft", fill: COLOR_BLUE, fontSize: 10, dy: 40 }}
+                    />
+                    <YAxis
+                      yAxisId="right"
+                      orientation="right"
+                      tick={{ fill: COLOR_GOLD, fontSize: 10 }}
+                      tickFormatter={(v) => `${(v/1000).toFixed(0)}k`}
+                      domain={["dataMin - 20000", "dataMax + 20000"]}
+                      label={{ value: "Trading Income (AED)", angle: 90, position: "insideRight", fill: COLOR_GOLD, fontSize: 10, dy: -50 }}
+                    />
                     <Tooltip
                       contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }}
                     />
@@ -729,7 +741,7 @@ const OtcDashboard = () => {
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <p className="text-xs text-muted-foreground">Total Counterparty Losses</p>
+                <p className="text-xs text-muted-foreground">Total Counterparty Losses <span className="text-[9px]">(figures in AED, thousands separators)</span></p>
                 <p className="text-2xl font-bold font-serif text-loss">{formatAED(otcSummary.scamYTD)}</p>
               </div>
               <div className="space-y-2">
