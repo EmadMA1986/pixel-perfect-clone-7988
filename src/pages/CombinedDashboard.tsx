@@ -9,7 +9,6 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import MonthFilter from "@/components/MonthFilter";
 import PortfolioInsights, { CompanySnapshot } from "@/components/PortfolioInsights";
 import ConsolidatedPLMatrix from "@/components/ConsolidatedPLMatrix";
-import PortfolioScorecard, { ScorecardRow } from "@/components/PortfolioScorecard";
 
 // Import data from all companies
 import { partnerCapital, otcSummary, monthlyPL as otcMonthlyPL } from "@/data/otcData";
@@ -322,18 +321,23 @@ const CombinedDashboard = () => {
 
   // === Build per-company snapshots with previous-month metrics for the insights component ===
   const companySnapshots = useMemo<CompanySnapshot[]>(() => {
+    const idx = ALL_MONTHS.indexOf(selectedMonth);
+    const end = idx >= 0 ? idx : ALL_MONTHS.length - 1;
+    const start = Math.max(0, end - 5);
+    const slice = ALL_MONTHS.slice(start, end + 1);
     return companies.map(c => {
       const prev = pd ? pd[c.key] : null;
+      const trend = slice.map(m => ({ month: m, profit: computeForMonth(m)[c.key].profit }));
       return {
         key: c.key,
         name: c.name,
         share: c.share,
         current: { investment: c.investment, profit: c.profit, netPosition: c.netPosition, roi: c.roi },
         previous: prev ? { investment: prev.investment, profit: prev.profit, netPosition: prev.netPosition, roi: prev.roi } : null,
-        trend: [],
+        trend,
       };
     });
-  }, [companies, pd]);
+  }, [companies, pd, selectedMonth]);
 
   // === Portfolio trend across last 6 months (revenue proxy = sum of profits + investment turnover; here we use profits aggregated) ===
   const portfolioTrend = useMemo(() => {
@@ -525,33 +529,6 @@ const CombinedDashboard = () => {
             </CardContent>
           </Card>
         </div>
-
-        <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-
-        {/* Portfolio Scorecard */}
-        <PortfolioScorecard
-          rows={companies.map<ScorecardRow>((c) => {
-            // Build 6-month profit trend per company in display currency
-            const idx = ALL_MONTHS.indexOf(selectedMonth);
-            const end = idx >= 0 ? idx : ALL_MONTHS.length - 1;
-            const start = Math.max(0, end - 5);
-            const slice = ALL_MONTHS.slice(start, end + 1);
-            const trend = slice.map((m) => toDisplay(computeForMonth(m)[c.key].profit));
-            return {
-              name: c.name,
-              investment: toDisplay(c.investment),
-              profit: toDisplay(c.profit),
-              roi: c.roi,
-              trend,
-            };
-          })}
-          totals={{
-            investment: toDisplay(totalInvestment),
-            profit: toDisplay(totalProfit),
-            roi: overallROI,
-          }}
-          format={fmt}
-        />
 
         <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 

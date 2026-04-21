@@ -28,6 +28,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  LineChart,
 } from "recharts";
 
 export interface CompanyMonthMetrics {
@@ -119,16 +120,9 @@ const PortfolioInsights = ({
     return { status: "stable", reason: `Net profit change ${p.toFixed(1)}% MoM — within ±10%.` };
   }, [totals]);
 
-  // === Ranked companies ===
+  // === Ranked companies (by ROI desc) ===
   const ranked = useMemo(() => {
-    return [...companies].sort((a, b) => {
-      // composite: ROI weighted with growth
-      const aGrowth = pctChange(a.current.profit, a.previous?.profit) ?? 0;
-      const bGrowth = pctChange(b.current.profit, b.previous?.profit) ?? 0;
-      const aScore = a.current.roi + aGrowth * 0.3;
-      const bScore = b.current.roi + bGrowth * 0.3;
-      return bScore - aScore;
-    });
+    return [...companies].sort((a, b) => b.current.roi - a.current.roi);
   }, [companies]);
 
   // === Investment signals ===
@@ -354,23 +348,27 @@ const PortfolioInsights = ({
         </Card>
       )}
 
-      {/* === 5. RANKED + AI INSIGHTS + SIGNALS === */}
+      {/* === 5. RANKED + AI INSIGHTS + SIGNALS + SCORECARD === */}
       <Card className="border-border/50 bg-card/80">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
             <Trophy className="h-4 w-4 text-primary" /> Company Ranking, AI Insights & Investment Signals
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="p-0 overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="text-xs w-12">Rank</TableHead>
                 <TableHead className="text-xs">Company</TableHead>
-                <TableHead className="text-xs text-right">ROI</TableHead>
-                <TableHead className="text-xs text-right">MoM</TableHead>
-                <TableHead className="text-xs">AI Insight & Action</TableHead>
+                <TableHead className="text-xs text-right">Investment</TableHead>
+                <TableHead className="text-xs text-right">Profit/Loss</TableHead>
+                <TableHead className="text-xs text-right">ROI %</TableHead>
+                <TableHead className="text-xs text-right">vs Last Month</TableHead>
+                <TableHead className="text-xs text-right">% of Portfolio</TableHead>
+                <TableHead className="text-xs">AI Insight</TableHead>
                 <TableHead className="text-xs text-center w-24">Signal</TableHead>
+                <TableHead className="text-xs text-right w-28">6M Trend</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -378,6 +376,14 @@ const PortfolioInsights = ({
                 const sig = signal(c);
                 const sum = companySummary(c);
                 const Icon = sig.Icon;
+                const share = totals.investment ? (c.current.investment / totals.investment) * 100 : 0;
+                const sparkData = c.trend.map((t, idx) => ({ i: idx, v: toDisplay(t.profit) }));
+                const sparkColor =
+                  sig.label === "SCALE" || sig.label === "HOLD"
+                    ? "hsl(var(--success))"
+                    : sig.label === "EXIT"
+                    ? "hsl(var(--loss))"
+                    : "hsl(var(--primary))";
                 return (
                   <TableRow key={c.key}>
                     <TableCell className="text-sm font-bold">#{i + 1}</TableCell>
@@ -385,13 +391,22 @@ const PortfolioInsights = ({
                       <div className="text-sm font-semibold text-foreground">{c.name}</div>
                       <div className="text-[10px] text-muted-foreground">{c.share} ownership</div>
                     </TableCell>
-                    <TableCell className={`text-right text-sm font-bold ${c.current.roi >= 0 ? "text-success" : "text-loss"}`}>
-                      {c.current.roi.toFixed(1)}%
+                    <TableCell className="text-right text-sm tabular-nums text-foreground">
+                      {format(toDisplay(c.current.investment))}
+                    </TableCell>
+                    <TableCell className={`text-right text-sm tabular-nums ${c.current.profit >= 0 ? "text-success" : "text-loss"}`}>
+                      {format(toDisplay(c.current.profit))}
+                    </TableCell>
+                    <TableCell className={`text-right text-sm font-bold tabular-nums ${c.current.roi >= 0 ? "text-success" : "text-loss"}`}>
+                      {c.current.roi >= 0 ? "+" : ""}{c.current.roi.toFixed(1)}%
                     </TableCell>
                     <TableCell className="text-right">
                       <Delta cur={c.current.profit} prev={c.previous?.profit} />
                     </TableCell>
-                    <TableCell className="max-w-md">
+                    <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
+                      {share.toFixed(1)}%
+                    </TableCell>
+                    <TableCell className="max-w-xs">
                       <p className="text-xs text-foreground leading-snug">{sum.line1}</p>
                       <p className="text-xs text-muted-foreground leading-snug">→ {sum.action}</p>
                     </TableCell>
@@ -401,9 +416,44 @@ const PortfolioInsights = ({
                         {sig.label}
                       </Badge>
                     </TableCell>
+                    <TableCell>
+                      <div className="h-8 w-24 ml-auto">
+                        {sparkData.length > 1 ? (
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={sparkData} margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
+                              <YAxis hide domain={["dataMin", "dataMax"]} />
+                              <Line type="monotone" dataKey="v" stroke={sparkColor} strokeWidth={1.75} dot={false} isAnimationActive={false} />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </div>
+                    </TableCell>
                   </TableRow>
                 );
               })}
+              {/* Totals row */}
+              <TableRow className="border-t-2 border-primary/40 bg-primary/5 font-bold">
+                <TableCell />
+                <TableCell className="text-sm font-bold text-foreground">Total</TableCell>
+                <TableCell className="text-right text-sm font-bold tabular-nums text-foreground">
+                  {format(toDisplay(totals.investment))}
+                </TableCell>
+                <TableCell className={`text-right text-sm font-bold tabular-nums ${totals.profit >= 0 ? "text-success" : "text-loss"}`}>
+                  {format(toDisplay(totals.profit))}
+                </TableCell>
+                <TableCell className={`text-right text-sm font-bold tabular-nums ${totals.roi >= 0 ? "text-success" : "text-loss"}`}>
+                  {totals.roi >= 0 ? "+" : ""}{totals.roi.toFixed(1)}%
+                </TableCell>
+                <TableCell className="text-right">
+                  <Delta cur={totals.profit} prev={totals.prevProfit} />
+                </TableCell>
+                <TableCell className="text-right text-sm font-bold tabular-nums text-foreground">100.0%</TableCell>
+                <TableCell />
+                <TableCell />
+                <TableCell />
+              </TableRow>
             </TableBody>
           </Table>
         </CardContent>
