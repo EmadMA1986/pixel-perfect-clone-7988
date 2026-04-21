@@ -191,6 +191,10 @@ const CombinedDashboard = () => {
 
   const companyData = useMemo(() => computeForMonth(selectedMonth), [selectedMonth]);
 
+  // === All-time (cumulative) per-company snapshot — used for ROI/Signal so a single bad month
+  // does not flip a long-term winner like RYA Gold into "EXIT" territory. ===
+  const allTimeData = useMemo(() => computeForMonth("all"), []);
+
   // === Compute previous month data for MoM comparison ===
   const prevMonthData = useMemo(() => {
     if (selectedMonth === "all") return null;
