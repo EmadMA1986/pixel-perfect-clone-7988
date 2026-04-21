@@ -7,6 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart as RechartsPie, Pie, Legend } from "recharts";
 import MonthFilter from "@/components/MonthFilter";
+import PortfolioInsights, { CompanySnapshot } from "@/components/PortfolioInsights";
 
 // Import data from all companies
 import { partnerCapital, otcSummary, monthlyPL as otcMonthlyPL } from "@/data/otcData";
@@ -78,7 +79,7 @@ const ALL_MONTHS = buildAllMonths();
 
 const CombinedDashboard = () => {
   const [currency, setCurrency] = useState<"AED" | "USD">("AED");
-  const [selectedMonth, setSelectedMonth] = useState("all");
+  const [selectedMonth, setSelectedMonth] = useState(ALL_MONTHS[ALL_MONTHS.length - 1] ?? "all");
   const toDisplay = (aedValue: number) => currency === "AED" ? aedValue : aedValue / AED_TO_USD_RATE;
   const fmt = (v: number) => currency === "AED" ? formatAEDShort(v) : formatUSDShort(v);
   const fmtFull = (v: number) => currency === "AED" ? formatAED(v) : formatUSD(v);
@@ -317,6 +318,45 @@ const CombinedDashboard = () => {
     color: c.color,
   }));
 
+  // === Build per-company snapshots with previous-month metrics for the insights component ===
+  const companySnapshots = useMemo<CompanySnapshot[]>(() => {
+    return companies.map(c => {
+      const prev = pd ? pd[c.key] : null;
+      return {
+        key: c.key,
+        name: c.name,
+        share: c.share,
+        current: { investment: c.investment, profit: c.profit, netPosition: c.netPosition, roi: c.roi },
+        previous: prev ? { investment: prev.investment, profit: prev.profit, netPosition: prev.netPosition, roi: prev.roi } : null,
+        trend: [],
+      };
+    });
+  }, [companies, pd]);
+
+  // === Portfolio trend across last 6 months (revenue proxy = sum of profits + investment turnover; here we use profits aggregated) ===
+  const portfolioTrend = useMemo(() => {
+    const idx = ALL_MONTHS.indexOf(selectedMonth);
+    const end = idx >= 0 ? idx : ALL_MONTHS.length - 1;
+    const start = Math.max(0, end - 5);
+    const slice = ALL_MONTHS.slice(start, end + 1);
+    return slice.map(m => {
+      const data = computeForMonth(m);
+      const profit = Object.values(data).reduce((s, v) => s + v.profit, 0);
+      const investment = Object.values(data).reduce((s, v) => s + v.investment, 0);
+      // Use abs profit as a proxy for "revenue activity" since true revenue isn't aggregated here
+      const revenue = Object.values(data).reduce((s, v) => s + Math.max(v.profit, 0), 0);
+      const roi = investment ? (profit / investment) * 100 : 0;
+      return { month: m, revenue, profit, roi };
+    });
+  }, [selectedMonth]);
+
+  const prevMonthLabel = useMemo(() => {
+    if (selectedMonth === "all") return null;
+    const idx = ALL_MONTHS.indexOf(selectedMonth);
+    return idx > 0 ? ALL_MONTHS[idx - 1] : null;
+  }, [selectedMonth]);
+
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
@@ -358,6 +398,16 @@ const CombinedDashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-6">
+
+        {/* Executive Portfolio Insights */}
+        <PortfolioInsights
+          companies={companySnapshots}
+          selectedMonth={selectedMonth}
+          prevMonthLabel={prevMonthLabel}
+          format={fmt}
+          toDisplay={toDisplay}
+          portfolioTrend={portfolioTrend}
+        />
 
         {/* Portfolio Health Alerts */}
         {(losingCompanies.length > 0 || largestExposurePct > 40) && (
