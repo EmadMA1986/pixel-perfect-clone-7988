@@ -393,9 +393,10 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
                     {row.label}
                   </TableCell>
                   {values.map((v, i) => {
-                    const isBest = best !== null && v === best && nonZero.length > 1;
-                    const isWorst = worst !== null && v === worst && nonZero.length > 1 && best !== worst;
-                    const colorClass = v === 0 ? "text-muted-foreground" : v >= 0 ? "text-success" : "text-loss";
+                    const companyHasData = data[i].hasData;
+                    const isBest = best !== null && v === best && nonZero.length > 1 && companyHasData;
+                    const isWorst = worst !== null && v === worst && nonZero.length > 1 && best !== worst && companyHasData;
+                    const colorClass = !companyHasData ? "text-muted-foreground/60" : v === 0 ? "text-muted-foreground" : v >= 0 ? "text-success" : "text-loss";
                     const borderClass = isBest
                       ? "ring-2 ring-inset ring-primary"
                       : isWorst
@@ -407,8 +408,8 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
                         className={`text-right text-base tabular-nums ${colorClass} ${borderClass}`}
                       >
                         <span className="inline-flex items-center gap-1 justify-end">
-                          {isPct ? formatPct(v) : formatAED(v)}
-                          <Trend curr={v} prev={prev[i]} positiveIsBetter={row.positiveIsBetter} />
+                          {!companyHasData ? "—" : isPct ? formatPct(v) : formatAED(v)}
+                          {companyHasData && <Trend curr={v} prev={prev[i]} positiveIsBetter={row.positiveIsBetter} />}
                         </span>
                       </TableCell>
                     );
