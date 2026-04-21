@@ -438,41 +438,99 @@ const OtcDashboard = () => {
               });
             }
 
+            const waterfallRows = [
+              {
+                key: "injected",
+                label: "Initial Capital Injected",
+                sub: "Total capital ever injected into the business",
+                maria: partnerCapital.maria.funding,
+                ahmad: partnerCapital.ahmad.funding,
+                total: partnerCapital.maria.funding + partnerCapital.ahmad.funding,
+                tone: "neutral" as const,
+              },
+              {
+                key: "withdrawals",
+                label: "Less: Partner Withdrawals",
+                sub: "Capital withdrawn to date",
+                maria: -partnerCapital.maria.withdrawal,
+                ahmad: -partnerCapital.ahmad.withdrawal,
+                total: -(partnerCapital.maria.withdrawal + partnerCapital.ahmad.withdrawal),
+                tone: "negative" as const,
+              },
+              {
+                key: "net-capital",
+                label: "Net Capital Remaining",
+                sub: "Net capital injection remaining in business",
+                maria: partnerCapital.maria.net,
+                ahmad: partnerCapital.ahmad.net,
+                total: partnerCapital.maria.net + partnerCapital.ahmad.net,
+                tone: "subtotal" as const,
+              },
+              {
+                key: "profit-share",
+                label: "Plus: Cumulative Net Profit Share",
+                sub: "Accumulated profit retained in business",
+                maria: partnerCapital.maria.profitShare,
+                ahmad: partnerCapital.ahmad.profitShare,
+                total: partnerCapital.maria.profitShare + partnerCapital.ahmad.profitShare,
+                tone: "positive" as const,
+              },
+              {
+                key: "working",
+                label: "Working Capital Position",
+                sub: "Current working capital = Net capital + Retained profit",
+                maria: partnerCapital.maria.net + partnerCapital.maria.profitShare,
+                ahmad: partnerCapital.ahmad.net + partnerCapital.ahmad.profitShare,
+                total:
+                  partnerCapital.maria.net + partnerCapital.maria.profitShare +
+                  partnerCapital.ahmad.net + partnerCapital.ahmad.profitShare,
+                tone: "total" as const,
+              },
+            ];
+
+            const rowClasses = (tone: string) => {
+              switch (tone) {
+                case "negative": return "text-loss";
+                case "positive": return "text-success";
+                case "subtotal": return "bg-primary/10 border-y border-primary/40 text-primary font-semibold";
+                case "total": return "bg-primary text-primary-foreground font-bold";
+                default: return "text-foreground";
+              }
+            };
+
             return (
               <>
-                {/* ROW 1 — Partner capital cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <Card className="border-success/30 bg-success/5 backdrop-blur-sm">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider">Maria</p>
-                        <Badge variant="secondary" className="text-[10px]">50% Partner</Badge>
-                      </div>
-                      <p className="text-2xl font-bold font-serif text-success mt-2">{formatAEDCompact(mariaCap)}</p>
-                      <p className="text-[10px] text-muted-foreground mt-1">Capital Position (net of withdrawals & profit share)</p>
-                    </CardContent>
-                  </Card>
-                  <Card className="border-primary/30 bg-primary/5 backdrop-blur-sm">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider">Ahmad</p>
-                        <Badge variant="secondary" className="text-[10px]">50% Partner</Badge>
-                      </div>
-                      <p className="text-2xl font-bold font-serif text-primary mt-2">{formatAEDCompact(ahmadCap)}</p>
-                      <p className="text-[10px] text-muted-foreground mt-1">Capital Position (net of withdrawals & profit share)</p>
-                    </CardContent>
-                  </Card>
-                  <Card className="border-foreground/30 bg-foreground/5 backdrop-blur-sm">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider">Total Own Capital</p>
-                        <Badge variant="outline" className="text-[10px]">Maria + Ahmad</Badge>
-                      </div>
-                      <p className="text-2xl font-extrabold font-serif text-foreground mt-2">{formatAEDCompact(ownCapital)}</p>
-                      <p className="text-[10px] text-muted-foreground mt-1">Distributable partner equity</p>
-                    </CardContent>
-                  </Card>
-                </div>
+                {/* Capital Waterfall Table */}
+                <Card className="border-border/50 bg-card/80 backdrop-blur-sm overflow-hidden">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-serif text-foreground">Capital Waterfall — Partner Journey</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-border/50">
+                          <TableHead className="w-[42%]">Stage</TableHead>
+                          <TableHead className="text-right">Maria</TableHead>
+                          <TableHead className="text-right">Ahmad</TableHead>
+                          <TableHead className="text-right">Total</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {waterfallRows.map((r) => (
+                          <TableRow key={r.key} className={`${rowClasses(r.tone)} hover:bg-transparent`}>
+                            <TableCell className="align-top">
+                              <p className="text-sm">{r.label}</p>
+                              <p className={`text-[10px] mt-0.5 ${r.tone === "total" ? "text-primary-foreground/80" : "text-muted-foreground"}`}>{r.sub}</p>
+                            </TableCell>
+                            <TableCell className="text-right font-serif tabular-nums">{formatAEDWhole(r.maria)}</TableCell>
+                            <TableCell className="text-right font-serif tabular-nums">{formatAEDWhole(r.ahmad)}</TableCell>
+                            <TableCell className="text-right font-serif tabular-nums">{formatAEDWhole(r.total)}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
 
                 {/* ROW 2 — Funding structure */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -554,8 +612,8 @@ const OtcDashboard = () => {
                   </div>
                 )}
 
-                <p className="text-[10px] italic text-muted-foreground">
-                  Own capital figures reflect each partner's net position after profit share and withdrawals as at March 2026 closing. Client float represents AR obligations and is not distributable capital.
+                <p className="text-[11px] italic text-muted-foreground">
+                  Working capital = net capital injected after withdrawals + cumulative profit share. Client float of {formatAEDWhole(arFloat)} is excluded as it represents client obligations not distributable capital.
                 </p>
 
                 {/* Supplementary: Capital deployment metrics retained */}
