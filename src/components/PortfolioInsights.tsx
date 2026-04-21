@@ -90,11 +90,13 @@ const PortfolioInsights = ({
     const inv = companies.reduce((s, c) => s + c.current.investment, 0);
     const profit = companies.reduce((s, c) => s + c.current.profit, 0);
     const netPos = companies.reduce((s, c) => s + c.current.netPosition, 0);
-    const prevProfit = companies.every(c => c.previous)
-      ? companies.reduce((s, c) => s + (c.previous?.profit ?? 0), 0)
+    // Use companies that have ANY previous data (don't require all)
+    const withPrev = companies.filter(c => c.previous);
+    const prevProfit = withPrev.length > 0
+      ? withPrev.reduce((s, c) => s + (c.previous?.profit ?? 0), 0)
       : null;
-    const prevInv = companies.every(c => c.previous)
-      ? companies.reduce((s, c) => s + (c.previous?.investment ?? 0), 0)
+    const prevInv = withPrev.length > 0
+      ? withPrev.reduce((s, c) => s + (c.previous?.investment ?? 0), 0)
       : null;
     return {
       investment: inv,
@@ -192,10 +194,15 @@ const PortfolioInsights = ({
 
   // === AI-style 2-line summaries per company ===
   const companySummary = (c: CompanySnapshot): { line1: string; action: string } => {
-    const g = pctChange(c.current.profit, c.previous?.profit);
-    const dir = g === null ? "no prior data" : g > 0 ? `up ${g.toFixed(0)}%` : `down ${Math.abs(g).toFixed(0)}%`;
+    const hasPriorData = !!c.previous && (c.previous.profit !== 0 || c.previous.investment !== 0);
+    const g = hasPriorData ? pctChange(c.current.profit, c.previous?.profit) : null;
     const status = c.current.profit >= 0 ? "profitable" : "loss-making";
-    const line1 = `${status} at ${format(toDisplay(c.current.profit))} (${c.current.roi.toFixed(1)}% ROI), ${dir} MoM.`;
+    const dir = g === null
+      ? "MoM trend unavailable"
+      : g > 0.5 ? `up ${g.toFixed(0)}% MoM`
+      : g < -0.5 ? `down ${Math.abs(g).toFixed(0)}% MoM`
+      : "flat MoM";
+    const line1 = `${status} at ${format(toDisplay(c.current.profit))} (${c.current.roi.toFixed(1)}% ROI), ${dir}.`;
     const sig = signal(c);
     const actionMap: Record<typeof sig.label, string> = {
       SCALE: "Increase capital allocation to capture upside.",
@@ -335,12 +342,21 @@ const PortfolioInsights = ({
                     <TableCell>
                       <div className="h-8 w-24 ml-auto">
                         {sparkData.length > 1 ? (
-                          <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={sparkData} margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
-                              <YAxis hide domain={["dataMin", "dataMax"]} />
-                              <Line type="monotone" dataKey="v" stroke={sparkColor} strokeWidth={1.75} dot={false} isAnimationActive={false} />
-                            </LineChart>
-                          </ResponsiveContainer>
+                          (() => {
+                            const vals = sparkData.map(p => p.v);
+                            const min = Math.min(...vals);
+                            const max = Math.max(...vals);
+                            // Ensure flat lines remain visible by adding padding
+                            const pad = max === min ? Math.max(Math.abs(max) * 0.1, 1) : (max - min) * 0.1;
+                            return (
+                              <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={sparkData} margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
+                                  <YAxis hide domain={[min - pad, max + pad]} />
+                                  <Line type="monotone" dataKey="v" stroke={sparkColor} strokeWidth={1.75} dot={{ r: 1.5, fill: sparkColor }} isAnimationActive={false} />
+                                </LineChart>
+                              </ResponsiveContainer>
+                            );
+                          })()
                         ) : (
                           <span className="text-xs text-muted-foreground">—</span>
                         )}

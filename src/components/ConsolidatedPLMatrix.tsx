@@ -159,17 +159,27 @@ const sumRows = (rows: PLRow[]): PLRow => rows.reduce((acc, r) => ({
 interface CompanyDef {
   key: string;
   label: string;
+  share: number; // Ahmad's ownership share (0-1) — used to reconcile with KPI cards
   forMonth: (m: string) => PLRow;
 }
 
 const COMPANIES: CompanyDef[] = [
-  { key: "otc", label: "OTC", forMonth: otcForMonth },
-  { key: "cars", label: "MK Autos (Cars)", forMonth: carsForMonth },
-  { key: "mkx", label: "MKX", forMonth: mkxForMonth },
-  { key: "garage", label: "MK Garage", forMonth: garageForMonth },
-  { key: "company", label: "MK Autos (Company)", forMonth: mkAutosCompanyForMonth },
-  { key: "rya", label: "RYA Gold", forMonth: ryaForMonth },
+  { key: "otc", label: "OTC", share: 0.5, forMonth: otcForMonth },
+  { key: "cars", label: "MK Autos (Cars)", share: 1, forMonth: carsForMonth },
+  { key: "mkx", label: "MKX", share: 0.5, forMonth: mkxForMonth },
+  { key: "garage", label: "MK Garage", share: 0.4, forMonth: garageForMonth },
+  { key: "company", label: "MK Autos (Company)", share: 0.45, forMonth: mkAutosCompanyForMonth },
+  { key: "rya", label: "RYA Gold", share: 1, forMonth: ryaForMonth },
 ];
+
+const applyShare = (r: PLRow, share: number): PLRow => ({
+  revenue: r.revenue * share,
+  cogs: r.cogs * share,
+  grossProfit: r.grossProfit * share,
+  indirect: r.indirect * share,
+  netProfit: r.netProfit * share,
+  investment: r.investment * share,
+});
 
 const formatAED = (v: number) => {
   const sign = v < 0 ? "-" : "";
@@ -232,26 +242,31 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
   const sortedAll = useMemo(() => [...allMonths].sort(compareMonth), [allMonths]);
 
   const resolveCurrent = (c: CompanyDef): PLRow => {
-    if (period !== "MTD") return sumRows(currentMonths.map(c.forMonth));
+    if (period !== "MTD") return applyShare(sumRows(currentMonths.map(c.forMonth)), c.share);
     const anchor = currentMonths[0];
     if (!anchor) return sumRows([]);
     const direct = c.forMonth(anchor);
-    if (!isRowEmpty(direct)) return direct;
+    if (!isRowEmpty(direct)) return applyShare(direct, c.share);
     // walk back through prior months until we find data
     const idx = sortedAll.indexOf(anchor);
     for (let i = idx - 1; i >= 0; i--) {
       const candidate = c.forMonth(sortedAll[i]);
-      if (!isRowEmpty(candidate)) return candidate;
+      if (!isRowEmpty(candidate)) return applyShare(candidate, c.share);
     }
-    return direct;
+    return applyShare(direct, c.share);
   };
 
   const data = useMemo(() => {
-    return COMPANIES.map(c => ({
-      ...c,
-      current: resolveCurrent(c),
-      previous: sumRows(prevMonths.map(c.forMonth)),
-    }));
+    return COMPANIES.map(c => {
+      const rawCurrent = period === "MTD" ? c.forMonth(currentMonths[0] ?? "") : sumRows(currentMonths.map(c.forMonth));
+      return {
+        ...c,
+        current: resolveCurrent(c),
+        previous: applyShare(sumRows(prevMonths.map(c.forMonth)), c.share),
+        // Track whether the company has ANY data in the selected period — used to render '—' for empty cells
+        hasData: !isRowEmpty(rawCurrent),
+      };
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentMonths, prevMonths, period, sortedAll]);
 
@@ -378,9 +393,10 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
                     {row.label}
                   </TableCell>
                   {values.map((v, i) => {
-                    const isBest = best !== null && v === best && nonZero.length > 1;
-                    const isWorst = worst !== null && v === worst && nonZero.length > 1 && best !== worst;
-                    const colorClass = v === 0 ? "text-muted-foreground" : v >= 0 ? "text-success" : "text-loss";
+                    const companyHasData = data[i].hasData;
+                    const isBest = best !== null && v === best && nonZero.length > 1 && companyHasData;
+                    const isWorst = worst !== null && v === worst && nonZero.length > 1 && best !== worst && companyHasData;
+                    const colorClass = !companyHasData ? "text-muted-foreground/60" : v === 0 ? "text-muted-foreground" : v >= 0 ? "text-success" : "text-loss";
                     const borderClass = isBest
                       ? "ring-2 ring-inset ring-primary"
                       : isWorst
@@ -392,8 +408,8 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
                         className={`text-right text-base tabular-nums ${colorClass} ${borderClass}`}
                       >
                         <span className="inline-flex items-center gap-1 justify-end">
-                          {isPct ? formatPct(v) : formatAED(v)}
-                          <Trend curr={v} prev={prev[i]} positiveIsBetter={row.positiveIsBetter} />
+                          {!companyHasData ? "—" : isPct ? formatPct(v) : formatAED(v)}
+                          {companyHasData && <Trend curr={v} prev={prev[i]} positiveIsBetter={row.positiveIsBetter} />}
                         </span>
                       </TableCell>
                     );
@@ -410,8 +426,9 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
           </TableBody>
         </Table>
         <p className="text-xs text-muted-foreground mt-3">
+          All figures show <span className="text-foreground font-medium">Ahmad's ownership share</span> (OTC 50% · Cars 100% · MKX 50% · Garage 40% · Company 45% · RYA 100%) — totals reconcile with the KPI cards above.
           Best value bordered in gold · Worst in red · Trend arrows compare vs prior {period === "MTD" ? "month" : period === "YTD" ? "year" : "period"}.
-          OTC and Cars report rental/trading P&L without separate Revenue/COGS split.
+          Cells showing "—" indicate no data for the selected period. OTC and Cars report rental/trading P&L without separate Revenue/COGS split.
         </p>
       </CardContent>
     </Card>
