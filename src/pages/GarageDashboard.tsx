@@ -43,6 +43,7 @@ import {
   formatAED,
   formatAEDFull,
 } from "@/data/garageData";
+import ExecutiveSummary, { ExecMonthInput } from "@/components/ExecutiveSummary";
 
 const GarageDashboard = () => {
   const [selectedMonth, setSelectedMonth] = useState("all");
@@ -120,6 +121,25 @@ const GarageDashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-6">
+        {/* === Executive Summary === */}
+        <ExecutiveSummary
+          businessName="MK Auto Garage"
+          format={formatAED}
+          currentMonth={selectedMonth === "all" ? undefined : selectedMonth}
+          history={monthlyPL.map<ExecMonthInput>((m) => ({
+            month: m.month,
+            revenue: m.totalRevenue,
+            costs: m.costOfSales + m.indirectExpenses,
+            grossProfit: m.grossProfit,
+            netProfit: m.netProfit,
+          }))}
+          reasons={{
+            revenueUp: "Higher service jobs & parts sales",
+            revenueDown: "Fewer jobs / lower workshop activity",
+            costsContext: "Parts (COGS) + payroll, rent & overhead",
+          }}
+        />
+
         {/* Ahmad's Capital Position */}
         {!isFiltered && (
           <Card className="border-border/50 bg-gradient-to-r from-orange-500/10 to-orange-700/5 backdrop-blur-sm">

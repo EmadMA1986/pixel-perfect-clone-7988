@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend } from "recharts";
 import { otcSummary, monthlyPL, expenseBreakdown, partnerCapital, formatAED } from "@/data/otcData";
+import ExecutiveSummary, { ExecMonthInput } from "@/components/ExecutiveSummary";
 
 const OtcDashboard = () => {
   const [selectedMonth, setSelectedMonth] = useState("all");
@@ -84,6 +85,31 @@ const OtcDashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-6">
+        {/* === Executive Summary === */}
+        <ExecutiveSummary
+          businessName="OTC Trading"
+          format={formatAED}
+          currentMonth={selectedMonth === "all" ? undefined : selectedMonth}
+          history={monthlyPL.map<ExecMonthInput>((m) => ({
+            month: m.month,
+            revenue: m.grossProfit,
+            costs: m.cashExpenses + m.scam,
+            grossProfit: m.grossProfit,
+            netProfit: m.netProfit,
+          }))}
+          reasons={{
+            revenueUp: "Higher trading gross profit",
+            revenueDown: "Lower trading gross profit",
+            costsContext: "Cash expenses + scam losses",
+          }}
+          extraIssues={(cur, prev) => {
+            const issues: string[] = [];
+            const m = monthlyPL.find((x) => x.month === cur.month);
+            if (m && m.scam > 0) issues.push(`Scam loss recorded: ${formatAED(m.scam)}`);
+            return issues;
+          }}
+        />
+
         {/* Ahmad's Capital Position - only show in All Time */}
         {!isFiltered && (
           <Card className="border-border/50 bg-gradient-to-r from-blue-500/10 to-blue-700/5 backdrop-blur-sm">
