@@ -11,7 +11,9 @@ import { formatAED, balanceSheet, balanceSheetSnapshots, monthlyPL } from "@/dat
 const MkAutosCompanyDashboard = () => {
   // Available periods for the selector (BS snapshots: Dec-25, Jan-26, Feb-26, Mar-26)
   const months = useMemo(() => balanceSheetSnapshots.map((s) => s.monthKey), []);
-  const [selectedMonth, setSelectedMonth] = useState<string>("Mar-26"); // default to latest
+  const [selectedMonth, setSelectedMonth] = useState<string>(
+    balanceSheetSnapshots[balanceSheetSnapshots.length - 1].monthKey
+  ); // auto-select latest month
 
   const snapshot = useMemo(
     () => balanceSheetSnapshots.find((s) => s.monthKey === selectedMonth) ?? balanceSheetSnapshots[balanceSheetSnapshots.length - 1],
