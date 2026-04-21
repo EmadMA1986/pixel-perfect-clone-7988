@@ -262,70 +262,7 @@ const PortfolioInsights = ({
         </Card>
       </div>
 
-      {/* === PORTFOLIO MoM COMPARISON (moved below ranking table) === */}
-      {false && (
-      {totals.prevProfit !== null && (
-        <Card className="border-border/50 bg-card/80">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-foreground">
-              Portfolio Month-over-Month — {prevMonthLabel} → {selectedMonth}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="rounded-md border border-border/50 p-3">
-                <p className="text-[10px] uppercase text-muted-foreground">Net Profit</p>
-                <p className={`text-lg font-bold ${totals.profit >= 0 ? "text-success" : "text-loss"}`}>{format(toDisplay(totals.profit))}</p>
-                <Delta cur={totals.profit} prev={totals.prevProfit} />
-              </div>
-              <div className="rounded-md border border-border/50 p-3">
-                <p className="text-[10px] uppercase text-muted-foreground">Portfolio ROI</p>
-                <p className={`text-lg font-bold ${totals.roi >= 0 ? "text-success" : "text-loss"}`}>{totals.roi.toFixed(1)}%</p>
-                <Delta cur={totals.roi} prev={totals.prevROI} isPct />
-              </div>
-              <div className="rounded-md border border-border/50 p-3">
-                <p className="text-[10px] uppercase text-muted-foreground">Top Gainer</p>
-                <p className="text-sm font-bold text-success">{movers.gainers[0]?.name ?? "—"}</p>
-                <p className="text-[10px] text-muted-foreground">{movers.gainers[0] ? `+${format(toDisplay(movers.gainers[0].delta))}` : ""}</p>
-              </div>
-              <div className="rounded-md border border-border/50 p-3">
-                <p className="text-[10px] uppercase text-muted-foreground">Top Decliner</p>
-                <p className="text-sm font-bold text-loss">{movers.losers[0]?.name ?? "—"}</p>
-                <p className="text-[10px] text-muted-foreground">{movers.losers[0] ? format(toDisplay(movers.losers[0].delta)) : ""}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* === 4. TREND CHART === */}
-      {portfolioTrend.length > 1 && (
-        <Card className="border-border/50 bg-card/80">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-foreground">Portfolio Trend — Profit & ROI</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[260px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={portfolioTrend} margin={{ left: 10, right: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="month" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
-                  <YAxis yAxisId="left" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v) => format(toDisplay(v))} />
-                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v) => `${v.toFixed(0)}%`} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", fontSize: 12 }}
-                    formatter={(v: number, name: string) => name === "ROI" ? [`${v.toFixed(1)}%`, name] : [format(toDisplay(v)), name]}
-                  />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Bar yAxisId="left" dataKey="revenue" name="Revenue" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
-                  <Bar yAxisId="left" dataKey="profit" name="Profit" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
-                  <Line yAxisId="right" type="monotone" dataKey="roi" name="ROI" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
-                </ComposedChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* MoM + Trend rendered AFTER ranking table below */}
 
       {/* === 5. RANKED + AI INSIGHTS + SIGNALS + SCORECARD === */}
       <Card className="border-border/50 bg-card/80">
