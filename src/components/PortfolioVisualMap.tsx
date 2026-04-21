@@ -82,36 +82,38 @@ const PortfolioVisualMap = ({ companies, totalInvestment, format }: Props) => {
           </p>
         </CardHeader>
         <CardContent>
-          <div className="h-[320px] relative">
+          <div className="h-[440px] relative">
             <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart margin={{ top: 20, right: 20, bottom: 30, left: 10 }}>
+              <ScatterChart margin={{ top: 30, right: 30, bottom: 40, left: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
                 <XAxis
                   type="number"
                   dataKey="x"
                   name="ROI"
                   unit="%"
-                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                  label={{ value: "ROI %", position: "insideBottom", offset: -10, fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                  domain={["dataMin - 5", "dataMax + 5"]}
+                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  label={{ value: "ROI %", position: "insideBottom", offset: -10, fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
                 />
                 <YAxis
                   type="number"
                   dataKey="y"
                   name="P/L"
-                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                  domain={["dataMin", "dataMax"]}
+                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
                   tickFormatter={(v) => format(v)}
-                  width={70}
+                  width={75}
                 />
-                <ZAxis type="number" dataKey="z" range={[80, 800]} />
-                <ReferenceLine x={0} stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" />
-                <ReferenceLine y={0} stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" />
+                <ZAxis type="number" dataKey="z" range={[400, 2400]} />
+                <ReferenceLine x={0} stroke="hsl(var(--primary))" strokeDasharray="4 4" strokeOpacity={0.6} />
+                <ReferenceLine y={0} stroke="hsl(var(--primary))" strokeDasharray="4 4" strokeOpacity={0.6} />
                 <Tooltip
                   cursor={{ strokeDasharray: "3 3" }}
                   contentStyle={{
                     backgroundColor: "hsl(var(--card))",
                     border: "1px solid hsl(var(--border))",
                     borderRadius: 8,
-                    fontSize: 11,
+                    fontSize: 12,
                   }}
                   formatter={(value: any, name: string) => {
                     if (name === "P/L") return [format(value), "P/L"];
@@ -123,22 +125,52 @@ const PortfolioVisualMap = ({ companies, totalInvestment, format }: Props) => {
                 />
                 <Scatter data={bubbleData}>
                   {bubbleData.map((entry, i) => (
-                    <Cell key={i} fill={entry.fill} fillOpacity={0.7} stroke={entry.fill} />
+                    <Cell key={i} fill={entry.fill} fillOpacity={0.55} stroke={entry.fill} strokeWidth={2} />
                   ))}
                   <LabelList
                     dataKey="short"
                     position="top"
-                    style={{ fontSize: 10, fill: "hsl(var(--foreground))", fontWeight: 600 }}
+                    offset={12}
+                    content={(props: any) => {
+                      const { x, y, value } = props;
+                      if (x == null || y == null) return null;
+                      const text = String(value ?? "");
+                      const w = Math.max(36, text.length * 6.5);
+                      return (
+                        <g>
+                          <rect
+                            x={x - w / 2}
+                            y={y - 22}
+                            width={w}
+                            height={16}
+                            rx={4}
+                            fill="hsl(var(--background))"
+                            fillOpacity={0.92}
+                            stroke="hsl(var(--border))"
+                          />
+                          <text
+                            x={x}
+                            y={y - 10}
+                            textAnchor="middle"
+                            fontSize={11}
+                            fontWeight={600}
+                            fill="hsl(var(--foreground))"
+                          >
+                            {text}
+                          </text>
+                        </g>
+                      );
+                    }}
                   />
                 </Scatter>
               </ScatterChart>
             </ResponsiveContainer>
             {/* Quadrant labels overlay */}
-            <div className="pointer-events-none absolute inset-0 text-[9px] font-semibold uppercase tracking-wider">
-              <span className="absolute top-2 right-2 text-success/70">★ Star</span>
-              <span className="absolute top-2 left-12 text-muted-foreground">Overinvested</span>
-              <span className="absolute bottom-8 right-2 text-primary/70">Recovering</span>
-              <span className="absolute bottom-8 left-12 text-loss/70">Exit Zone</span>
+            <div className="pointer-events-none absolute inset-0 text-[11px] font-semibold uppercase tracking-wider">
+              <span className="absolute top-3 right-4 px-2 py-0.5 rounded bg-success/15 text-success border border-success/30">⭐ Star</span>
+              <span className="absolute top-3 left-20 px-2 py-0.5 rounded bg-muted/40 text-muted-foreground border border-border">Overinvested</span>
+              <span className="absolute bottom-12 right-4 px-2 py-0.5 rounded bg-primary/15 text-primary border border-primary/30">Recovering</span>
+              <span className="absolute bottom-12 left-20 px-2 py-0.5 rounded bg-loss/15 text-loss border border-loss/30">🚨 Exit Zone</span>
             </div>
           </div>
         </CardContent>
@@ -154,42 +186,42 @@ const PortfolioVisualMap = ({ companies, totalInvestment, format }: Props) => {
           <p className="text-[10px] text-muted-foreground">Highest to lowest return on invested capital</p>
         </CardHeader>
         <CardContent>
-          <div className="h-[320px]">
+          <div className="h-[440px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={barData} layout="vertical" margin={{ top: 5, right: 20, bottom: 20, left: 10 }}>
+              <BarChart data={barData} layout="vertical" margin={{ top: 10, right: 130, bottom: 25, left: 30 }} barCategoryGap="20%">
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} horizontal={false} />
                 <XAxis
                   type="number"
-                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
                   tickFormatter={(v) => `${v}%`}
                 />
                 <YAxis
                   type="category"
                   dataKey="short"
-                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                  width={90}
+                  tick={{ fontSize: 12, fill: "hsl(var(--foreground))", fontWeight: 600 }}
+                  width={110}
                 />
-                <ReferenceLine x={0} stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" />
+                <ReferenceLine x={0} stroke="hsl(var(--primary))" strokeDasharray="6 4" strokeWidth={2} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "hsl(var(--card))",
                     border: "1px solid hsl(var(--border))",
                     borderRadius: 8,
-                    fontSize: 11,
+                    fontSize: 12,
                   }}
                   formatter={(value: any, _name: string, item: any) => {
                     const inv = item?.payload?.investment;
                     return [`${value}% · ${format(inv)}`, item?.payload?.name];
                   }}
                 />
-                <Bar dataKey="roi" radius={[0, 4, 4, 0]}>
+                <Bar dataKey="roi" radius={[0, 4, 4, 0]} barSize={28}>
                   {barData.map((entry, i) => (
                     <Cell key={i} fill={entry.fill} />
                   ))}
                   <LabelList
                     dataKey="label"
                     position="right"
-                    style={{ fontSize: 9, fill: "hsl(var(--foreground))" }}
+                    style={{ fontSize: 10, fill: "hsl(var(--foreground))", fontWeight: 500 }}
                   />
                 </Bar>
               </BarChart>
@@ -208,21 +240,21 @@ const PortfolioVisualMap = ({ companies, totalInvestment, format }: Props) => {
           <p className="text-[10px] text-muted-foreground">Total invested = {format(totalInvestment)}</p>
         </CardHeader>
         <CardContent>
-          <div className="h-[320px] relative">
+          <div className="h-[440px] relative">
             <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
+              <PieChart margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
                 <Pie
                   data={donutData}
                   dataKey="value"
                   nameKey="name"
                   cx="50%"
                   cy="50%"
-                  innerRadius={70}
-                  outerRadius={110}
+                  innerRadius={85}
+                  outerRadius={140}
                   paddingAngle={2}
                   label={({ payload }) => `${payload.short} ${payload.pct.toFixed(0)}%`}
-                  labelLine={false}
-                  style={{ fontSize: 10 }}
+                  labelLine={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1 }}
+                  style={{ fontSize: 11, fontWeight: 600, fill: "hsl(var(--foreground))" }}
                 >
                   {donutData.map((entry, i) => (
                     <Cell key={i} fill={entry.fill} fillOpacity={0.85} stroke="hsl(var(--card))" strokeWidth={2} />
@@ -233,7 +265,7 @@ const PortfolioVisualMap = ({ companies, totalInvestment, format }: Props) => {
                     backgroundColor: "hsl(var(--card))",
                     border: "1px solid hsl(var(--border))",
                     borderRadius: 8,
-                    fontSize: 11,
+                    fontSize: 12,
                   }}
                   formatter={(value: any, _name: string, item: any) => [
                     `${format(value)} · ${item?.payload?.pct.toFixed(1)}%`,
@@ -244,7 +276,7 @@ const PortfolioVisualMap = ({ companies, totalInvestment, format }: Props) => {
             </ResponsiveContainer>
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Total</p>
-              <p className="text-lg font-bold font-serif text-foreground">{format(totalInvestment)}</p>
+              <p className="text-2xl font-extrabold font-serif text-primary">{format(totalInvestment)}</p>
             </div>
           </div>
         </CardContent>
