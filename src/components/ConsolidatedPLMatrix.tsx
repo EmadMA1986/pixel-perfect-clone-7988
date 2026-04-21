@@ -331,11 +331,11 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="text-xs sticky left-0 bg-card z-10">Metric</TableHead>
+              <TableHead className="text-sm sticky left-0 bg-card z-10">Metric</TableHead>
               {COMPANIES.map(c => (
-                <TableHead key={c.key} className="text-xs text-right whitespace-nowrap">{c.label}</TableHead>
+                <TableHead key={c.key} className="text-sm text-right whitespace-nowrap">{c.label}</TableHead>
               ))}
-              <TableHead className="text-xs text-right whitespace-nowrap font-bold border-l border-border">Total</TableHead>
+              <TableHead className="text-sm text-right whitespace-nowrap font-bold border-l-2 border-primary/40 bg-primary/5">Total</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -359,15 +359,15 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
                     const isBest = best !== null && v === best && nonZero.length > 1;
                     const isWorst = worst !== null && v === worst && nonZero.length > 1 && best !== worst;
                     const colorClass = v === 0 ? "text-muted-foreground" : v >= 0 ? "text-success" : "text-loss";
-                    const bgClass = isBest
-                      ? "border-2 border-primary"
+                    const borderClass = isBest
+                      ? "ring-2 ring-inset ring-primary"
                       : isWorst
-                      ? "border-2 border-loss"
+                      ? "ring-2 ring-inset ring-loss"
                       : "";
                     return (
                       <TableCell
                         key={i}
-                        className={`text-right text-sm tabular-nums ${colorClass} ${bgClass}`}
+                        className={`text-right text-sm tabular-nums ${colorClass} ${borderClass}`}
                       >
                         <span className="inline-flex items-center gap-1 justify-end">
                           {isPct ? formatPct(v) : formatAED(v)}
@@ -376,7 +376,7 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
                       </TableCell>
                     );
                   })}
-                  <TableCell className={`text-right text-sm font-bold tabular-nums border-l border-border ${total === 0 ? "text-muted-foreground" : total >= 0 ? "text-success" : "text-loss"}`}>
+                  <TableCell className={`text-right text-sm font-bold tabular-nums border-l-2 border-primary/40 bg-primary/5 ${total === 0 ? "text-muted-foreground" : total >= 0 ? "text-success" : "text-loss"}`}>
                     <span className="inline-flex items-center gap-1 justify-end">
                       {isPct ? formatPct(total) : formatAED(total)}
                       <Trend curr={total} prev={prevTotal} positiveIsBetter={row.positiveIsBetter} />
@@ -387,7 +387,7 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
             })}
           </TableBody>
         </Table>
-        <p className="text-[10px] text-muted-foreground mt-3">
+        <p className="text-xs text-muted-foreground mt-3">
           Best value bordered in gold · Worst in red · Trend arrows compare vs prior {period === "MTD" ? "month" : period === "YTD" ? "year" : "period"}.
           OTC and Cars report rental/trading P&L without separate Revenue/COGS split.
         </p>
