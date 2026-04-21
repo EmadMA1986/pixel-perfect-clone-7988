@@ -1,123 +1,113 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { TrendingUp, DollarSign, Wallet, Building2, ArrowLeft, BarChart3, Percent, User, Landmark, Users, FileText } from "lucide-react";
-import SummaryCard from "@/components/SummaryCard";
+import {
+  TrendingUp, TrendingDown, DollarSign, Building2, ArrowLeft,
+  AlertTriangle, Target, Zap, Activity, Minus, ChevronRight,
+} from "lucide-react";
 import MonthFilter from "@/components/MonthFilter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatAED, balanceSheet, balanceSheetSnapshots, monthlyPL } from "@/data/mkAutosData";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, CartesianGrid, Legend,
+} from "recharts";
+import { formatAED, balanceSheetSnapshots, monthlyPL } from "@/data/mkAutosData";
 
 const MkAutosCompanyDashboard = () => {
-  // Available periods for the selector (BS snapshots: Dec-25, Jan-26, Feb-26, Mar-26)
   const months = useMemo(() => balanceSheetSnapshots.map((s) => s.monthKey), []);
   const [selectedMonth, setSelectedMonth] = useState<string>(
     balanceSheetSnapshots[balanceSheetSnapshots.length - 1].monthKey
-  ); // auto-select latest month
+  );
 
   const snapshot = useMemo(
     () => balanceSheetSnapshots.find((s) => s.monthKey === selectedMonth) ?? balanceSheetSnapshots[balanceSheetSnapshots.length - 1],
     [selectedMonth]
   );
-  const pl = useMemo(() => monthlyPL.find((m) => m.month === selectedMonth), [selectedMonth]);
 
-  const isAll = selectedMonth === "all";
-  const allMode = isAll;
+  const allMode = selectedMonth === "all";
 
-  // Aggregate "All Time" view — sum of P&L months, latest BS for stocks
-  const allPL = useMemo(() => {
-    return monthlyPL.reduce(
-      (acc, m) => ({
-        directIncome: acc.directIncome + m.directIncome,
-        costOfSales: acc.costOfSales + m.costOfSales,
-        grossProfit: acc.grossProfit + m.grossProfit,
-        indirectExpenses: acc.indirectExpenses + m.indirectExpenses,
-        otherExpense: acc.otherExpense + m.otherExpense,
-        netProfit: acc.netProfit + m.netProfit,
-      }),
-      { directIncome: 0, costOfSales: 0, grossProfit: 0, indirectExpenses: 0, otherExpense: 0, netProfit: 0 }
-    );
-  }, []);
-
-  const view = allMode
-    ? {
-        asOf: "All Time (May-25 → Mar-26)",
-        capitalAccount: balanceSheetSnapshots.at(-1)!.capitalAccount,
-        fixedAssetsTotal: balanceSheetSnapshots.at(-1)!.fixedAssetsTotal,
-        currentAssetsTotal: balanceSheetSnapshots.at(-1)!.currentAssetsTotal,
-        currentLiabilitiesTotal: balanceSheetSnapshots.at(-1)!.currentLiabilitiesTotal,
-        loansTotal: balanceSheetSnapshots.at(-1)!.loansTotal,
-        profitLoss: { opening: 0, currentPeriod: allPL.netProfit, total: allPL.netProfit },
-        plMonth: allPL,
-      }
-    : {
-        asOf: snapshot.asOf,
-        capitalAccount: snapshot.capitalAccount,
-        fixedAssetsTotal: snapshot.fixedAssetsTotal,
-        currentAssetsTotal: snapshot.currentAssetsTotal,
-        currentLiabilitiesTotal: snapshot.currentLiabilitiesTotal,
-        loansTotal: snapshot.loansTotal,
-        profitLoss: snapshot.profitLoss,
-        plMonth: pl,
-      };
-
-  const currentRatio = view.currentAssetsTotal / view.currentLiabilitiesTotal;
-  const debtToEquity = view.loansTotal / view.capitalAccount;
-
-  // ===== Executive Summary: current vs previous month =====
-  const execSummary = useMemo(() => {
-    // Always anchor on a real month (use latest if "all" selected)
+  // ===== Executive analysis =====
+  const exec = useMemo(() => {
     const anchorKey = allMode ? monthlyPL[monthlyPL.length - 1].month : selectedMonth;
     const idx = monthlyPL.findIndex((m) => m.month === anchorKey);
-    if (idx <= 0) return null;
+    if (idx < 0) return null;
     const cur = monthlyPL[idx];
-    const prev = monthlyPL[idx - 1];
+    const prev = idx > 0 ? monthlyPL[idx - 1] : null;
 
     const pct = (a: number, b: number) => (b === 0 ? 0 : ((a - b) / Math.abs(b)) * 100);
-    const revPct = pct(cur.directIncome, prev.directIncome);
-    const costTotalCur = cur.costOfSales + cur.indirectExpenses + cur.otherExpense;
-    const costTotalPrev = prev.costOfSales + prev.indirectExpenses + prev.otherExpense;
-    const costPct = pct(costTotalCur, costTotalPrev);
-    const npPct = pct(cur.netProfit, prev.netProfit);
+    const costCur = cur.costOfSales + cur.indirectExpenses + cur.otherExpense;
+    const costPrev = prev ? prev.costOfSales + prev.indirectExpenses + prev.otherExpense : 0;
 
-    // Driver detection
-    const drivers: string[] = [];
-    if (revPct >= 5) drivers.push(`revenue grew ${revPct.toFixed(1)}%`);
-    else if (revPct <= -5) drivers.push(`revenue dropped ${Math.abs(revPct).toFixed(1)}%`);
-    if (costPct >= 10) drivers.push(`total costs rose ${costPct.toFixed(1)}%`);
-    else if (costPct <= -10) drivers.push(`costs reduced ${Math.abs(costPct).toFixed(1)}%`);
-    if (cur.grossProfit > prev.grossProfit * 1.05) drivers.push("gross margin improved");
-    else if (cur.grossProfit < prev.grossProfit * 0.95) drivers.push("gross margin weakened");
+    const revPct = prev ? pct(cur.directIncome, prev.directIncome) : 0;
+    const costPct = prev ? pct(costCur, costPrev) : 0;
+    const npPct = prev ? pct(cur.netProfit, prev.netProfit) : 0;
+    const gpMargin = cur.directIncome ? (cur.grossProfit / cur.directIncome) * 100 : 0;
+    const npMargin = cur.directIncome ? (cur.netProfit / cur.directIncome) * 100 : 0;
 
-    // Risks
-    const risks: string[] = [];
-    if (cur.netProfit < 0) risks.push("Operating at a net loss");
-    if (cur.indirectExpenses > cur.grossProfit) risks.push("Overheads exceed gross profit");
-    if (cur.directIncome < prev.directIncome * 0.85) risks.push("Sharp revenue decline (>15%)");
-
-    // Verdict + recommendation
+    // Verdict
     let verdict: "improving" | "stable" | "declining";
-    if (cur.netProfit > prev.netProfit && cur.netProfit >= 0) verdict = "improving";
+    if (prev && cur.netProfit > prev.netProfit && cur.netProfit >= 0) verdict = "improving";
     else if (Math.abs(npPct) < 10) verdict = "stable";
     else verdict = "declining";
 
-    const mainReason =
-      Math.abs(revPct) > Math.abs(costPct)
-        ? revPct >= 0 ? "stronger top-line revenue" : "weaker rental income"
-        : costPct >= 0 ? "rising operating costs" : "tighter cost control";
+    // Main driver
+    let mainDriver = "";
+    if (prev) {
+      const revDelta = cur.directIncome - prev.directIncome;
+      const costDelta = costCur - costPrev;
+      if (Math.abs(revDelta) > Math.abs(costDelta)) {
+        mainDriver = revDelta >= 0
+          ? `Revenue up ${formatAED(revDelta)} (+${revPct.toFixed(1)}%)`
+          : `Revenue down ${formatAED(Math.abs(revDelta))} (${revPct.toFixed(1)}%)`;
+      } else {
+        mainDriver = costDelta >= 0
+          ? `Costs up ${formatAED(costDelta)} (+${costPct.toFixed(1)}%)`
+          : `Costs cut ${formatAED(Math.abs(costDelta))} (${costPct.toFixed(1)}%)`;
+      }
+    }
 
-    let recommendation = "Maintain current operations and monitor monthly trend.";
-    if (cur.netProfit < 0 && cur.indirectExpenses > prev.indirectExpenses)
-      recommendation = "Cut indirect expenses immediately and renegotiate fixed overheads.";
+    // Main issue
+    let mainIssue = "No critical issue detected";
+    const issues: string[] = [];
+    if (cur.netProfit < 0) issues.push("Operating at a net loss");
+    if (cur.indirectExpenses > cur.grossProfit) issues.push("Overheads exceed gross profit");
+    if (prev && cur.directIncome < prev.directIncome * 0.85) issues.push("Sharp revenue decline >15%");
+    if (gpMargin < 30) issues.push(`Thin gross margin (${gpMargin.toFixed(0)}%)`);
+    if (issues.length) mainIssue = issues[0];
+
+    // Single recommendation
+    let action = "Maintain current operations and monitor next month closely.";
+    if (cur.netProfit < 0 && cur.indirectExpenses > cur.grossProfit)
+      action = "URGENT: Cut overheads — they exceed gross profit.";
+    else if (cur.netProfit < 0)
+      action = "Cut indirect expenses immediately to restore profitability.";
     else if (revPct < -10)
-      recommendation = "Boost fleet utilization and re-activate idle vehicles to recover revenue.";
+      action = "Boost fleet utilization — re-activate idle vehicles now.";
     else if (costPct > 15)
-      recommendation = "Audit cost-of-sales spike and freeze non-essential spending.";
+      action = "Audit cost spike and freeze non-essential spending.";
     else if (verdict === "improving")
-      recommendation = "Reinvest surplus into highest-ROI vehicles and scale rental capacity.";
+      action = "Reinvest surplus into highest-ROI vehicles to scale.";
 
-    return { cur, prev, revPct, costPct, npPct, costTotalCur, costTotalPrev, drivers, risks, verdict, mainReason, recommendation };
+    // Performance snapshot for chart (last 6 months)
+    const trendData = monthlyPL.slice(Math.max(0, idx - 5), idx + 1).map((m) => ({
+      month: m.month,
+      Revenue: Math.round(m.directIncome),
+      Costs: Math.round(m.costOfSales + m.indirectExpenses + m.otherExpense),
+      "Net Profit": Math.round(m.netProfit),
+    }));
+
+    return {
+      cur, prev, revPct, costPct, npPct, costCur, costPrev,
+      gpMargin, npMargin, verdict, mainDriver, mainIssue, issues, action, trendData,
+    };
   }, [selectedMonth, allMode]);
+
+  const verdictStyle = exec?.verdict === "improving"
+    ? { bg: "bg-success/10", border: "border-success/40", text: "text-success", label: "IMPROVING", Icon: TrendingUp }
+    : exec?.verdict === "declining"
+    ? { bg: "bg-loss/10", border: "border-loss/40", text: "text-loss", label: "DECLINING", Icon: TrendingDown }
+    : { bg: "bg-muted/40", border: "border-border", text: "text-muted-foreground", label: "STABLE", Icon: Minus };
 
   return (
     <div className="min-h-screen bg-background">
@@ -133,8 +123,8 @@ const MkAutosCompanyDashboard = () => {
               <Building2 className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-serif font-bold text-foreground tracking-tight">MK Autos — Company</h1>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Balance Sheet & Financial Overview</p>
+              <h1 className="text-xl font-serif font-bold text-foreground tracking-tight">MK Autos — Executive View</h1>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Decision-Focused Dashboard</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -142,318 +132,270 @@ const MkAutosCompanyDashboard = () => {
             <Link to="/mk-autos">
               <Button variant="outline" size="sm" className="text-xs">← Cars Dashboard</Button>
             </Link>
-            <Badge variant="secondary" className="text-xs">Currency: AED</Badge>
+            <Badge variant="secondary" className="text-xs">AED</Badge>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 space-y-6">
-        {/* Executive Summary — auto-generated MoM */}
-        {execSummary && (
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div>
-                  <CardTitle className="text-lg font-serif text-foreground">Executive Summary</CardTitle>
-                  <p className="text-[10px] text-muted-foreground tracking-wider uppercase">
-                    {execSummary.cur.month} vs {execSummary.prev.month} · auto-generated
-                  </p>
-                </div>
-                <Badge
-                  variant="secondary"
-                  className={`text-xs ${
-                    execSummary.verdict === "improving"
-                      ? "bg-success/15 text-success"
-                      : execSummary.verdict === "declining"
-                      ? "bg-loss/15 text-loss"
-                      : ""
-                  }`}
-                >
-                  {execSummary.verdict === "improving" ? "▲ Improving" : execSummary.verdict === "declining" ? "▼ Declining" : "● Stable"}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {/* MoM metric strip */}
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { label: "Revenue", cur: execSummary.cur.directIncome, pct: execSummary.revPct },
-                  { label: "Total Costs", cur: execSummary.costTotalCur, pct: execSummary.costPct, inverse: true },
-                  { label: "Net Profit", cur: execSummary.cur.netProfit, pct: execSummary.npPct },
-                ].map((m) => {
-                  const good = m.inverse ? m.pct < 0 : m.pct >= 0;
-                  return (
-                    <div key={m.label} className="rounded-lg border border-border/40 bg-background/40 p-3">
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{m.label}</p>
-                      <p className="text-base font-bold tabular-nums text-foreground mt-1">{formatAED(m.cur)}</p>
-                      <p className={`text-xs font-medium mt-0.5 ${good ? "text-success" : "text-loss"}`}>
-                        {m.pct >= 0 ? "▲" : "▼"} {Math.abs(m.pct).toFixed(1)}% MoM
-                      </p>
+      <main className="container mx-auto px-4 py-6 space-y-5">
+        {exec && (
+          <>
+            {/* === 1. VERDICT BANNER === */}
+            <Card className={`border-2 ${verdictStyle.border} ${verdictStyle.bg} backdrop-blur-sm`}>
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className={`flex h-14 w-14 items-center justify-center rounded-full ${verdictStyle.bg} border-2 ${verdictStyle.border}`}>
+                      <verdictStyle.Icon className={`h-7 w-7 ${verdictStyle.text}`} />
                     </div>
-                  );
-                })}
-              </div>
-
-              {/* Drivers + risks */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                <div className="rounded-lg border border-border/40 bg-background/40 p-3">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Key Drivers</p>
-                  {execSummary.drivers.length ? (
-                    <ul className="list-disc list-inside space-y-0.5 text-foreground capitalize">
-                      {execSummary.drivers.map((d) => <li key={d}>{d}</li>)}
-                    </ul>
-                  ) : (
-                    <p className="text-muted-foreground">No material movements vs prior month.</p>
-                  )}
-                </div>
-                <div className="rounded-lg border border-border/40 bg-background/40 p-3">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Risks / Anomalies</p>
-                  {execSummary.risks.length ? (
-                    <ul className="list-disc list-inside space-y-0.5 text-loss">
-                      {execSummary.risks.map((r) => <li key={r}>{r}</li>)}
-                    </ul>
-                  ) : (
-                    <p className="text-success">No critical risks detected.</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Conclusion */}
-              <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs text-foreground leading-relaxed">
-                <span className="font-semibold">Conclusion: </span>
-                Performance is <span className="font-semibold capitalize">{execSummary.verdict}</span> in {execSummary.cur.month}, with net profit moving {execSummary.npPct >= 0 ? "up" : "down"} {Math.abs(execSummary.npPct).toFixed(1)}% vs {execSummary.prev.month}, driven by {execSummary.mainReason}.
-                <br />
-                <span className="font-semibold text-primary">Action: </span>{execSummary.recommendation}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Summary Cards */}
-        <div>
-          <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground mb-2">
-            MK Autos — As at {view.asOf}
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            <SummaryCard title="Capital Account" value={formatAED(view.capitalAccount)} subtitle="Ahmad + Jamal + Moez" icon={Users} />
-            <SummaryCard title="Fixed Assets" value={formatAED(view.fixedAssetsTotal)} subtitle="Vehicles & equipment" icon={Building2} />
-            <SummaryCard title="Current Assets" value={formatAED(view.currentAssetsTotal)} subtitle="Receivables, cash, bank" icon={Wallet} />
-            <SummaryCard title="Current Liabilities" value={formatAED(view.currentLiabilitiesTotal)} subtitle="Payables & dues" icon={TrendingUp} />
-            <SummaryCard title="Loans" value={formatAED(view.loansTotal)} subtitle="Banks + Investors" icon={Landmark} />
-            <SummaryCard
-              title="Profit & Loss"
-              value={formatAED(Math.abs(view.profitLoss.total))}
-              subtitle={view.profitLoss.total < 0 ? "Net loss" : "Net profit"}
-              icon={BarChart3}
-              trend={view.profitLoss.total >= 0 ? "up" : "down"}
-            />
-          </div>
-        </div>
-
-        {/* Monthly P&L summary for the selected period */}
-        {view.plMonth && (
-          <div>
-            <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground mb-2">
-              {allMode ? "Cumulative P&L (May-25 → Mar-26)" : `P&L — ${selectedMonth}`}
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-              <SummaryCard title="Direct Income" value={formatAED(view.plMonth.directIncome)} subtitle="Rental + extras" icon={DollarSign} />
-              <SummaryCard title="Cost of Sales" value={formatAED(view.plMonth.costOfSales)} subtitle="Direct expenses" icon={FileText} />
-              <SummaryCard title="Gross Profit" value={formatAED(view.plMonth.grossProfit)} subtitle="Income − COGS" icon={TrendingUp} trend="up" />
-              <SummaryCard title="Indirect Expenses" value={formatAED(view.plMonth.indirectExpenses)} subtitle="Operating overhead" icon={FileText} />
-              <SummaryCard title="Other Expense" value={formatAED(view.plMonth.otherExpense)} subtitle="Investor profits etc." icon={User} />
-              <SummaryCard
-                title="Net Profit"
-                value={formatAED(Math.abs(view.plMonth.netProfit))}
-                subtitle={view.plMonth.netProfit < 0 ? "Net loss" : "Net profit"}
-                icon={BarChart3}
-                trend={view.plMonth.netProfit >= 0 ? "up" : "down"}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Financial Ratios */}
-        <div>
-          <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground mb-2">Financial Ratios — {view.asOf}</p>
-          <div className="grid grid-cols-2 gap-3">
-            <SummaryCard
-              title="Current Ratio"
-              value={`${currentRatio.toFixed(2)}x`}
-              subtitle={currentRatio >= 2 ? "✅ Healthy" : currentRatio >= 1 ? "⚠ Adequate" : "⚠ Risky — below 1x"}
-              icon={BarChart3}
-              trend={currentRatio >= 1 ? "up" : "down"}
-            />
-            <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
-              <CardContent className="p-5 relative">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-2 w-full">
-                    <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Debt-to-Equity</p>
-                    <div className="flex items-baseline gap-2">
-                      <p className="text-2xl font-bold font-serif text-foreground">
-                        {debtToEquity.toFixed(2)}x
-                      </p>
-                      <span className={`text-xs font-medium ${debtToEquity > 5 ? "text-loss" : "text-success"}`}>
-                        {debtToEquity > 10 ? "⚠ Very High Risk" : debtToEquity > 5 ? "⚠ High Risk" : debtToEquity > 2 ? "Moderate" : "Healthy"}
-                      </span>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Performance Verdict — {exec.cur.month}</p>
+                      <p className={`text-3xl font-serif font-bold ${verdictStyle.text} tracking-wide`}>{verdictStyle.label}</p>
                     </div>
-                    <p className="text-[10px] text-muted-foreground pt-1 border-t border-border/30">
-                      Total loans / capital account
-                    </p>
                   </div>
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                    <Percent className="h-5 w-5 text-primary" />
+                  <div className="text-right">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Net Profit MoM</p>
+                    <p className={`text-2xl font-bold tabular-nums ${exec.npPct >= 0 ? "text-success" : "text-loss"}`}>
+                      {exec.npPct >= 0 ? "▲" : "▼"} {Math.abs(exec.npPct).toFixed(1)}%
+                    </p>
+                    <p className="text-xs text-muted-foreground tabular-nums">{formatAED(exec.cur.netProfit)}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </div>
 
-        {/* Detailed Balance Sheet — shown only when no specific older snapshot is picked (item-level data is Feb-26 reference) */}
-        {(allMode || selectedMonth === "Feb-26") && (
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-xl font-serif text-foreground">MK Autos Balance Sheet — Itemized</CardTitle>
-              <p className="text-xs text-muted-foreground tracking-wider uppercase">As of Feb 2026</p>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
-                {/* Fixed Assets */}
-                <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-                  <CardHeader className="py-3 px-4">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm font-serif text-foreground">Fixed Assets</CardTitle>
-                      <Badge variant="secondary" className="text-xs font-bold">{formatAED(balanceSheet.fixedAssets.total)}</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="px-4 pb-3 pt-0 max-h-64 overflow-y-auto">
-                    {balanceSheet.fixedAssets.items.map((item) => (
-                      <div key={item.name} className="flex items-center justify-between py-1 text-xs">
-                        <span className="text-muted-foreground truncate mr-2">{item.name}</span>
-                        <span className="tabular-nums font-medium text-foreground whitespace-nowrap">{formatAED(item.amount)}</span>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
+            {/* === 2. KEY MESSAGES (4 cards) === */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+              <Card className="border-border/50 bg-card/80">
+                <CardContent className="p-4 space-y-1">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Activity className="h-3.5 w-3.5" />
+                    <p className="text-[10px] uppercase tracking-wider">Performance</p>
+                  </div>
+                  <p className={`text-lg font-bold ${verdictStyle.text}`}>{verdictStyle.label}</p>
+                  <p className="text-xs text-muted-foreground">vs {exec.prev?.month ?? "—"}</p>
+                </CardContent>
+              </Card>
+              <Card className="border-border/50 bg-card/80">
+                <CardContent className="p-4 space-y-1">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    <p className="text-[10px] uppercase tracking-wider">Main Issue</p>
+                  </div>
+                  <p className={`text-sm font-semibold leading-snug ${exec.issues.length ? "text-loss" : "text-success"}`}>
+                    {exec.mainIssue}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="border-border/50 bg-card/80">
+                <CardContent className="p-4 space-y-1">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Zap className="h-3.5 w-3.5" />
+                    <p className="text-[10px] uppercase tracking-wider">Main Driver</p>
+                  </div>
+                  <p className="text-sm font-semibold text-foreground leading-snug">{exec.mainDriver || "No prior month"}</p>
+                </CardContent>
+              </Card>
+              <Card className="border-2 border-primary/40 bg-primary/5">
+                <CardContent className="p-4 space-y-1">
+                  <div className="flex items-center gap-2 text-primary">
+                    <Target className="h-3.5 w-3.5" />
+                    <p className="text-[10px] uppercase tracking-wider font-semibold">Action</p>
+                  </div>
+                  <p className="text-sm font-semibold text-foreground leading-snug">{exec.action}</p>
+                </CardContent>
+              </Card>
+            </div>
 
-                {/* Current Assets */}
-                <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-                  <CardHeader className="py-3 px-4">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm font-serif text-foreground">Current Assets</CardTitle>
-                      <Badge variant="secondary" className="text-xs font-bold">{formatAED(balanceSheet.currentAssets.total)}</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="px-4 pb-3 pt-0 max-h-64 overflow-y-auto">
-                    {balanceSheet.currentAssets.items.filter((i) => i.amount !== 0).map((item) => (
-                      <div key={item.name} className="flex items-center justify-between py-1 text-xs">
-                        <span className="text-muted-foreground truncate mr-2">{item.name}</span>
-                        <span className="tabular-nums font-medium text-foreground whitespace-nowrap">{formatAED(item.amount)}</span>
-                      </div>
+            {/* === 3. CRITICAL ISSUES ALERT === */}
+            {exec.issues.length > 0 && (
+              <Alert className="border-loss/50 bg-loss/5">
+                <AlertTriangle className="h-4 w-4 !text-loss" />
+                <AlertTitle className="text-loss font-semibold">Critical Issues Detected ({exec.issues.length})</AlertTitle>
+                <AlertDescription>
+                  <ul className="mt-2 space-y-1 text-sm text-foreground">
+                    {exec.issues.map((i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <ChevronRight className="h-3.5 w-3.5 mt-0.5 text-loss shrink-0" />
+                        <span>{i}</span>
+                      </li>
                     ))}
-                  </CardContent>
-                </Card>
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
 
-                {/* Current Liabilities */}
-                <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-                  <CardHeader className="py-3 px-4">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm font-serif text-foreground">Current Liabilities</CardTitle>
-                      <Badge variant="secondary" className="text-xs font-bold">{formatAED(balanceSheet.currentLiabilities.total)}</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="px-4 pb-3 pt-0 max-h-64 overflow-y-auto">
-                    {balanceSheet.currentLiabilities.items.map((item) => (
-                      <div key={item.name} className="flex items-center justify-between py-1 text-xs">
-                        <span className="text-muted-foreground truncate mr-2">{item.name}</span>
-                        <span className={`tabular-nums font-medium whitespace-nowrap ${item.amount < 0 ? "text-success" : "text-foreground"}`}>{formatAED(item.amount)}</span>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
+            {/* === 4. DECISION KPIs (only what matters) === */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <Card className="border-border/50 bg-card/80">
+                <CardContent className="p-4">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Revenue</p>
+                  <p className="text-xl font-bold tabular-nums text-foreground mt-1">{formatAED(exec.cur.directIncome)}</p>
+                  <p className={`text-xs font-medium mt-1 ${exec.revPct >= 0 ? "text-success" : "text-loss"}`}>
+                    {exec.revPct >= 0 ? "▲" : "▼"} {Math.abs(exec.revPct).toFixed(1)}% MoM
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="border-border/50 bg-card/80">
+                <CardContent className="p-4">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Total Costs</p>
+                  <p className="text-xl font-bold tabular-nums text-foreground mt-1">{formatAED(exec.costCur)}</p>
+                  <p className={`text-xs font-medium mt-1 ${exec.costPct <= 0 ? "text-success" : "text-loss"}`}>
+                    {exec.costPct >= 0 ? "▲" : "▼"} {Math.abs(exec.costPct).toFixed(1)}% MoM
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="border-border/50 bg-card/80">
+                <CardContent className="p-4">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Net Profit</p>
+                  <p className={`text-xl font-bold tabular-nums mt-1 ${exec.cur.netProfit >= 0 ? "text-success" : "text-loss"}`}>
+                    {formatAED(exec.cur.netProfit)}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Margin: {exec.npMargin.toFixed(1)}%</p>
+                </CardContent>
+              </Card>
+              <Card className="border-border/50 bg-card/80">
+                <CardContent className="p-4">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Gross Margin</p>
+                  <p className="text-xl font-bold tabular-nums text-foreground mt-1">{exec.gpMargin.toFixed(1)}%</p>
+                  <p className="text-xs text-muted-foreground mt-1">{formatAED(exec.cur.grossProfit)} GP</p>
+                </CardContent>
+              </Card>
+            </div>
 
-                {/* Loans & Capital */}
-                <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-                  <CardHeader className="py-3 px-4">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm font-serif text-foreground">Loans</CardTitle>
-                      <Badge variant="secondary" className="text-xs font-bold">{formatAED(balanceSheet.loans.total)}</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="px-4 pb-3 pt-0 max-h-64 overflow-y-auto">
-                    {balanceSheet.loans.items.map((item) => (
-                      <div key={item.name} className="flex items-center justify-between py-1 text-xs">
-                        <span className="text-muted-foreground truncate mr-2">{item.name}</span>
-                        <span className={`tabular-nums font-medium whitespace-nowrap ${item.amount < 0 ? "text-success" : "text-foreground"}`}>{formatAED(item.amount)}</span>
-                      </div>
-                    ))}
-                    <div className="border-t border-border/30 mt-2 pt-2 space-y-1">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground font-medium">Capital Account</span>
-                        <span className="tabular-nums font-bold text-foreground">{formatAED(balanceSheet.capitalAccount)}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground font-medium">P&L (Current)</span>
-                        <span className={`tabular-nums font-bold ${balanceSheet.profitLoss.currentPeriod >= 0 ? "text-success" : "text-loss"}`}>{formatAED(balanceSheet.profitLoss.currentPeriod)}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground font-medium">P&L (Total)</span>
-                        <span className={`tabular-nums font-bold ${balanceSheet.profitLoss.total >= 0 ? "text-success" : "text-loss"}`}>{formatAED(balanceSheet.profitLoss.total)}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </CardContent>
-          </Card>
+            {/* === 5. TREND VISUALIZATION === */}
+            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-serif text-foreground">6-Month Trend — Revenue, Costs & Net Profit</CardTitle>
+                <p className="text-[10px] text-muted-foreground tracking-wider uppercase">Visual decision context</p>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={260}>
+                  <ComposedChart data={exec.trendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                    <XAxis dataKey="month" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                    <YAxis
+                      tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                      tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: 8,
+                        fontSize: 12,
+                      }}
+                      formatter={(v: number) => formatAED(v)}
+                    />
+                    <Legend wrapperStyle={{ fontSize: 11 }} />
+                    <Bar dataKey="Revenue" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
+                    <Bar dataKey="Costs" fill="hsl(var(--muted-foreground))" radius={[3, 3, 0, 0]} opacity={0.6} />
+                    <Line type="monotone" dataKey="Net Profit" stroke="hsl(var(--success))" strokeWidth={2.5} dot={{ r: 4 }} />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* === 6. MoM COMPARISON SUMMARY === */}
+            {exec.prev && (
+              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base font-serif text-foreground">
+                    Month-over-Month: {exec.cur.month} vs {exec.prev.month}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-border/50 text-[10px] uppercase tracking-wider text-muted-foreground">
+                          <th className="text-left py-2">Metric</th>
+                          <th className="text-right py-2">{exec.prev.month}</th>
+                          <th className="text-right py-2">{exec.cur.month}</th>
+                          <th className="text-right py-2">Change</th>
+                          <th className="text-left py-2 pl-4">Reason</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-xs">
+                        {[
+                          { label: "Revenue", prev: exec.prev.directIncome, cur: exec.cur.directIncome, pct: exec.revPct, inverse: false,
+                            reason: exec.revPct >= 0 ? "Higher fleet utilization / more rentals" : "Lower bookings or idle vehicles" },
+                          { label: "Cost of Sales", prev: exec.prev.costOfSales, cur: exec.cur.costOfSales,
+                            pct: exec.prev.costOfSales ? ((exec.cur.costOfSales - exec.prev.costOfSales) / Math.abs(exec.prev.costOfSales)) * 100 : 0,
+                            inverse: true, reason: "Direct rental & vehicle running costs" },
+                          { label: "Indirect Expenses", prev: exec.prev.indirectExpenses, cur: exec.cur.indirectExpenses,
+                            pct: exec.prev.indirectExpenses ? ((exec.cur.indirectExpenses - exec.prev.indirectExpenses) / Math.abs(exec.prev.indirectExpenses)) * 100 : 0,
+                            inverse: true, reason: "Salaries, rent, admin overhead" },
+                          { label: "Net Profit", prev: exec.prev.netProfit, cur: exec.cur.netProfit, pct: exec.npPct, inverse: false,
+                            reason: exec.npPct >= 0 ? "Profit improved on revenue/cost mix" : "Profit eroded by costs or weaker sales" },
+                        ].map((r) => {
+                          const good = r.inverse ? r.pct < 0 : r.pct >= 0;
+                          return (
+                            <tr key={r.label} className="border-b border-border/20">
+                              <td className="py-2.5 font-medium text-foreground">{r.label}</td>
+                              <td className="py-2.5 text-right tabular-nums text-muted-foreground">{formatAED(r.prev)}</td>
+                              <td className="py-2.5 text-right tabular-nums text-foreground">{formatAED(r.cur)}</td>
+                              <td className={`py-2.5 text-right tabular-nums font-semibold ${good ? "text-success" : "text-loss"}`}>
+                                {r.pct >= 0 ? "▲" : "▼"} {Math.abs(r.pct).toFixed(1)}%
+                              </td>
+                              <td className="py-2.5 pl-4 text-muted-foreground">{r.reason}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* === 7. STRONG ACTION CALLOUT === */}
+            <Card className="border-2 border-primary bg-gradient-to-br from-primary/10 to-primary/5">
+              <CardContent className="p-5 flex items-center gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                  <Target className="h-6 w-6" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-semibold">Recommended Action</p>
+                  <p className="text-base md:text-lg font-serif font-semibold text-foreground mt-1 leading-snug">
+                    {exec.action}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Light context footer — balance sheet snapshot at-a-glance */}
+            <Card className="border-border/40 bg-card/40">
+              <CardContent className="p-4">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
+                  Balance Sheet Context — As at {snapshot.asOf}
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                  <div>
+                    <p className="text-muted-foreground">Capital</p>
+                    <p className="font-semibold tabular-nums text-foreground">{formatAED(snapshot.capitalAccount)}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Loans</p>
+                    <p className="font-semibold tabular-nums text-foreground">{formatAED(snapshot.loansTotal)}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Current Ratio</p>
+                    <p className="font-semibold tabular-nums text-foreground">
+                      {(snapshot.currentAssetsTotal / snapshot.currentLiabilitiesTotal).toFixed(2)}x
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Debt / Equity</p>
+                    <p className="font-semibold tabular-nums text-foreground">
+                      {(snapshot.loansTotal / snapshot.capitalAccount).toFixed(2)}x
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </>
         )}
-
-        {/* Monthly P&L history table */}
-        <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg font-serif text-foreground">Monthly Profit & Loss History</CardTitle>
-            <p className="text-[10px] text-muted-foreground tracking-wider uppercase">May 2025 → March 2026</p>
-          </CardHeader>
-          <CardContent className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-border/50 text-muted-foreground">
-                  <th className="text-left py-2 px-2">Month</th>
-                  <th className="text-right py-2 px-2">Direct Income</th>
-                  <th className="text-right py-2 px-2">Cost of Sales</th>
-                  <th className="text-right py-2 px-2">Gross Profit</th>
-                  <th className="text-right py-2 px-2">Indirect Exp</th>
-                  <th className="text-right py-2 px-2">Other Exp</th>
-                  <th className="text-right py-2 px-2">Net Profit</th>
-                </tr>
-              </thead>
-              <tbody>
-                {monthlyPL.map((m) => {
-                  const isSel = !allMode && m.month === selectedMonth;
-                  return (
-                    <tr
-                      key={m.month}
-                      className={`border-b border-border/20 hover:bg-secondary/30 transition-colors ${isSel ? "bg-primary/10" : ""}`}
-                    >
-                      <td className="py-2 px-2 font-medium text-foreground">{m.month}</td>
-                      <td className="py-2 px-2 text-right tabular-nums">{formatAED(m.directIncome)}</td>
-                      <td className="py-2 px-2 text-right tabular-nums">{formatAED(m.costOfSales)}</td>
-                      <td className="py-2 px-2 text-right tabular-nums text-success">{formatAED(m.grossProfit)}</td>
-                      <td className="py-2 px-2 text-right tabular-nums">{formatAED(m.indirectExpenses)}</td>
-                      <td className="py-2 px-2 text-right tabular-nums">{formatAED(m.otherExpense)}</td>
-                      <td className={`py-2 px-2 text-right tabular-nums font-semibold ${m.netProfit >= 0 ? "text-success" : "text-loss"}`}>
-                        {formatAED(m.netProfit)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </CardContent>
-        </Card>
       </main>
     </div>
   );
