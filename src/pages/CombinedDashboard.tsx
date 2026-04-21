@@ -526,6 +526,8 @@ const CombinedDashboard = () => {
           </Card>
         </div>
 
+        <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+
         {/* Capital Efficiency / ROI Ranking / Capital Allocation visuals */}
         <PortfolioVisualMap
           companies={companies.map(c => ({
@@ -544,6 +546,8 @@ const CombinedDashboard = () => {
           totalInvestment={toDisplay(totalInvestment)}
           format={fmt}
         />
+
+        <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
         {/* Consolidated P&L Matrix */}
         <ConsolidatedPLMatrix allMonths={ALL_MONTHS} selectedMonth={selectedMonth} />
