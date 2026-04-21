@@ -194,10 +194,15 @@ const PortfolioInsights = ({
 
   // === AI-style 2-line summaries per company ===
   const companySummary = (c: CompanySnapshot): { line1: string; action: string } => {
-    const g = pctChange(c.current.profit, c.previous?.profit);
-    const dir = g === null ? "no prior data" : g > 0 ? `up ${g.toFixed(0)}%` : `down ${Math.abs(g).toFixed(0)}%`;
+    const hasPriorData = !!c.previous && (c.previous.profit !== 0 || c.previous.investment !== 0);
+    const g = hasPriorData ? pctChange(c.current.profit, c.previous?.profit) : null;
     const status = c.current.profit >= 0 ? "profitable" : "loss-making";
-    const line1 = `${status} at ${format(toDisplay(c.current.profit))} (${c.current.roi.toFixed(1)}% ROI), ${dir} MoM.`;
+    const dir = g === null
+      ? "MoM trend unavailable"
+      : g > 0.5 ? `up ${g.toFixed(0)}% MoM`
+      : g < -0.5 ? `down ${Math.abs(g).toFixed(0)}% MoM`
+      : "flat MoM";
+    const line1 = `${status} at ${format(toDisplay(c.current.profit))} (${c.current.roi.toFixed(1)}% ROI), ${dir}.`;
     const sig = signal(c);
     const actionMap: Record<typeof sig.label, string> = {
       SCALE: "Increase capital allocation to capture upside.",
