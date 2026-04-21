@@ -87,6 +87,25 @@ const MkAutosCarsDashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-6">
+        {/* Executive Summary — top-of-page decision view */}
+        <ExecutiveSummary
+          businessName="MK Autos — Cars"
+          format={formatAED}
+          currentMonth={selectedMonth === "all" ? undefined : selectedMonth}
+          history={execHistory}
+          reasons={{
+            revenueUp: "Higher fleet utilization / longer rental contracts",
+            revenueDown: "Idle vehicles or shorter rental periods",
+            costsContext: "Operating cost = avg monthly maintenance + depreciation run-rate",
+          }}
+          extraIssues={(cur) => {
+            const out: string[] = [];
+            if (cur.netProfit < 0) out.push("Monthly revenue below run-rate operating cost — fleet under-utilized.");
+            if (cur.revenue < avgMonthlyCost * 0.6) out.push("Revenue <60% of break-even — review idle vehicles.");
+            return out;
+          }}
+        />
+
         {/* Ahmad's Capital Position Bar */}
         {!isFiltered && (
           <Card className="border-border/50 bg-gradient-to-r from-emerald-500/10 to-emerald-700/5 backdrop-blur-sm">
