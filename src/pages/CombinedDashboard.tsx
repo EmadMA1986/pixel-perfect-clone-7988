@@ -584,148 +584,33 @@ const CombinedDashboard = () => {
           })}
         </div>
 
-        {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* ROI Comparison */}
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold text-foreground">
-                ROI Comparison {selectedMonth !== "all" && `(${selectedMonth})`}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[280px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={roiChartData} layout="vertical" margin={{ left: 80, right: 30 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis type="number" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v) => `${v}%`} />
-                    <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={75} />
-                    <Tooltip formatter={(v: number) => [`${v.toFixed(1)}%`, "ROI"]} contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                    <Bar dataKey="roi" radius={[0, 4, 4, 0]}>
-                      {roiChartData.map((entry, i) => (
-                        <Cell key={i} fill={entry.roi >= 0 ? "hsl(var(--success))" : "hsl(var(--loss))"} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Investment Allocation Pie */}
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold text-foreground">Investment Allocation</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[280px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RechartsPie>
-                    <Pie
-                      data={investmentPieData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={3}
-                      dataKey="value"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    >
-                      {investmentPieData.map((entry, i) => (
-                        <Cell key={i} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(v: number) => [currency === "AED" ? formatAED(v) : formatUSD(v), "Investment"]} contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                  </RechartsPie>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Profit/Loss by Company */}
+        {/* Investment Allocation Pie */}
         <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold text-foreground">
-              Ahmad's {selectedMonth !== "all" ? "Monthly" : ""} Profit/Loss by Company
-            </CardTitle>
+            <CardTitle className="text-base font-semibold text-foreground">Investment Allocation</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={profitChartData} margin={{ left: 20, right: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                  <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v) => fmt(v)} />
-                  <Tooltip formatter={(v: number) => [currency === "AED" ? formatAED(v) : formatUSD(v), "Profit/Loss"]} contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                  <Bar dataKey="profit" radius={[4, 4, 0, 0]}>
-                    {profitChartData.map((entry, i) => (
-                      <Cell key={i} fill={entry.profit >= 0 ? "hsl(var(--success))" : "hsl(var(--loss))"} />
+                <RechartsPie>
+                  <Pie
+                    data={investmentPieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={3}
+                    dataKey="value"
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  >
+                    {investmentPieData.map((entry, i) => (
+                      <Cell key={i} fill={entry.color} />
                     ))}
-                  </Bar>
-                </BarChart>
+                  </Pie>
+                  <Tooltip formatter={(v: number) => [currency === "AED" ? formatAED(v) : formatUSD(v), "Investment"]} contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                </RechartsPie>
               </ResponsiveContainer>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Detailed Table */}
-        <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold text-foreground">
-              Ahmad's Capital Position — {selectedMonth !== "all" ? `${selectedMonth} Breakdown` : "Detailed Breakdown"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-xs">Company</TableHead>
-                  <TableHead className="text-xs text-right">Ownership</TableHead>
-                  <TableHead className="text-xs text-right">Investment</TableHead>
-                  <TableHead className="text-xs text-right">{selectedMonth !== "all" ? "Monthly P/L" : "Profit/Loss Share"}</TableHead>
-                  <TableHead className="text-xs text-right">Net Position</TableHead>
-                  <TableHead className="text-xs text-right">ROI</TableHead>
-                  <TableHead className="text-xs text-right">% of Portfolio</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {companies.map((c) => (
-                  <TableRow key={c.name} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(c.route)}>
-                    <TableCell className="font-medium text-sm">{c.name}</TableCell>
-                    <TableCell className="text-right text-sm">{c.share}</TableCell>
-                    <TableCell className="text-right text-sm">{fmtFull(toDisplay(c.investment))}</TableCell>
-                    <TableCell className={`text-right text-sm font-medium ${c.profit >= 0 ? "text-success" : "text-loss"}`}>
-                      {c.profit >= 0 ? "" : "-"}{fmtFull(toDisplay(Math.abs(c.profit)))}
-                    </TableCell>
-                    <TableCell className={`text-right text-sm font-medium ${c.netPosition >= 0 ? "text-success" : "text-loss"}`}>
-                      {c.netPosition >= 0 ? "" : "-"}{fmtFull(toDisplay(Math.abs(c.netPosition)))}
-                    </TableCell>
-                    <TableCell className={`text-right text-sm font-bold ${c.roi >= 0 ? "text-success" : "text-loss"}`}>
-                      {c.roi.toFixed(1)}%
-                    </TableCell>
-                    <TableCell className="text-right text-sm text-muted-foreground">
-                      {((c.investment / totalInvestment) * 100).toFixed(1)}%
-                    </TableCell>
-                  </TableRow>
-                ))}
-                <TableRow className="border-t-2 border-primary/30 bg-muted/30">
-                  <TableCell className="font-bold text-sm">Total Portfolio</TableCell>
-                  <TableCell className="text-right text-sm">—</TableCell>
-                  <TableCell className="text-right text-sm font-bold">{fmtFull(toDisplay(totalInvestment))}</TableCell>
-                  <TableCell className={`text-right text-sm font-bold ${totalProfit >= 0 ? "text-success" : "text-loss"}`}>
-                    {totalProfit >= 0 ? "" : "-"}{fmtFull(toDisplay(Math.abs(totalProfit)))}
-                  </TableCell>
-                  <TableCell className={`text-right text-sm font-bold ${totalNetPosition >= 0 ? "text-success" : "text-loss"}`}>
-                    {totalNetPosition >= 0 ? "" : "-"}{fmtFull(toDisplay(Math.abs(totalNetPosition)))}
-                  </TableCell>
-                  <TableCell className={`text-right text-sm font-bold ${overallROI >= 0 ? "text-success" : "text-loss"}`}>
-                    {overallROI.toFixed(1)}%
-                  </TableCell>
-                  <TableCell className="text-right text-sm font-bold">100%</TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
           </CardContent>
         </Card>
 
