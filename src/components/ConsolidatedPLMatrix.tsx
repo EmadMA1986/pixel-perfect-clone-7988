@@ -352,7 +352,7 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
 
               return (
                 <TableRow key={row.label}>
-                  <TableCell className="font-medium text-sm sticky left-0 bg-card z-10 whitespace-nowrap">
+                  <TableCell className="font-medium text-base sticky left-0 bg-card z-10 whitespace-nowrap">
                     {row.label}
                   </TableCell>
                   {values.map((v, i) => {
@@ -367,7 +367,7 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
                     return (
                       <TableCell
                         key={i}
-                        className={`text-right text-sm tabular-nums ${colorClass} ${borderClass}`}
+                        className={`text-right text-base tabular-nums ${colorClass} ${borderClass}`}
                       >
                         <span className="inline-flex items-center gap-1 justify-end">
                           {isPct ? formatPct(v) : formatAED(v)}
@@ -376,7 +376,7 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
                       </TableCell>
                     );
                   })}
-                  <TableCell className={`text-right text-sm font-bold tabular-nums border-l-2 border-primary/40 bg-primary/5 ${total === 0 ? "text-muted-foreground" : total >= 0 ? "text-success" : "text-loss"}`}>
+                  <TableCell className={`text-right text-base font-bold tabular-nums border-l-2 border-primary/40 bg-primary/5 ${total === 0 ? "text-muted-foreground" : total >= 0 ? "text-success" : "text-loss"}`}>
                     <span className="inline-flex items-center gap-1 justify-end">
                       {isPct ? formatPct(total) : formatAED(total)}
                       <Trend curr={total} prev={prevTotal} positiveIsBetter={row.positiveIsBetter} />
