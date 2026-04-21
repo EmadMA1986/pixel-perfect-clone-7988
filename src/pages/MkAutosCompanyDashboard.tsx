@@ -62,6 +62,61 @@ const MkAutosCompanyDashboard = () => {
   const currentRatio = view.currentAssetsTotal / view.currentLiabilitiesTotal;
   const debtToEquity = view.loansTotal / view.capitalAccount;
 
+  // ===== Executive Summary: current vs previous month =====
+  const execSummary = useMemo(() => {
+    // Always anchor on a real month (use latest if "all" selected)
+    const anchorKey = allMode ? monthlyPL[monthlyPL.length - 1].month : selectedMonth;
+    const idx = monthlyPL.findIndex((m) => m.month === anchorKey);
+    if (idx <= 0) return null;
+    const cur = monthlyPL[idx];
+    const prev = monthlyPL[idx - 1];
+
+    const pct = (a: number, b: number) => (b === 0 ? 0 : ((a - b) / Math.abs(b)) * 100);
+    const revPct = pct(cur.directIncome, prev.directIncome);
+    const costTotalCur = cur.costOfSales + cur.indirectExpenses + cur.otherExpense;
+    const costTotalPrev = prev.costOfSales + prev.indirectExpenses + prev.otherExpense;
+    const costPct = pct(costTotalCur, costTotalPrev);
+    const npPct = pct(cur.netProfit, prev.netProfit);
+
+    // Driver detection
+    const drivers: string[] = [];
+    if (revPct >= 5) drivers.push(`revenue grew ${revPct.toFixed(1)}%`);
+    else if (revPct <= -5) drivers.push(`revenue dropped ${Math.abs(revPct).toFixed(1)}%`);
+    if (costPct >= 10) drivers.push(`total costs rose ${costPct.toFixed(1)}%`);
+    else if (costPct <= -10) drivers.push(`costs reduced ${Math.abs(costPct).toFixed(1)}%`);
+    if (cur.grossProfit > prev.grossProfit * 1.05) drivers.push("gross margin improved");
+    else if (cur.grossProfit < prev.grossProfit * 0.95) drivers.push("gross margin weakened");
+
+    // Risks
+    const risks: string[] = [];
+    if (cur.netProfit < 0) risks.push("Operating at a net loss");
+    if (cur.indirectExpenses > cur.grossProfit) risks.push("Overheads exceed gross profit");
+    if (cur.directIncome < prev.directIncome * 0.85) risks.push("Sharp revenue decline (>15%)");
+
+    // Verdict + recommendation
+    let verdict: "improving" | "stable" | "declining";
+    if (cur.netProfit > prev.netProfit && cur.netProfit >= 0) verdict = "improving";
+    else if (Math.abs(npPct) < 10) verdict = "stable";
+    else verdict = "declining";
+
+    const mainReason =
+      Math.abs(revPct) > Math.abs(costPct)
+        ? revPct >= 0 ? "stronger top-line revenue" : "weaker rental income"
+        : costPct >= 0 ? "rising operating costs" : "tighter cost control";
+
+    let recommendation = "Maintain current operations and monitor monthly trend.";
+    if (cur.netProfit < 0 && cur.indirectExpenses > prev.indirectExpenses)
+      recommendation = "Cut indirect expenses immediately and renegotiate fixed overheads.";
+    else if (revPct < -10)
+      recommendation = "Boost fleet utilization and re-activate idle vehicles to recover revenue.";
+    else if (costPct > 15)
+      recommendation = "Audit cost-of-sales spike and freeze non-essential spending.";
+    else if (verdict === "improving")
+      recommendation = "Reinvest surplus into highest-ROI vehicles and scale rental capacity.";
+
+    return { cur, prev, revPct, costPct, npPct, costTotalCur, costTotalPrev, drivers, risks, verdict, mainReason, recommendation };
+  }, [selectedMonth, allMode]);
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border/50 bg-card/30 backdrop-blur-sm sticky top-0 z-50">
