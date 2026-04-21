@@ -417,67 +417,7 @@ const CombinedDashboard = () => {
 
       <main className="container mx-auto px-4 py-6 space-y-6">
 
-        {/* Executive Portfolio Insights */}
-        <PortfolioInsights
-          companies={companySnapshots}
-          selectedMonth={selectedMonth}
-          prevMonthLabel={prevMonthLabel}
-          format={fmt}
-          toDisplay={toDisplay}
-          portfolioTrend={portfolioTrend}
-        />
-
-        <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-
-        {/* Portfolio Health Alerts */}
-        {(losingCompanies.length > 0 || largestExposurePct > 40) && (
-          <div className="space-y-2">
-            {losingCompanies.map(c => (
-              <Card key={c.name} className="border-loss/30 bg-loss/5 cursor-pointer hover:border-loss/50 transition-colors" onClick={() => navigate(c.route)}>
-                <CardContent className="p-3 flex items-center gap-3">
-                  <AlertTriangle className="h-5 w-5 text-loss shrink-0" />
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-loss">{c.name} — Loss Alert</p>
-                    <p className="text-xs text-muted-foreground">
-                      ROI: {c.roi.toFixed(1)}% · Loss: {fmt(toDisplay(c.profit))} · {((c.investment / totalInvestment) * 100).toFixed(0)}% of portfolio exposure
-                    </p>
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-loss" />
-                </CardContent>
-              </Card>
-            ))}
-            {largestExposurePct > 40 && (
-              <Card className="border-yellow-500/30 bg-yellow-500/5">
-                <CardContent className="p-3 flex items-center gap-3">
-                  <Shield className="h-5 w-5 text-yellow-500 shrink-0" />
-                  <div>
-                    <p className="text-sm font-semibold text-yellow-600 dark:text-yellow-400">Concentration Risk</p>
-                    <p className="text-xs text-muted-foreground">
-                      {largestExposure.name} represents {largestExposurePct.toFixed(0)}% of total investment. Consider diversification if above 40%.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        )}
-
-        <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-
-        {/* Executive Summary */}
-        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-transparent backdrop-blur-sm">
-          <CardContent className="p-4 flex items-start gap-3">
-            <FileText className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-1">Executive Summary</p>
-              <p className="text-sm text-foreground leading-relaxed">{executiveSummary}</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-
-        {/* Overall Summary Cards */}
+        {/* 1. KPI Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
@@ -544,8 +484,98 @@ const CombinedDashboard = () => {
 
         <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
-        {/* Consolidated P&L Matrix */}
+        {/* 2-5. Performance Verdict + Critical Alerts, Ranking table, MoM, Trend chart */}
+        <PortfolioInsights
+          companies={companySnapshots}
+          selectedMonth={selectedMonth}
+          prevMonthLabel={prevMonthLabel}
+          format={fmt}
+          toDisplay={toDisplay}
+          portfolioTrend={portfolioTrend}
+        />
+
+        <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+
+        {/* 6. Risk Flags — Concentration Recommendation + Loss Alerts + Concentration Risk */}
+        <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+              <Shield className="h-4 w-4 text-primary" /> Risk Flags
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {/* Concentration Recommendation */}
+            <div className={`rounded-md border-2 p-3 flex items-start gap-3 ${largestExposurePct > 50 ? "border-loss/40 bg-loss/5" : largestExposurePct > 35 ? "border-yellow-500/40 bg-yellow-500/5" : "border-success/40 bg-success/5"}`}>
+              <Shield className={`h-5 w-5 shrink-0 mt-0.5 ${largestExposurePct > 50 ? "text-loss" : largestExposurePct > 35 ? "text-yellow-500" : "text-success"}`} />
+              <div className="flex-1">
+                <p className="text-xs font-bold uppercase tracking-wider mb-0.5">
+                  Concentration Recommendation: {largestExposurePct > 50 ? "REDUCE" : largestExposurePct > 35 ? "REBALANCE" : "MAINTAIN"}
+                </p>
+                <p className="text-sm text-foreground">
+                  {largestExposurePct > 50
+                    ? `${largestExposure.name} at ${largestExposurePct.toFixed(0)}% of portfolio — divest to <40% to limit single-entity risk.`
+                    : largestExposurePct > 35
+                    ? `${largestExposure.name} at ${largestExposurePct.toFixed(0)}% — rebalance toward underweighted entities.`
+                    : `Top exposure at ${largestExposurePct.toFixed(0)}% — diversification healthy.`}
+                </p>
+              </div>
+            </div>
+
+            {/* Loss Alerts */}
+            {losingCompanies.map(c => (
+              <div
+                key={c.name}
+                className="rounded-md border border-loss/30 bg-loss/5 cursor-pointer hover:border-loss/50 transition-colors p-3 flex items-center gap-3"
+                onClick={() => navigate(c.route)}
+              >
+                <AlertTriangle className="h-5 w-5 text-loss shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-loss">{c.name} — Loss Alert</p>
+                  <p className="text-xs text-muted-foreground">
+                    ROI: {c.roi.toFixed(1)}% · Loss: {fmt(toDisplay(c.profit))} · {((c.investment / totalInvestment) * 100).toFixed(0)}% of portfolio exposure
+                  </p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-loss" />
+              </div>
+            ))}
+            {losingCompanies.length === 0 && (
+              <div className="rounded-md border border-success/30 bg-success/5 p-3 text-xs text-muted-foreground">
+                No active loss alerts — all entities profitable on a cumulative basis.
+              </div>
+            )}
+
+            {/* Concentration Risk */}
+            {largestExposurePct > 40 && (
+              <div className="rounded-md border border-yellow-500/30 bg-yellow-500/5 p-3 flex items-center gap-3">
+                <Shield className="h-5 w-5 text-yellow-500 shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-yellow-600 dark:text-yellow-400">Concentration Risk</p>
+                  <p className="text-xs text-muted-foreground">
+                    {largestExposure.name} represents {largestExposurePct.toFixed(0)}% of total investment. Consider diversification if above 40%.
+                  </p>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+
+        {/* 7. Consolidated P&L Matrix */}
         <ConsolidatedPLMatrix allMonths={ALL_MONTHS} selectedMonth={selectedMonth} />
+
+        <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+
+        {/* 8. Executive Summary */}
+        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-transparent backdrop-blur-sm">
+          <CardContent className="p-4 flex items-start gap-3">
+            <FileText className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-1">Executive Summary</p>
+              <p className="text-sm text-foreground leading-relaxed">{executiveSummary}</p>
+            </div>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );
