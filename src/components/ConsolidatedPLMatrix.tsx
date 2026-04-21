@@ -1,0 +1,393 @@
+import { useMemo, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ArrowUp, ArrowDown, Minus, Layers } from "lucide-react";
+
+import { monthlyPL as otcMonthlyPL, otcSummary } from "@/data/otcData";
+import { monthlyIncome as mkAutosMonthly, mkAutosSummary } from "@/data/mkAutosData";
+import { monthlyPL as mkAutosCompanyPL, balanceSheet as mkAutosBS } from "@/data/mkAutosData";
+import { monthlyData as mkxMonthly, mkxSummary } from "@/data/mkxData";
+import { monthlyPL as garagePL, balanceSheet as garageBS } from "@/data/garageData";
+import {
+  sales as goldSales,
+  expenses as goldExpenses,
+  salesDiscounts as goldDiscounts,
+  goldCapital,
+  AED_TO_USD_RATE,
+} from "@/data/goldData";
+
+type Period = "MTD" | "YTD" | "L6M";
+
+interface PLRow {
+  revenue: number;
+  cogs: number;
+  grossProfit: number;
+  indirect: number;
+  netProfit: number;
+  investment: number;
+}
+
+const monthOrder = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+const normalizeMonth = (m: string): string => {
+  const m4 = m.match(/^(\w{3})\s*(\d{4})$/);
+  if (m4) return `${m4[1]}-${m4[2].slice(2)}`;
+  const m2 = m.match(/^(\w{3})\s+(\d{2})$/);
+  if (m2) return `${m2[1]}-${m2[2]}`;
+  const md = m.match(/^(\w{3})-(\d{2})$/);
+  if (md) return `${md[1]}-${md[2]}`;
+  return m;
+};
+
+const compareMonth = (a: string, b: string) => {
+  const [mA, yA] = a.split("-");
+  const [mB, yB] = b.split("-");
+  const yd = parseInt(yA) - parseInt(yB);
+  if (yd !== 0) return yd;
+  return monthOrder.indexOf(mA) - monthOrder.indexOf(mB);
+};
+
+// === Per-company per-month P&L extractors (returns 0s if no data) ===
+
+const otcForMonth = (m: string): PLRow => {
+  const row = otcMonthlyPL.find(r => normalizeMonth(r.month) === m);
+  if (!row) return zero();
+  // OTC has no revenue/COGS split: gross profit acts as both
+  return {
+    revenue: row.grossProfit,
+    cogs: 0,
+    grossProfit: row.grossProfit,
+    indirect: row.cashExpenses + row.scam,
+    netProfit: row.netProfit,
+    investment: otcSummary.initialCapital,
+  };
+};
+
+const carsForMonth = (m: string): PLRow => {
+  const row = mkAutosMonthly.find(r => normalizeMonth(r.month) === m);
+  if (!row) return zero();
+  // Rental income = revenue, no COGS line per month, treat as = revenue (GP=NP)
+  return {
+    revenue: row.total,
+    cogs: 0,
+    grossProfit: row.total,
+    indirect: 0,
+    netProfit: row.total,
+    investment: mkAutosSummary.totalInitialInvestment,
+  };
+};
+
+const mkxForMonth = (m: string): PLRow => {
+  const row = mkxMonthly.find(r => normalizeMonth(r.month) === m);
+  if (!row) return zero();
+  return {
+    revenue: row.revenue,
+    cogs: row.gasFees,
+    grossProfit: row.grossProfit,
+    indirect: row.totalExpenses,
+    netProfit: row.netProfit,
+    investment: 11577867.96, // MKX total paid-up capital (Ahmad+Maria)
+  };
+};
+
+const garageForMonth = (m: string): PLRow => {
+  const row = garagePL.find(r => normalizeMonth(r.month) === m);
+  if (!row) return zero();
+  return {
+    revenue: row.totalRevenue,
+    cogs: row.costOfSales,
+    grossProfit: row.grossProfit,
+    indirect: row.indirectExpenses,
+    netProfit: row.netProfit,
+    investment: garageBS.capital.total,
+  };
+};
+
+const mkAutosCompanyForMonth = (m: string): PLRow => {
+  const row = mkAutosCompanyPL.find(r => normalizeMonth(r.month) === m);
+  if (!row) return zero();
+  return {
+    revenue: row.directIncome,
+    cogs: row.costOfSales,
+    grossProfit: row.grossProfit,
+    indirect: row.indirectExpenses + row.otherExpense,
+    netProfit: row.netProfit,
+    investment: mkAutosBS.capitalAccount,
+  };
+};
+
+const ryaForMonth = (m: string): PLRow => {
+  // Aggregate sales/expenses/discounts in AED for the month
+  const inMonth = (date: string) => {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return false;
+    return `${d.toLocaleString("en-US", { month: "short" })}-${String(d.getFullYear()).slice(2)}` === m;
+  };
+  const salesM = goldSales.filter(s => inMonth(s.date));
+  const expM = goldExpenses.filter(e => inMonth(e.date));
+  const discM = goldDiscounts.filter(e => inMonth(e.date));
+  if (salesM.length === 0 && expM.length === 0 && discM.length === 0) return zero();
+
+  const revenueUSD = salesM.reduce((s, t) => s + t.amountUSD, 0);
+  const cogsUSD = salesM.reduce((s, t) => s + t.costUSD, 0);
+  const discountUSD = discM.reduce((s, t) => s + t.amount, 0);
+  const expenseUSD = expM.reduce((s, t) => s + t.amount, 0);
+  const grossProfitUSD = revenueUSD - cogsUSD - discountUSD;
+  const netUSD = grossProfitUSD - expenseUSD;
+  return {
+    revenue: revenueUSD * AED_TO_USD_RATE,
+    cogs: (cogsUSD + discountUSD) * AED_TO_USD_RATE,
+    grossProfit: grossProfitUSD * AED_TO_USD_RATE,
+    indirect: expenseUSD * AED_TO_USD_RATE,
+    netProfit: netUSD * AED_TO_USD_RATE,
+    investment: Math.abs(goldCapital.initialCapital) * AED_TO_USD_RATE,
+  };
+};
+
+const zero = (): PLRow => ({ revenue: 0, cogs: 0, grossProfit: 0, indirect: 0, netProfit: 0, investment: 0 });
+
+const sumRows = (rows: PLRow[]): PLRow => rows.reduce((acc, r) => ({
+  revenue: acc.revenue + r.revenue,
+  cogs: acc.cogs + r.cogs,
+  grossProfit: acc.grossProfit + r.grossProfit,
+  indirect: acc.indirect + r.indirect,
+  netProfit: acc.netProfit + r.netProfit,
+  investment: Math.max(acc.investment, r.investment), // investment is a stock, not flow
+}), zero());
+
+interface CompanyDef {
+  key: string;
+  label: string;
+  forMonth: (m: string) => PLRow;
+}
+
+const COMPANIES: CompanyDef[] = [
+  { key: "otc", label: "OTC", forMonth: otcForMonth },
+  { key: "cars", label: "MK Autos (Cars)", forMonth: carsForMonth },
+  { key: "mkx", label: "MKX", forMonth: mkxForMonth },
+  { key: "garage", label: "MK Garage", forMonth: garageForMonth },
+  { key: "company", label: "MK Autos (Company)", forMonth: mkAutosCompanyForMonth },
+  { key: "rya", label: "RYA Gold", forMonth: ryaForMonth },
+];
+
+const formatAED = (v: number) => {
+  const sign = v < 0 ? "-" : "";
+  const abs = Math.abs(v);
+  const formatted = abs >= 1_000_000
+    ? `${(abs / 1_000_000).toFixed(2)}M`
+    : abs >= 1_000
+    ? `${(abs / 1_000).toFixed(1)}K`
+    : abs.toFixed(0);
+  return `${sign}AED ${formatted}`;
+};
+
+const formatPct = (v: number) => `${v >= 0 ? "" : "-"}${Math.abs(v).toFixed(1)}%`;
+
+interface Props {
+  allMonths: string[];
+  selectedMonth: string;
+}
+
+const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
+  const [period, setPeriod] = useState<Period>("MTD");
+
+  // Determine the set of months to aggregate
+  const { currentMonths, prevMonths } = useMemo(() => {
+    const sorted = [...allMonths].sort(compareMonth);
+    const anchor = selectedMonth !== "all" && sorted.includes(selectedMonth)
+      ? selectedMonth
+      : sorted[sorted.length - 1];
+    const idx = sorted.indexOf(anchor);
+
+    if (period === "MTD") {
+      return {
+        currentMonths: [anchor],
+        prevMonths: idx > 0 ? [sorted[idx - 1]] : [],
+      };
+    }
+    if (period === "L6M") {
+      const start = Math.max(0, idx - 5);
+      const prevStart = Math.max(0, start - 6);
+      const prevEnd = Math.max(0, start);
+      return {
+        currentMonths: sorted.slice(start, idx + 1),
+        prevMonths: sorted.slice(prevStart, prevEnd),
+      };
+    }
+    // YTD: all months in same year as anchor up to anchor
+    const [, anchorYear] = anchor.split("-");
+    const ytd = sorted.filter(m => {
+      const [, y] = m.split("-");
+      return y === anchorYear && compareMonth(m, anchor) <= 0;
+    });
+    const prevYearLabel = String(parseInt(anchorYear) - 1).padStart(2, "0");
+    const prev = sorted.filter(m => m.endsWith(`-${prevYearLabel}`));
+    return { currentMonths: ytd, prevMonths: prev };
+  }, [period, selectedMonth, allMonths]);
+
+  // Compute matrix data
+  const data = useMemo(() => {
+    return COMPANIES.map(c => ({
+      ...c,
+      current: sumRows(currentMonths.map(c.forMonth)),
+      previous: sumRows(prevMonths.map(c.forMonth)),
+    }));
+  }, [currentMonths, prevMonths]);
+
+  const totals = useMemo(() => ({
+    current: sumRows(data.map(d => d.current)),
+    previous: sumRows(data.map(d => d.previous)),
+  }), [data]);
+
+  const getRowValues = (metric: keyof PLRow | "grossMargin" | "netMargin" | "roi"): { values: number[]; total: number; prev: number[]; prevTotal: number; isPct: boolean } => {
+    const calc = (row: PLRow): number => {
+      switch (metric) {
+        case "grossMargin":
+          return row.revenue !== 0 ? (row.grossProfit / row.revenue) * 100 : 0;
+        case "netMargin":
+          return row.revenue !== 0 ? (row.netProfit / row.revenue) * 100 : 0;
+        case "roi":
+          return row.investment !== 0 ? (row.netProfit / row.investment) * 100 : 0;
+        default:
+          return row[metric];
+      }
+    };
+    return {
+      values: data.map(d => calc(d.current)),
+      total: calc(totals.current),
+      prev: data.map(d => calc(d.previous)),
+      prevTotal: calc(totals.previous),
+      isPct: metric === "grossMargin" || metric === "netMargin" || metric === "roi",
+    };
+  };
+
+  const ROWS: { key: any; label: string; positiveIsBetter: boolean }[] = [
+    { key: "revenue", label: "Revenue", positiveIsBetter: true },
+    { key: "cogs", label: "Cost of Sales", positiveIsBetter: false },
+    { key: "grossProfit", label: "Gross Profit", positiveIsBetter: true },
+    { key: "grossMargin", label: "Gross Margin %", positiveIsBetter: true },
+    { key: "indirect", label: "Indirect Expenses", positiveIsBetter: false },
+    { key: "netProfit", label: "Net Profit", positiveIsBetter: true },
+    { key: "netMargin", label: "Net Margin %", positiveIsBetter: true },
+    { key: "roi", label: "ROI", positiveIsBetter: true },
+  ];
+
+  const Trend = ({ curr, prev, positiveIsBetter }: { curr: number; prev: number; positiveIsBetter: boolean }) => {
+    if (prev === 0 && curr === 0) return null;
+    if (prevMonths.length === 0) return null;
+    const delta = curr - prev;
+    if (Math.abs(delta) < 0.01) return <Minus className="h-3 w-3 text-muted-foreground inline" />;
+    const up = delta > 0;
+    const good = positiveIsBetter ? up : !up;
+    const Icon = up ? ArrowUp : ArrowDown;
+    return <Icon className={`h-3 w-3 inline ${good ? "text-success" : "text-loss"}`} />;
+  };
+
+  const periodLabel: Record<Period, string> = {
+    MTD: "Month-to-Date",
+    YTD: "Year-to-Date",
+    L6M: "Last 6 Months",
+  };
+
+  return (
+    <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+      <CardHeader className="pb-3 flex flex-row items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <Layers className="h-5 w-5 text-primary" />
+          <div>
+            <CardTitle className="text-base font-semibold text-foreground">Consolidated P&L Matrix</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              {periodLabel[period]} · {currentMonths.length > 0
+                ? currentMonths.length === 1
+                  ? currentMonths[0]
+                  : `${currentMonths[0]} → ${currentMonths[currentMonths.length - 1]}`
+                : "—"}
+              {prevMonths.length > 0 && ` · vs ${prevMonths.length === 1 ? prevMonths[0] : `${prevMonths[0]} → ${prevMonths[prevMonths.length - 1]}`}`}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center border border-border rounded-lg overflow-hidden">
+          {(["MTD", "YTD", "L6M"] as Period[]).map(p => (
+            <button
+              key={p}
+              onClick={() => setPeriod(p)}
+              className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                period === p ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {p === "L6M" ? "Last 6M" : p}
+            </button>
+          ))}
+        </div>
+      </CardHeader>
+      <CardContent className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="text-xs sticky left-0 bg-card z-10">Metric</TableHead>
+              {COMPANIES.map(c => (
+                <TableHead key={c.key} className="text-xs text-right whitespace-nowrap">{c.label}</TableHead>
+              ))}
+              <TableHead className="text-xs text-right whitespace-nowrap font-bold border-l border-border">Total</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {ROWS.map(row => {
+              const { values, total, prev, prevTotal, isPct } = getRowValues(row.key);
+              // Identify best/worst (exclude 0 values to avoid highlighting empty cells)
+              const nonZero = values.filter(v => v !== 0);
+              const best = nonZero.length > 0
+                ? row.positiveIsBetter ? Math.max(...nonZero) : Math.min(...nonZero)
+                : null;
+              const worst = nonZero.length > 0
+                ? row.positiveIsBetter ? Math.min(...nonZero) : Math.max(...nonZero)
+                : null;
+
+              return (
+                <TableRow key={row.label}>
+                  <TableCell className="font-medium text-sm sticky left-0 bg-card z-10 whitespace-nowrap">
+                    {row.label}
+                  </TableCell>
+                  {values.map((v, i) => {
+                    const isBest = best !== null && v === best && nonZero.length > 1;
+                    const isWorst = worst !== null && v === worst && nonZero.length > 1 && best !== worst;
+                    const colorClass = v === 0 ? "text-muted-foreground" : v >= 0 ? "text-success" : "text-loss";
+                    const bgClass = isBest
+                      ? "bg-primary/10"
+                      : isWorst
+                      ? "bg-loss/10"
+                      : "";
+                    return (
+                      <TableCell
+                        key={i}
+                        className={`text-right text-sm tabular-nums ${colorClass} ${bgClass}`}
+                      >
+                        <span className="inline-flex items-center gap-1 justify-end">
+                          {isPct ? formatPct(v) : formatAED(v)}
+                          <Trend curr={v} prev={prev[i]} positiveIsBetter={row.positiveIsBetter} />
+                        </span>
+                      </TableCell>
+                    );
+                  })}
+                  <TableCell className={`text-right text-sm font-bold tabular-nums border-l border-border ${total === 0 ? "text-muted-foreground" : total >= 0 ? "text-success" : "text-loss"}`}>
+                    <span className="inline-flex items-center gap-1 justify-end">
+                      {isPct ? formatPct(total) : formatAED(total)}
+                      <Trend curr={total} prev={prevTotal} positiveIsBetter={row.positiveIsBetter} />
+                    </span>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+        <p className="text-[10px] text-muted-foreground mt-3">
+          Best performer highlighted in gold · Worst in red · Trend arrows compare vs prior {period === "MTD" ? "month" : period === "YTD" ? "year" : "6-month period"}.
+          OTC and Cars report rental/trading P&L without separate Revenue/COGS split.
+        </p>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default ConsolidatedPLMatrix;
