@@ -293,7 +293,7 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
   const periodLabel: Record<Period, string> = {
     MTD: "Month-to-Date",
     YTD: "Year-to-Date",
-    L6M: "Last 6 Months",
+    ALL: "All Time",
   };
 
   return (
@@ -314,7 +314,7 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
           </div>
         </div>
         <div className="flex items-center border border-border rounded-lg overflow-hidden">
-          {(["MTD", "YTD", "L6M"] as Period[]).map(p => (
+          {(["MTD", "YTD", "ALL"] as Period[]).map(p => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
@@ -322,7 +322,7 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
                 period === p ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"
               }`}
             >
-              {p === "L6M" ? "Last 6M" : p}
+              {p === "ALL" ? "All Time" : p}
             </button>
           ))}
         </div>
@@ -360,9 +360,9 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
                     const isWorst = worst !== null && v === worst && nonZero.length > 1 && best !== worst;
                     const colorClass = v === 0 ? "text-muted-foreground" : v >= 0 ? "text-success" : "text-loss";
                     const bgClass = isBest
-                      ? "bg-primary/10"
+                      ? "border-2 border-primary"
                       : isWorst
-                      ? "bg-loss/10"
+                      ? "border-2 border-loss"
                       : "";
                     return (
                       <TableCell
@@ -388,7 +388,7 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
           </TableBody>
         </Table>
         <p className="text-[10px] text-muted-foreground mt-3">
-          Best performer highlighted in gold · Worst in red · Trend arrows compare vs prior {period === "MTD" ? "month" : period === "YTD" ? "year" : "6-month period"}.
+          Best value bordered in gold · Worst in red · Trend arrows compare vs prior {period === "MTD" ? "month" : period === "YTD" ? "year" : "period"}.
           OTC and Cars report rental/trading P&L without separate Revenue/COGS split.
         </p>
       </CardContent>
