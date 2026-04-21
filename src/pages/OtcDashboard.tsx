@@ -44,11 +44,11 @@ const OtcDashboard = () => {
   const avgSpreadPct = totalVolume > 0 ? (totalTradingIncome / totalVolume) * 100 : 0;
   const costToRevenue = totalTradingIncome > 0 ? (totalDirectCosts / totalTradingIncome) * 100 : 0;
 
-  // Capital deployment
-  const capitalDeployed = otcSummary.netCapital - otcSummary.cashPosition;
-  const utilizationPct = otcSummary.netCapital > 0
-    ? (Math.max(0, capitalDeployed) / otcSummary.netCapital) * 100
-    : 0;
+  // Capital deployment: how much of total partner capital is committed (not sitting as cash)
+  // Basis = total partner funding (gross capital injected), since net-capital can be skewed by withdrawals.
+  const capitalBasis = partnerCapital.totalFunding;
+  const capitalDeployed = Math.max(0, capitalBasis - otcSummary.cashPosition);
+  const utilizationPct = capitalBasis > 0 ? (capitalDeployed / capitalBasis) * 100 : 0;
 
   // Burn rate from last 6 closed months (excluding scam outliers)
   const last6 = monthlyPL.slice(-6);
