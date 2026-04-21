@@ -207,7 +207,7 @@ const OtcDashboard = () => {
                 <p className="text-lg font-bold font-serif text-loss">{formatAED(partnerCapital.ahmad.withdrawal)}</p>
               </div>
               <div className="text-center">
-                <p className="text-xs text-muted-foreground">Scam Loss (50%)</p>
+                <p className="text-xs text-muted-foreground">Trading Loss Reserve (50%)</p>
                 <p className="text-lg font-bold font-serif text-loss">{formatAED(partnerCapital.ahmad.scamLoss)}</p>
               </div>
               <div className="text-center">
