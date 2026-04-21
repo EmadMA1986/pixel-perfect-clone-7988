@@ -136,7 +136,7 @@ const PortfolioVisualMap = ({ companies, totalInvestment, format }: Props) => {
             {/* Quadrant labels overlay */}
             <div className="pointer-events-none absolute inset-0 text-[9px] font-semibold uppercase tracking-wider">
               <span className="absolute top-2 right-2 text-success/70">★ Star</span>
-              <span className="absolute top-2 left-12 text-yellow-500/70">Overinvested</span>
+              <span className="absolute top-2 left-12 text-muted-foreground">Overinvested</span>
               <span className="absolute bottom-8 right-2 text-primary/70">Recovering</span>
               <span className="absolute bottom-8 left-12 text-loss/70">Exit Zone</span>
             </div>
