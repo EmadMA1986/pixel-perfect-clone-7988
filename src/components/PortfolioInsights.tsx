@@ -90,11 +90,13 @@ const PortfolioInsights = ({
     const inv = companies.reduce((s, c) => s + c.current.investment, 0);
     const profit = companies.reduce((s, c) => s + c.current.profit, 0);
     const netPos = companies.reduce((s, c) => s + c.current.netPosition, 0);
-    const prevProfit = companies.every(c => c.previous)
-      ? companies.reduce((s, c) => s + (c.previous?.profit ?? 0), 0)
+    // Use companies that have ANY previous data (don't require all)
+    const withPrev = companies.filter(c => c.previous);
+    const prevProfit = withPrev.length > 0
+      ? withPrev.reduce((s, c) => s + (c.previous?.profit ?? 0), 0)
       : null;
-    const prevInv = companies.every(c => c.previous)
-      ? companies.reduce((s, c) => s + (c.previous?.investment ?? 0), 0)
+    const prevInv = withPrev.length > 0
+      ? withPrev.reduce((s, c) => s + (c.previous?.investment ?? 0), 0)
       : null;
     return {
       investment: inv,
