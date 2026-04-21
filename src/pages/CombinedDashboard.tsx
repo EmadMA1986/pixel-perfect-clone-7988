@@ -327,6 +327,10 @@ const CombinedDashboard = () => {
   }));
 
   // === Build per-company snapshots with previous-month metrics for the insights component ===
+  // current.roi is overridden with the CUMULATIVE (all-time) ROI so that the merged
+  // ranking table, signal logic and loss alerts reflect the long-term investment performance
+  // (matching each company's individual dashboard). current.profit/investment remain
+  // period-scoped for the Profit/Loss + MoM columns.
   const companySnapshots = useMemo<CompanySnapshot[]>(() => {
     const idx = ALL_MONTHS.indexOf(selectedMonth);
     const end = idx >= 0 ? idx : ALL_MONTHS.length - 1;
@@ -334,17 +338,18 @@ const CombinedDashboard = () => {
     const slice = ALL_MONTHS.slice(start, end + 1);
     return companies.map(c => {
       const prev = pd ? pd[c.key] : null;
+      const cum = allTimeData[c.key];
       const trend = slice.map(m => ({ month: m, profit: computeForMonth(m)[c.key].profit }));
       return {
         key: c.key,
         name: c.name,
         share: c.share,
-        current: { investment: c.investment, profit: c.profit, netPosition: c.netPosition, roi: c.roi },
+        current: { investment: c.investment, profit: c.profit, netPosition: c.netPosition, roi: cum.roi },
         previous: prev ? { investment: prev.investment, profit: prev.profit, netPosition: prev.netPosition, roi: prev.roi } : null,
         trend,
       };
     });
-  }, [companies, pd, selectedMonth]);
+  }, [companies, pd, selectedMonth, allTimeData]);
 
   // === Portfolio trend across last 6 months (revenue proxy = sum of profits + investment turnover; here we use profits aggregated) ===
   const portfolioTrend = useMemo(() => {
