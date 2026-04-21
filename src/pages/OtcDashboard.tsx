@@ -503,15 +503,36 @@ const OtcDashboard = () => {
                       <p className="text-[10px] text-muted-foreground mt-1">Thresholds: amber &gt;30% · red &gt;50%</p>
                     </CardContent>
                   </Card>
-                  <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-                    <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground uppercase tracking-wider">Cash Runway (Own Capital)</p>
-                      <p className={`text-2xl font-bold font-serif mt-2 ${ownRunwayDays > 365 ? "text-success" : ownRunwayDays > 90 ? "text-foreground" : "text-loss"}`}>
-                        {ownRunwayDays > 999 ? "999+" : ownRunwayDays} days
-                      </p>
-                      <p className="text-[10px] text-muted-foreground mt-1">@ {formatAEDCompact(avgMonthlyBurn)}/mo burn · excludes client float</p>
-                    </CardContent>
-                  </Card>
+                  {(() => {
+                    const netFreeCapital = ownCapital - arFloat;
+                    const coverage = arFloat > 0 ? ownCapital / arFloat : 999;
+                    const tone = coverage >= 2 ? "text-success" : coverage >= 1 ? "text-primary" : "text-loss";
+                    const badge = coverage >= 2
+                      ? { label: "Healthy", cls: "border-success/40 text-success" }
+                      : coverage >= 1
+                      ? { label: "Watch", cls: "border-primary/40 text-primary" }
+                      : { label: "Risk", cls: "border-loss/40 text-loss" };
+                    return (
+                      <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs text-muted-foreground uppercase tracking-wider">Liquidity Buffer</p>
+                            <Badge variant="outline" className={`text-[10px] ${badge.cls}`}>{badge.label}</Badge>
+                          </div>
+                          <p className={`text-2xl font-bold font-serif mt-2 ${tone}`}>{formatAEDCompact(netFreeCapital)}</p>
+                          <p className="text-[10px] text-muted-foreground mt-1 leading-tight">
+                            Net Free Capital — available after covering all client obligations.
+                          </p>
+                          <p className={`text-[11px] mt-1.5 font-medium ${tone}`}>
+                            Client Float Coverage: {coverage >= 999 ? "∞" : `${coverage.toFixed(1)}x`}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground leading-tight">
+                            Own capital covers client obligations {coverage >= 999 ? "fully" : `${coverage.toFixed(1)} times over`}.
+                          </p>
+                        </CardContent>
+                      </Card>
+                    );
+                  })()}
                 </div>
 
                 {/* ROW 3 — Alert bar */}
