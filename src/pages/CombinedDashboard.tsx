@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart as RechartsPie, Pie, Legend } from "recharts";
 import MonthFilter from "@/components/MonthFilter";
 import PortfolioInsights, { CompanySnapshot } from "@/components/PortfolioInsights";
+import ConsolidatedPLMatrix from "@/components/ConsolidatedPLMatrix";
 
 // Import data from all companies
 import { partnerCapital, otcSummary, monthlyPL as otcMonthlyPL } from "@/data/otcData";
@@ -727,6 +728,9 @@ const CombinedDashboard = () => {
             </Table>
           </CardContent>
         </Card>
+
+        {/* Consolidated P&L Matrix */}
+        <ConsolidatedPLMatrix allMonths={ALL_MONTHS} selectedMonth={selectedMonth} />
       </main>
     </div>
   );
