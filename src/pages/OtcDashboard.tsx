@@ -548,8 +548,8 @@ const OtcDashboard = () => {
                           <span className="tabular-nums font-medium text-foreground">{formatAEDCompact(p.funding)}</span>
                         </div>
                         <div className="flex justify-between text-xs">
-                          <span className="text-muted-foreground">Profit Contribution (50%)</span>
-                          <span className="tabular-nums font-medium text-success">{formatAEDCompact(totalNetProfit / 2)}</span>
+                          <span className="text-muted-foreground">Profit Contribution (50%) · {periodLabel}</span>
+                          <span className={`tabular-nums font-medium ${totalNetProfit >= 0 ? "text-success" : "text-loss"}`}>{formatAEDCompact(totalNetProfit / 2)}</span>
                         </div>
                         <div className="flex justify-between text-xs pt-1.5 border-t border-border/30">
                           <span className="text-muted-foreground">Net Position</span>
