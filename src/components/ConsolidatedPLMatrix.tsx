@@ -159,17 +159,27 @@ const sumRows = (rows: PLRow[]): PLRow => rows.reduce((acc, r) => ({
 interface CompanyDef {
   key: string;
   label: string;
+  share: number; // Ahmad's ownership share (0-1) — used to reconcile with KPI cards
   forMonth: (m: string) => PLRow;
 }
 
 const COMPANIES: CompanyDef[] = [
-  { key: "otc", label: "OTC", forMonth: otcForMonth },
-  { key: "cars", label: "MK Autos (Cars)", forMonth: carsForMonth },
-  { key: "mkx", label: "MKX", forMonth: mkxForMonth },
-  { key: "garage", label: "MK Garage", forMonth: garageForMonth },
-  { key: "company", label: "MK Autos (Company)", forMonth: mkAutosCompanyForMonth },
-  { key: "rya", label: "RYA Gold", forMonth: ryaForMonth },
+  { key: "otc", label: "OTC", share: 0.5, forMonth: otcForMonth },
+  { key: "cars", label: "MK Autos (Cars)", share: 1, forMonth: carsForMonth },
+  { key: "mkx", label: "MKX", share: 0.5, forMonth: mkxForMonth },
+  { key: "garage", label: "MK Garage", share: 0.4, forMonth: garageForMonth },
+  { key: "company", label: "MK Autos (Company)", share: 0.45, forMonth: mkAutosCompanyForMonth },
+  { key: "rya", label: "RYA Gold", share: 1, forMonth: ryaForMonth },
 ];
+
+const applyShare = (r: PLRow, share: number): PLRow => ({
+  revenue: r.revenue * share,
+  cogs: r.cogs * share,
+  grossProfit: r.grossProfit * share,
+  indirect: r.indirect * share,
+  netProfit: r.netProfit * share,
+  investment: r.investment * share,
+});
 
 const formatAED = (v: number) => {
   const sign = v < 0 ? "-" : "";
