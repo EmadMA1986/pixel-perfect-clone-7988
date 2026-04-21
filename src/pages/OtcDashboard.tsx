@@ -727,16 +727,12 @@ const OtcDashboard = () => {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={220}>
-                <LineChart data={monthlyPL.filter(m => !m.month.includes("Dec 2024")).map(m => ({
-                  name: m.month.replace("Jan-Dec 2024", "2024"),
-                  ratio: m.grossProfit > 0 ? parseFloat(((m.cashExpenses / m.grossProfit) * 100).toFixed(1)) : 0,
-                  grossProfit: m.grossProfit,
-                }))} margin={{ top: 5, right: 20, bottom: 30, left: 5 }}>
+                <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 30, left: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 18%)" />
                   <XAxis dataKey="name" tick={{ fill: "hsl(220 10% 50%)", fontSize: 9 }} angle={-45} textAnchor="end" />
                   <YAxis tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} tickFormatter={(v) => `${v}%`} />
                   <Tooltip contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }} formatter={(value: number) => [`${value}%`, "Cost-to-Revenue"]} />
-                  <Line type="monotone" dataKey="ratio" stroke="hsl(43, 74%, 52%)" strokeWidth={2} dot={{ r: 3, fill: "hsl(43, 74%, 52%)" }} />
+                  <Line type="monotone" dataKey="ratio" stroke={COLOR_GOLD} strokeWidth={2} dot={makeHighlightDot(COLOR_GOLD)} />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
@@ -751,27 +747,42 @@ const OtcDashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div>
-                <p className="text-xs text-muted-foreground">Total Counterparty Losses <span className="text-[9px]">(figures in AED, thousands separators)</span></p>
-                <p className="text-2xl font-bold font-serif text-loss">{formatAED(otcSummary.scamYTD)}</p>
-              </div>
-              <div className="space-y-2">
-                {monthlyPL.filter(m => m.scam > 0).map(m => (
-                  <div key={m.month} className="flex justify-between items-center text-xs p-2 rounded bg-loss/10">
-                    <span className="text-muted-foreground">{m.month}</span>
-                    <span className="font-bold text-loss">{formatAED(m.scam)}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="pt-2 border-t border-border/30">
-                <p className="text-xs text-muted-foreground">Impact on Net Profit</p>
-                <p className="text-sm font-semibold text-foreground">
-                  Without losses: {formatAED(otcSummary.netProfitYTD + otcSummary.scamYTD)} net profit
-                </p>
-                <p className="text-[10px] text-muted-foreground mt-1">
-                  Losses represent {((otcSummary.scamYTD / otcSummary.grossProfitYTD) * 100).toFixed(1)}% of trading income
-                </p>
-              </div>
+              {(() => {
+                const lossesUpTo = monthlyPL.slice(0, selectedIdx + 1).filter((m) => m.scam > 0);
+                const lossesTotal = lossesUpTo.reduce((s, m) => s + m.scam, 0);
+                const incomeUpTo = monthlyPL.slice(0, selectedIdx + 1).reduce((s, m) => s + m.grossProfit, 0);
+                const netUpTo = monthlyPL.slice(0, selectedIdx + 1).reduce((s, m) => s + m.netProfit, 0);
+                return (
+                  <>
+                    <div>
+                      <p className="text-xs text-muted-foreground">
+                        Total Counterparty Losses {isFiltered ? `(through ${selectedMonth})` : "(YTD)"}
+                        <span className="text-[9px]"> · figures in AED, thousands separators</span>
+                      </p>
+                      <p className="text-2xl font-bold font-serif text-loss">{formatAED(lossesTotal)}</p>
+                    </div>
+                    <div className="space-y-2">
+                      {lossesUpTo.length === 0 ? (
+                        <p className="text-xs text-muted-foreground italic p-2">No counterparty losses recorded in this period.</p>
+                      ) : lossesUpTo.map((m) => (
+                        <div key={m.month} className="flex justify-between items-center text-xs p-2 rounded bg-loss/10">
+                          <span className="text-muted-foreground">{m.month}</span>
+                          <span className="font-bold text-loss">{formatAED(m.scam)}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="pt-2 border-t border-border/30">
+                      <p className="text-xs text-muted-foreground">Impact on Net Profit</p>
+                      <p className="text-sm font-semibold text-foreground">
+                        Without losses: {formatAED(netUpTo + lossesTotal)} net profit
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        Losses represent {incomeUpTo > 0 ? ((lossesTotal / incomeUpTo) * 100).toFixed(1) : "0.0"}% of trading income
+                      </p>
+                    </div>
+                  </>
+                );
+              })()}
             </CardContent>
           </Card>
         </div>
