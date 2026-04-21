@@ -7,6 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart as RechartsPie, Pie, Legend } from "recharts";
 import MonthFilter from "@/components/MonthFilter";
+import PortfolioInsights, { CompanySnapshot } from "@/components/PortfolioInsights";
 
 // Import data from all companies
 import { partnerCapital, otcSummary, monthlyPL as otcMonthlyPL } from "@/data/otcData";
