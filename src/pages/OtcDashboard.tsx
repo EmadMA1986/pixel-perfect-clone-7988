@@ -277,7 +277,7 @@ const OtcDashboard = () => {
           <SummaryCard
             title="Net Profit"
             value={formatAEDCompact(totalNetProfit)}
-            subtitle={`${profitableMonths}/${filteredPL.length} profitable months`}
+            subtitle={isFiltered ? (totalNetProfit >= 0 ? "Profitable month" : "Loss month") : `${profitableMonths}/${filteredPL.length} profitable months`}
             icon={TrendingUp}
             trend={totalNetProfit >= 0 ? "up" : "down"}
           />
