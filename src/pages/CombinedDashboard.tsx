@@ -559,7 +559,7 @@ const CombinedDashboard = () => {
           </CardContent>
         </Card>
 
-        <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+        <div className="h-[2px] bg-gradient-to-r from-transparent via-primary/70 to-transparent rounded-full" />
 
         {/* 7. Consolidated P&L Matrix */}
         <ConsolidatedPLMatrix allMonths={ALL_MONTHS} selectedMonth={selectedMonth} />
