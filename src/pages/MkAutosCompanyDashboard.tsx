@@ -146,6 +146,88 @@ const MkAutosCompanyDashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-6">
+        {/* Executive Summary — auto-generated MoM */}
+        {execSummary && (
+          <Card className="border-border/50 bg-card/80 backdrop-blur-sm overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <CardTitle className="text-lg font-serif text-foreground">Executive Summary</CardTitle>
+                  <p className="text-[10px] text-muted-foreground tracking-wider uppercase">
+                    {execSummary.cur.month} vs {execSummary.prev.month} · auto-generated
+                  </p>
+                </div>
+                <Badge
+                  variant="secondary"
+                  className={`text-xs ${
+                    execSummary.verdict === "improving"
+                      ? "bg-success/15 text-success"
+                      : execSummary.verdict === "declining"
+                      ? "bg-loss/15 text-loss"
+                      : ""
+                  }`}
+                >
+                  {execSummary.verdict === "improving" ? "▲ Improving" : execSummary.verdict === "declining" ? "▼ Declining" : "● Stable"}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {/* MoM metric strip */}
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { label: "Revenue", cur: execSummary.cur.directIncome, pct: execSummary.revPct },
+                  { label: "Total Costs", cur: execSummary.costTotalCur, pct: execSummary.costPct, inverse: true },
+                  { label: "Net Profit", cur: execSummary.cur.netProfit, pct: execSummary.npPct },
+                ].map((m) => {
+                  const good = m.inverse ? m.pct < 0 : m.pct >= 0;
+                  return (
+                    <div key={m.label} className="rounded-lg border border-border/40 bg-background/40 p-3">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{m.label}</p>
+                      <p className="text-base font-bold tabular-nums text-foreground mt-1">{formatAED(m.cur)}</p>
+                      <p className={`text-xs font-medium mt-0.5 ${good ? "text-success" : "text-loss"}`}>
+                        {m.pct >= 0 ? "▲" : "▼"} {Math.abs(m.pct).toFixed(1)}% MoM
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Drivers + risks */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                <div className="rounded-lg border border-border/40 bg-background/40 p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Key Drivers</p>
+                  {execSummary.drivers.length ? (
+                    <ul className="list-disc list-inside space-y-0.5 text-foreground capitalize">
+                      {execSummary.drivers.map((d) => <li key={d}>{d}</li>)}
+                    </ul>
+                  ) : (
+                    <p className="text-muted-foreground">No material movements vs prior month.</p>
+                  )}
+                </div>
+                <div className="rounded-lg border border-border/40 bg-background/40 p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Risks / Anomalies</p>
+                  {execSummary.risks.length ? (
+                    <ul className="list-disc list-inside space-y-0.5 text-loss">
+                      {execSummary.risks.map((r) => <li key={r}>{r}</li>)}
+                    </ul>
+                  ) : (
+                    <p className="text-success">No critical risks detected.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Conclusion */}
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs text-foreground leading-relaxed">
+                <span className="font-semibold">Conclusion: </span>
+                Performance is <span className="font-semibold capitalize">{execSummary.verdict}</span> in {execSummary.cur.month}, with net profit moving {execSummary.npPct >= 0 ? "up" : "down"} {Math.abs(execSummary.npPct).toFixed(1)}% vs {execSummary.prev.month}, driven by {execSummary.mainReason}.
+                <br />
+                <span className="font-semibold text-primary">Action: </span>{execSummary.recommendation}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Summary Cards */}
         <div>
           <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground mb-2">
