@@ -480,13 +480,13 @@ const OtcDashboard = () => {
           <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
             <CardContent className="p-5">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                {partnersByExposure.slice(0, 3).map((p, idx) => {
+                {partnersByExposure.slice(0, 2).map((p, idx) => {
                   const sharePct = (p.funding / totalPartnerFunding) * 100;
                   const isTopRisky = idx === 0 && sharePct > 55;
                   return (
                     <div key={p.name} className={`p-4 rounded-lg border ${isTopRisky ? "border-loss/40 bg-loss/5" : "border-border/40 bg-secondary/20"}`}>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs uppercase tracking-wider text-muted-foreground">#{idx + 1} Partner</span>
+                        <span className="text-xs uppercase tracking-wider text-muted-foreground">#{idx + 1} Capital Partner</span>
                         <Badge variant={isTopRisky ? "destructive" : "secondary"} className="text-[10px]">
                           {sharePct.toFixed(1)}% share
                         </Badge>
@@ -509,6 +509,32 @@ const OtcDashboard = () => {
                     </div>
                   );
                 })}
+
+                {/* Direct Clients (trading flow, no capital exposure) */}
+                <div className="p-4 rounded-lg border border-border/40 bg-secondary/10">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs uppercase tracking-wider text-muted-foreground">Trading Flow</span>
+                    <Badge variant="secondary" className="text-[10px]">Walk-in volume</Badge>
+                  </div>
+                  <p className="text-lg font-serif font-bold text-foreground">Direct Clients</p>
+                  <div className="mt-3 space-y-1.5">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Capital Funding</span>
+                      <span className="tabular-nums font-medium text-muted-foreground">—</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Volume Contribution</span>
+                      <span className="tabular-nums font-medium text-foreground">~100%</span>
+                    </div>
+                    <div className="flex justify-between text-xs pt-1.5 border-t border-border/30">
+                      <span className="text-muted-foreground">Source of Trading Income</span>
+                      <span className="tabular-nums font-bold text-success">{formatAEDCompact(totalTradingIncome)}</span>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-2 leading-tight">
+                    All USDT↔AED trades flow through direct/walk-in clients — Maria & Ahmad are capital-funding partners only.
+                  </p>
+                </div>
               </div>
               {concentrationRisk ? (
                 <div className="mt-4 p-3 rounded-lg border border-loss/40 bg-loss/10 flex items-start gap-2">
@@ -530,6 +556,69 @@ const OtcDashboard = () => {
               )}
             </CardContent>
           </Card>
+        </section>
+
+        {/* Gold divider */}
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+
+        {/* === Risk Dashboard === */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-primary" />
+            <h2 className="text-sm font-serif font-semibold uppercase tracking-wider text-foreground">Risk Dashboard</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* Counterparty concentration */}
+            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Top Counterparty</p>
+                  <Badge variant="secondary" className="text-[10px]">Volume share</Badge>
+                </div>
+                <p className="text-2xl font-bold font-serif text-foreground">~100%</p>
+                <p className="text-[10px] text-muted-foreground mt-1 leading-tight">
+                  All trading volume routes through direct walk-in clients — no single named client exposure tracked yet.
+                </p>
+                <p className="text-[10px] text-primary mt-1.5">⚠ Recommend tracking per-client volume to surface concentration.</p>
+              </CardContent>
+            </Card>
+
+            {/* Negative months */}
+            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Loss-Making Months</p>
+                  <Badge variant={negativeMonths >= 4 ? "destructive" : negativeMonths >= 2 ? "secondary" : "default"} className="text-[10px]">
+                    {negativeMonths >= 4 ? "High" : negativeMonths >= 2 ? "Watch" : "Healthy"}
+                  </Badge>
+                </div>
+                <p className={`text-2xl font-bold font-serif ${negativeMonths >= 4 ? "text-loss" : "text-foreground"}`}>
+                  {negativeMonths} <span className="text-sm text-muted-foreground font-normal">/ {last12.length}</span>
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Months with negative net profit (last {last12.length} months)
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Liquidity */}
+            <Card className={`border-border/50 backdrop-blur-sm ${liquidityHealthy ? "bg-card/80" : "bg-loss/5 border-loss/30"}`}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Liquidity vs Minimum</p>
+                  <Badge variant={liquidityHealthy ? "default" : "destructive"} className="text-[10px]">
+                    {liquidityHealthy ? "✓ Above min" : "✗ Below min"}
+                  </Badge>
+                </div>
+                <p className={`text-2xl font-bold font-serif ${liquidityHealthy ? "text-success" : "text-loss"}`}>
+                  {(liquidityRatio / 100).toFixed(1)}×
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  {formatAEDCompact(otcSummary.cashPosition)} cash vs {formatAEDCompact(MIN_LIQUIDITY)} min threshold
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         </section>
 
         {/* Gold divider */}
