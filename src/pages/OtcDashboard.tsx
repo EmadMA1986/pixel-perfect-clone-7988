@@ -67,12 +67,19 @@ const OtcDashboard = () => {
   const liquidityHealthy = otcSummary.cashPosition >= MIN_LIQUIDITY;
   const liquidityRatio = (otcSummary.cashPosition / MIN_LIQUIDITY) * 100;
 
+  // === Trend data: ALWAYS last 12 months, independent of selected filter ===
+  // Charts show full context; selected month is highlighted via `isSelected` flag.
+  const trendMonths = useMemo(() => monthlyPL.slice(-12), []);
+
   const chartData = useMemo(
     () =>
-      filteredPL.map((m) => {
+      trendMonths.map((m) => {
         const vol = m.grossProfit / ASSUMED_SPREAD;
+        const displayName = m.month.replace("Jan-Dec 2024", "2024");
         return {
-          name: m.month.replace("Jan-Dec 2024", "2024"),
+          name: displayName,
+          month: m.month,
+          isSelected: selectedMonth !== "all" && m.month === selectedMonth,
           income: Math.round(m.grossProfit),
           costs: Math.round(m.cashExpenses),
           scam: Math.round(m.scam),
@@ -81,24 +88,36 @@ const OtcDashboard = () => {
           volumeM: parseFloat((vol / 1_000_000).toFixed(2)),
           revPerM: vol > 0 ? Math.round(m.grossProfit / (vol / 1_000_000)) : 0,
           spreadPct: vol > 0 ? parseFloat(((m.grossProfit / vol) * 100).toFixed(3)) : 0,
+          ratio: m.grossProfit > 0 ? parseFloat(((m.cashExpenses / m.grossProfit) * 100).toFixed(1)) : 0,
         };
       }),
-    [filteredPL]
+    [trendMonths, selectedMonth]
   );
 
-  // 6-month spread trend (full history, not filtered)
-  const spreadTrend = useMemo(
-    () => monthlyPL.map((m) => {
-      const vol = m.grossProfit / ASSUMED_SPREAD;
-      return {
-        name: m.month.replace("Jan-Dec 2024", "2024"),
-        spreadPct: vol > 0 ? parseFloat(((m.grossProfit / vol) * 100).toFixed(3)) : 0,
-        volumeM: parseFloat((vol / 1_000_000).toFixed(2)),
-        income: Math.round(m.grossProfit),
-      };
-    }),
-    []
-  );
+  // Spread trend uses same window now
+  const spreadTrend = chartData;
+
+  // Theme colors for chart highlight
+  const COLOR_GOLD = "hsl(43, 74%, 52%)";
+  const COLOR_GOLD_DIM = "hsl(43, 30%, 35%)";
+  const COLOR_BLUE = "hsl(200, 50%, 45%)";
+  const COLOR_BLUE_DIM = "hsl(200, 25%, 30%)";
+  const COLOR_GREEN = "hsl(160, 60%, 45%)";
+
+  // Custom dot for line charts: enlarged + bright when selected
+  const makeHighlightDot = (color: string) => (props: any) => {
+    const { cx, cy, payload } = props;
+    if (cx == null || cy == null) return null;
+    if (payload?.isSelected) {
+      return (
+        <g>
+          <circle cx={cx} cy={cy} r={7} fill={COLOR_GOLD} stroke="hsl(220 16% 11%)" strokeWidth={2} />
+          <circle cx={cx} cy={cy} r={3} fill="hsl(220 16% 11%)" />
+        </g>
+      );
+    }
+    return <circle cx={cx} cy={cy} r={3} fill={color} />;
+  };
 
   const expensePieData = useMemo(
     () => expenseBreakdown.filter((e) => e.amount > 0).map((e) => ({ name: e.category, value: Math.round(e.amount) })),
@@ -258,7 +277,7 @@ const OtcDashboard = () => {
           <SummaryCard
             title="Net Profit"
             value={formatAEDCompact(totalNetProfit)}
-            subtitle={`${profitableMonths}/${filteredPL.length} profitable months`}
+            subtitle={isFiltered ? (totalNetProfit >= 0 ? "Profitable month" : "Loss month") : `${profitableMonths}/${filteredPL.length} profitable months`}
             icon={TrendingUp}
             trend={totalNetProfit >= 0 ? "up" : "down"}
           />
@@ -308,7 +327,11 @@ const OtcDashboard = () => {
                       contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }}
                       formatter={(value: number) => [`AED ${value.toFixed(2)}M`, "Volume"]}
                     />
-                    <Bar dataKey="volumeM" name="Volume (AED M)" fill="hsl(43, 74%, 52%)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="volumeM" name="Volume (AED M)" fill={COLOR_GOLD_DIM} radius={[4, 4, 0, 0]}>
+                      {chartData.map((d, i) => (
+                        <Cell key={i} fill={d.isSelected ? COLOR_GOLD : COLOR_GOLD_DIM} />
+                      ))}
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
                 <p className="text-[10px] text-muted-foreground mt-2">
@@ -340,7 +363,7 @@ const OtcDashboard = () => {
                       contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }}
                       formatter={(value: number) => [formatAED(value), "Per AED 1M"]}
                     />
-                    <Line type="monotone" dataKey="revPerM" stroke="hsl(160, 60%, 45%)" strokeWidth={2} dot={{ r: 3 }} />
+                    <Line type="monotone" dataKey="revPerM" stroke={COLOR_GREEN} strokeWidth={2} dot={makeHighlightDot(COLOR_GREEN)} />
                   </LineChart>
                 </ResponsiveContainer>
                 <p className="text-[10px] text-muted-foreground mt-2">
@@ -432,7 +455,7 @@ const OtcDashboard = () => {
                       contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }}
                       formatter={(value: number) => [`${value}%`, "Spread"]}
                     />
-                    <Area type="monotone" dataKey="spreadPct" stroke="hsl(43, 74%, 52%)" strokeWidth={2} fill="url(#spreadFill)" />
+                    <Area type="monotone" dataKey="spreadPct" stroke={COLOR_GOLD} strokeWidth={2} fill="url(#spreadFill)" dot={makeHighlightDot(COLOR_GOLD)} />
                   </AreaChart>
                 </ResponsiveContainer>
                 <p className="text-[10px] text-muted-foreground mt-2">
@@ -456,8 +479,12 @@ const OtcDashboard = () => {
                       contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }}
                     />
                     <Legend wrapperStyle={{ fontSize: 11 }} />
-                    <Bar yAxisId="left" dataKey="volumeM" name="Volume (AED M)" fill="hsl(200, 50%, 45%)" radius={[4, 4, 0, 0]} />
-                    <Line yAxisId="right" type="monotone" dataKey="income" name="Trading Income (AED)" stroke="hsl(43, 74%, 52%)" strokeWidth={2} dot={{ r: 3 }} />
+                    <Bar yAxisId="left" dataKey="volumeM" name="Volume (AED M)" fill={COLOR_BLUE} radius={[4, 4, 0, 0]}>
+                      {chartData.map((d, i) => (
+                        <Cell key={i} fill={d.isSelected ? COLOR_GOLD : COLOR_BLUE_DIM} />
+                      ))}
+                    </Bar>
+                    <Line yAxisId="right" type="monotone" dataKey="income" name="Trading Income (AED)" stroke={COLOR_GOLD} strokeWidth={2} dot={makeHighlightDot(COLOR_GOLD)} />
                   </ComposedChart>
                 </ResponsiveContainer>
                 <p className="text-[10px] text-muted-foreground mt-2">
@@ -636,8 +663,16 @@ const OtcDashboard = () => {
                   <XAxis dataKey="name" tick={{ fill: "hsl(220 10% 50%)", fontSize: 9 }} angle={-45} textAnchor="end" axisLine={{ stroke: "hsl(220 14% 18%)" }} tickLine={false} />
                   <YAxis tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
                   <Tooltip contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }} formatter={(value: number) => [formatAED(value), ""]} />
-                  <Bar dataKey="income" name="Trading Income" fill="hsl(43, 74%, 52%)" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="costs" name="Direct Trading Costs" fill="hsl(200, 50%, 45%)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="income" name="Trading Income" fill={COLOR_GOLD_DIM} radius={[4, 4, 0, 0]}>
+                    {chartData.map((d, i) => (
+                      <Cell key={`inc-${i}`} fill={d.isSelected ? COLOR_GOLD : COLOR_GOLD_DIM} />
+                    ))}
+                  </Bar>
+                  <Bar dataKey="costs" name="Direct Trading Costs" fill={COLOR_BLUE_DIM} radius={[4, 4, 0, 0]}>
+                    {chartData.map((d, i) => (
+                      <Cell key={`cost-${i}`} fill={d.isSelected ? COLOR_BLUE : COLOR_BLUE_DIM} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -654,7 +689,7 @@ const OtcDashboard = () => {
                   <XAxis dataKey="name" tick={{ fill: "hsl(220 10% 50%)", fontSize: 9 }} angle={-45} textAnchor="end" axisLine={{ stroke: "hsl(220 14% 18%)" }} tickLine={false} />
                   <YAxis tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
                   <Tooltip contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }} formatter={(value: number) => [formatAED(value), ""]} />
-                  <Line type="monotone" dataKey="net" name="Net Profit" stroke="hsl(43, 74%, 52%)" strokeWidth={2} dot={{ r: 4, fill: "hsl(43, 74%, 52%)" }} />
+                  <Line type="monotone" dataKey="net" name="Net Profit" stroke={COLOR_GOLD} strokeWidth={2} dot={makeHighlightDot(COLOR_GOLD)} />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
@@ -744,24 +779,30 @@ const OtcDashboard = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredPL.map((row) => (
-                        <TableRow key={row.month} className="border-border/30 hover:bg-secondary/30">
-                          <TableCell className="text-sm font-medium text-foreground">{row.month}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(row.grossProfit)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAED(row.cashExpenses)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-loss">{row.scam > 0 ? formatAED(row.scam) : "—"}</TableCell>
-                          <TableCell className={`text-sm tabular-nums text-right font-medium ${row.netProfit >= 0 ? "text-success" : "text-loss"}`}>{formatAED(row.netProfit)}</TableCell>
-                        </TableRow>
-                      ))}
-                      {filteredPL.length > 1 && (
-                        <TableRow className="border-border/50 bg-secondary/30 font-semibold">
-                          <TableCell className="text-sm text-foreground">Total</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(totalTradingIncome)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAED(totalDirectCosts)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-loss">{formatAED(totalScam)}</TableCell>
-                          <TableCell className={`text-sm tabular-nums text-right font-bold ${totalNetProfit >= 0 ? "text-success" : "text-loss"}`}>{formatAED(totalNetProfit)}</TableCell>
-                        </TableRow>
-                      )}
+                      {monthlyPL.map((row) => {
+                        const isSel = selectedMonth !== "all" && row.month === selectedMonth;
+                        return (
+                          <TableRow
+                            key={row.month}
+                            className={`border-border/30 hover:bg-secondary/30 ${isSel ? "bg-primary/15 hover:bg-primary/20 border-l-2 border-l-primary" : ""}`}
+                          >
+                            <TableCell className={`text-sm font-medium ${isSel ? "text-primary font-bold" : "text-foreground"}`}>
+                              {row.month}{isSel && " ●"}
+                            </TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(row.grossProfit)}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAED(row.cashExpenses)}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-loss">{row.scam > 0 ? formatAED(row.scam) : "—"}</TableCell>
+                            <TableCell className={`text-sm tabular-nums text-right font-medium ${row.netProfit >= 0 ? "text-success" : "text-loss"}`}>{formatAED(row.netProfit)}</TableCell>
+                          </TableRow>
+                        );
+                      })}
+                      <TableRow className="border-border/50 bg-secondary/30 font-semibold">
+                        <TableCell className="text-sm text-foreground">{isFiltered ? `Selected: ${selectedMonth}` : "Total (YTD)"}</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(totalTradingIncome)}</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAED(totalDirectCosts)}</TableCell>
+                        <TableCell className="text-sm tabular-nums text-right text-loss">{formatAED(totalScam)}</TableCell>
+                        <TableCell className={`text-sm tabular-nums text-right font-bold ${totalNetProfit >= 0 ? "text-success" : "text-loss"}`}>{formatAED(totalNetProfit)}</TableCell>
+                      </TableRow>
                     </TableBody>
                   </Table>
                 </div>
