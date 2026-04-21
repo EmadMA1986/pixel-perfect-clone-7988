@@ -242,26 +242,31 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
   const sortedAll = useMemo(() => [...allMonths].sort(compareMonth), [allMonths]);
 
   const resolveCurrent = (c: CompanyDef): PLRow => {
-    if (period !== "MTD") return sumRows(currentMonths.map(c.forMonth));
+    if (period !== "MTD") return applyShare(sumRows(currentMonths.map(c.forMonth)), c.share);
     const anchor = currentMonths[0];
     if (!anchor) return sumRows([]);
     const direct = c.forMonth(anchor);
-    if (!isRowEmpty(direct)) return direct;
+    if (!isRowEmpty(direct)) return applyShare(direct, c.share);
     // walk back through prior months until we find data
     const idx = sortedAll.indexOf(anchor);
     for (let i = idx - 1; i >= 0; i--) {
       const candidate = c.forMonth(sortedAll[i]);
-      if (!isRowEmpty(candidate)) return candidate;
+      if (!isRowEmpty(candidate)) return applyShare(candidate, c.share);
     }
-    return direct;
+    return applyShare(direct, c.share);
   };
 
   const data = useMemo(() => {
-    return COMPANIES.map(c => ({
-      ...c,
-      current: resolveCurrent(c),
-      previous: sumRows(prevMonths.map(c.forMonth)),
-    }));
+    return COMPANIES.map(c => {
+      const rawCurrent = period === "MTD" ? c.forMonth(currentMonths[0] ?? "") : sumRows(currentMonths.map(c.forMonth));
+      return {
+        ...c,
+        current: resolveCurrent(c),
+        previous: applyShare(sumRows(prevMonths.map(c.forMonth)), c.share),
+        // Track whether the company has ANY data in the selected period — used to render '—' for empty cells
+        hasData: !isRowEmpty(rawCurrent),
+      };
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentMonths, prevMonths, period, sortedAll]);
 
