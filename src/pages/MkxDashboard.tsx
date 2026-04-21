@@ -52,6 +52,7 @@ import {
   balanceSheet,
   varaStandards,
 } from "@/data/mkxData";
+import ExecutiveSummary, { ExecMonthInput } from "@/components/ExecutiveSummary";
 
 const MkxDashboard = () => {
   const [selectedMonth, setSelectedMonth] = useState("all");
@@ -177,6 +178,25 @@ const MkxDashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-6">
+        {/* === Executive Summary === */}
+        <ExecutiveSummary
+          businessName="MKX Crypto Exchange"
+          format={formatAED}
+          currentMonth={selectedMonth === "all" ? undefined : selectedMonth}
+          history={monthlyData.map<ExecMonthInput>((m) => ({
+            month: m.month,
+            revenue: m.revenue,
+            costs: m.totalExpenses + m.gasFees,
+            grossProfit: m.grossProfit,
+            netProfit: m.netProfit,
+          }))}
+          reasons={{
+            revenueUp: "Higher trading volume / fees",
+            revenueDown: "Lower trading volume / fees",
+            costsContext: "Operating expenses + gas fees",
+          }}
+        />
+
         {/* Partners' Capital Position - only in All Time */}
         {!isFiltered && (<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Ahmad */}

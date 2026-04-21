@@ -29,6 +29,7 @@ import {
   formatCurrency,
   formatNumber,
 } from "@/data/goldData";
+import ExecutiveSummary, { ExecMonthInput } from "@/components/ExecutiveSummary";
 
 const parseDate = (dateStr: string): Date | null => {
   // Format: M/D/YY
@@ -214,6 +215,24 @@ const RyaDashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-6">
+        {/* === Executive Summary (cumulative — single period) === */}
+        {!isClientView && (
+          <ExecutiveSummary
+            businessName="RYA Gold Trading"
+            format={(v) => formatCurrency(v, "USD")}
+            history={[{
+              month: "Cumulative",
+              revenue: profitLoss.sales,
+              costs: profitLoss.costOfSales + profitLoss.meltingLoss + profitLoss.hedgeExpenses + profitLoss.totalAdminExpenses + profitLoss.salesDiscount,
+              grossProfit: profitLoss.grossProfit,
+              netProfit: profitLoss.netProfit,
+            }]}
+            reasons={{
+              costsContext: "COGS + melting loss + hedge + admin + discounts",
+            }}
+          />
+        )}
+
         {/* Capital Position */}
         {!isClientView && (
           <Card className="border-border/50 bg-gradient-to-r from-primary/10 to-gold-dark/5 backdrop-blur-sm">
