@@ -519,70 +519,24 @@ const CombinedDashboard = () => {
           </Card>
         </div>
 
-        {/* Company Cards with ROI */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-          {companies.map((c) => {
-            const Icon = c.icon;
-            const prevCompany = pd ? pd[c.key] : null;
-            return (
-              <Card
-                key={c.name}
-                className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm cursor-pointer hover:border-primary/50 transition-colors"
-                onClick={() => navigate(c.route)}
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
-                <CardContent className="p-5 relative space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg" style={{ backgroundColor: `${c.color}20` }}>
-                        <Icon className="h-4 w-4" style={{ color: c.color }} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">{c.name}</p>
-                        <p className="text-xs text-muted-foreground">{c.share} ownership</p>
-                        {(c as any).subtitle && <p className="text-[10px] text-muted-foreground/70">{(c as any).subtitle}</p>}
-                        <p className="text-[10px] text-muted-foreground/60">Updated to: {c.updatedTo}</p>
-                      </div>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-
-                  <div className="space-y-1.5 pt-1">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">Investment</span>
-                      <span className="font-medium text-foreground">{fmt(toDisplay(c.investment))}</span>
-                    </div>
-                    <div className={`flex justify-between items-center text-xs rounded-md px-2 py-1.5 -mx-2 ${c.profit >= 0 ? "bg-emerald-500/10" : "bg-red-500/10"}`}>
-                      <span className={`font-semibold ${c.profit >= 0 ? "text-success" : "text-loss"}`}>
-                        {selectedMonth !== "all" ? "Monthly P/L" : "Profit/Loss"}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        <span className={`text-sm font-bold ${c.profit >= 0 ? "text-success" : "text-loss"}`}>{fmt(toDisplay(c.profit))}</span>
-                        <TrendBadge current={c.profit} previous={prevCompany?.profit} />
-                      </div>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">Net Position</span>
-                      <span className={`font-medium ${c.netPosition >= 0 ? "text-success" : "text-loss"}`}>{fmt(toDisplay(c.netPosition))}</span>
-                    </div>
-                  </div>
-
-                  <div className="pt-2 border-t border-border/50">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-muted-foreground">ROI</span>
-                      <div className="flex items-center gap-1">
-                        {c.roi >= 0 ? <TrendingUp className="h-3 w-3 text-success" /> : <TrendingDown className="h-3 w-3 text-loss" />}
-                        <span className={`text-lg font-bold font-serif ${c.roi >= 0 ? "text-success" : "text-loss"}`}>
-                          {c.roi.toFixed(1)}%
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+        {/* Capital Efficiency / ROI Ranking / Capital Allocation visuals */}
+        <PortfolioVisualMap
+          companies={companies.map(c => ({
+            name: c.name,
+            short: c.name
+              .replace("MK Autos (Company)", "MKA Co")
+              .replace("MK Autos (Cars)", "MKA Cars")
+              .replace("RYA Gold", "RYA")
+              .replace("OTC Trading", "OTC")
+              .replace("MKX Crypto", "MKX")
+              .replace("MK Garage", "Garage"),
+            investment: toDisplay(c.investment),
+            profit: toDisplay(c.profit),
+            roi: c.roi,
+          }))}
+          totalInvestment={toDisplay(totalInvestment)}
+          format={fmt}
+        />
 
         {/* Consolidated P&L Matrix */}
         <ConsolidatedPLMatrix allMonths={ALL_MONTHS} selectedMonth={selectedMonth} />
