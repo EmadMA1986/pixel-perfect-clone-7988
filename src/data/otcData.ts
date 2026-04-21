@@ -73,6 +73,90 @@ export const expenseBreakdown = [
   { category: "Scam Loss", amount: 950000 },
 ];
 
+// Per-month expense breakdown sourced from OTC-4.xlsx (Expenses tabs).
+// Keys: YYYY-MM. Values are AED (USDT entries converted at 3.673).
+// Use getExpensesForMonth(monthLabel) to retrieve totals for a dashboard
+// month label (e.g. "Mar 2026"). Returns YTD totals when monthLabel is
+// "all" or unrecognised.
+export const expensesByMonth: Record<string, Record<string, number>> = {
+  "General Exp": {
+    "2024-02": 5569.69, "2024-04": 300, "2024-10": 6330, "2024-11": 1533.42,
+    "2024-12": 10347, "2025-01": 1480, "2025-02": 9355, "2025-03": -750.76,
+    "2025-04": 972.54, "2025-05": -849, "2025-06": 129825, "2025-07": -207,
+    "2025-08": 1097, "2025-10": 8000, "2025-11": -295, "2026-01": -121,
+    "2026-02": 13183, "2026-03": -1000, "2026-04": 263, "2026-05": 236,
+  },
+  "Car Exp": {
+    "2025-01": 871, "2025-02": 350, "2025-03": 1903, "2025-05": 2017.54,
+    "2025-06": 2677, "2025-07": 450, "2025-08": 777, "2025-09": 638,
+    "2025-10": 1794, "2025-11": 3982, "2025-12": 1400, "2026-01": 510,
+    "2026-02": 2179, "2026-03": 2507,
+  },
+  "Salaries": {
+    "2024-12": 5500, "2025-01": 9500, "2025-02": 2000, "2025-03": 2500,
+    "2025-04": 2500, "2025-05": 15500, "2025-06": 19500, "2025-07": 17000,
+    "2025-08": 50000, "2025-09": 20000, "2025-10": 25000, "2025-11": 25000,
+    "2026-01": 36800, "2026-02": 59000, "2026-03": 24000,
+  },
+  "TRX": {
+    "2024-02": 1101.9, "2024-03": 18365, "2024-09": 3673, "2024-10": 11019,
+    "2024-12": 11019, "2025-03": 12194.36, "2025-05": -367.3, "2025-06": 4370.87,
+    "2025-07": -117.54, "2025-08": -805.46, "2025-09": -815.53, "2025-10": -71031.62,
+    "2025-11": -2408, "2026-01": -550.95, "2026-03": 280.3,
+  },
+  "DFZ Rent": {
+    "2025-01": 21000, "2025-03": 10000, "2025-05": 30000, "2025-10": 21000,
+    "2026-01": 21000, "2026-02": 21000,
+  },
+  "Gatepass": {
+    "2024-04": 10, "2024-09": 488, "2024-11": 415, "2024-12": 107,
+    "2025-01": 2100, "2025-02": 440, "2025-03": 1160, "2025-04": -60,
+    "2025-05": 490, "2025-06": -10, "2025-07": 634, "2025-08": 300,
+    "2025-10": 260, "2025-11": 850, "2026-02": 1090, "2026-03": 610,
+  },
+};
+
+const MONTH_NAME_TO_NUM: Record<string, number> = {
+  Jan: 1, Feb: 2, Mar: 3, Apr: 4, May: 5, Jun: 6,
+  Jul: 7, Aug: 8, Sep: 9, Oct: 10, Nov: 11, Dec: 12,
+};
+
+// Convert dashboard label like "Mar 2026" -> "2026-03". Returns null for
+// aggregate labels like "Jan-Dec 2024" or unrecognised input.
+export const monthLabelToKey = (label: string): string | null => {
+  const m = /^([A-Za-z]{3})\s+(\d{4})$/.exec(label.trim());
+  if (!m) return null;
+  const num = MONTH_NAME_TO_NUM[m[1]];
+  if (!num) return null;
+  return `${m[2]}-${String(num).padStart(2, "0")}`;
+};
+
+// Get expense breakdown by category for a given month label, or YTD totals
+// when `monthLabel` is "all" / null / aggregate. Always returns the full
+// category list (zero when no entries that month) so UI can decide to grey out.
+export const getExpensesForMonth = (
+  monthLabel: string | null | undefined
+): { category: string; amount: number }[] => {
+  const categories = Object.keys(expensesByMonth);
+  if (!monthLabel || monthLabel === "all") {
+    return categories.map((cat) => ({
+      category: cat,
+      amount: Object.values(expensesByMonth[cat]).reduce((s, v) => s + v, 0),
+    }));
+  }
+  const key = monthLabelToKey(monthLabel);
+  if (!key) {
+    return categories.map((cat) => ({
+      category: cat,
+      amount: Object.values(expensesByMonth[cat]).reduce((s, v) => s + v, 0),
+    }));
+  }
+  return categories.map((cat) => ({
+    category: cat,
+    amount: expensesByMonth[cat][key] ?? 0,
+  }));
+};
+
 export interface CapitalTransaction {
   date: string;
   description: string;
