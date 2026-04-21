@@ -399,6 +399,16 @@ const CombinedDashboard = () => {
 
       <main className="container mx-auto px-4 py-6 space-y-6">
 
+        {/* Executive Portfolio Insights */}
+        <PortfolioInsights
+          companies={companySnapshots}
+          selectedMonth={selectedMonth}
+          prevMonthLabel={prevMonthLabel}
+          format={fmt}
+          toDisplay={toDisplay}
+          portfolioTrend={portfolioTrend}
+        />
+
         {/* Portfolio Health Alerts */}
         {(losingCompanies.length > 0 || largestExposurePct > 40) && (
           <div className="space-y-2">
