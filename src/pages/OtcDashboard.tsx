@@ -67,12 +67,19 @@ const OtcDashboard = () => {
   const liquidityHealthy = otcSummary.cashPosition >= MIN_LIQUIDITY;
   const liquidityRatio = (otcSummary.cashPosition / MIN_LIQUIDITY) * 100;
 
+  // === Trend data: ALWAYS last 12 months, independent of selected filter ===
+  // Charts show full context; selected month is highlighted via `isSelected` flag.
+  const trendMonths = useMemo(() => monthlyPL.slice(-12), []);
+
   const chartData = useMemo(
     () =>
-      filteredPL.map((m) => {
+      trendMonths.map((m) => {
         const vol = m.grossProfit / ASSUMED_SPREAD;
+        const displayName = m.month.replace("Jan-Dec 2024", "2024");
         return {
-          name: m.month.replace("Jan-Dec 2024", "2024"),
+          name: displayName,
+          month: m.month,
+          isSelected: selectedMonth !== "all" && m.month === selectedMonth,
           income: Math.round(m.grossProfit),
           costs: Math.round(m.cashExpenses),
           scam: Math.round(m.scam),
@@ -81,24 +88,36 @@ const OtcDashboard = () => {
           volumeM: parseFloat((vol / 1_000_000).toFixed(2)),
           revPerM: vol > 0 ? Math.round(m.grossProfit / (vol / 1_000_000)) : 0,
           spreadPct: vol > 0 ? parseFloat(((m.grossProfit / vol) * 100).toFixed(3)) : 0,
+          ratio: m.grossProfit > 0 ? parseFloat(((m.cashExpenses / m.grossProfit) * 100).toFixed(1)) : 0,
         };
       }),
-    [filteredPL]
+    [trendMonths, selectedMonth]
   );
 
-  // 6-month spread trend (full history, not filtered)
-  const spreadTrend = useMemo(
-    () => monthlyPL.map((m) => {
-      const vol = m.grossProfit / ASSUMED_SPREAD;
-      return {
-        name: m.month.replace("Jan-Dec 2024", "2024"),
-        spreadPct: vol > 0 ? parseFloat(((m.grossProfit / vol) * 100).toFixed(3)) : 0,
-        volumeM: parseFloat((vol / 1_000_000).toFixed(2)),
-        income: Math.round(m.grossProfit),
-      };
-    }),
-    []
-  );
+  // Spread trend uses same window now
+  const spreadTrend = chartData;
+
+  // Theme colors for chart highlight
+  const COLOR_GOLD = "hsl(43, 74%, 52%)";
+  const COLOR_GOLD_DIM = "hsl(43, 30%, 35%)";
+  const COLOR_BLUE = "hsl(200, 50%, 45%)";
+  const COLOR_BLUE_DIM = "hsl(200, 25%, 30%)";
+  const COLOR_GREEN = "hsl(160, 60%, 45%)";
+
+  // Custom dot for line charts: enlarged + bright when selected
+  const makeHighlightDot = (color: string) => (props: any) => {
+    const { cx, cy, payload } = props;
+    if (cx == null || cy == null) return null;
+    if (payload?.isSelected) {
+      return (
+        <g>
+          <circle cx={cx} cy={cy} r={7} fill={COLOR_GOLD} stroke="hsl(220 16% 11%)" strokeWidth={2} />
+          <circle cx={cx} cy={cy} r={3} fill="hsl(220 16% 11%)" />
+        </g>
+      );
+    }
+    return <circle cx={cx} cy={cy} r={3} fill={color} />;
+  };
 
   const expensePieData = useMemo(
     () => expenseBreakdown.filter((e) => e.amount > 0).map((e) => ({ name: e.category, value: Math.round(e.amount) })),
