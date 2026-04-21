@@ -411,6 +411,8 @@ const CombinedDashboard = () => {
           portfolioTrend={portfolioTrend}
         />
 
+        <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+
         {/* Portfolio Health Alerts */}
         {(losingCompanies.length > 0 || largestExposurePct > 40) && (
           <div className="space-y-2">
@@ -444,6 +446,8 @@ const CombinedDashboard = () => {
           </div>
         )}
 
+        <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+
         {/* Executive Summary */}
         <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-transparent backdrop-blur-sm">
           <CardContent className="p-4 flex items-start gap-3">
@@ -454,6 +458,8 @@ const CombinedDashboard = () => {
             </div>
           </CardContent>
         </Card>
+
+        <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
         {/* Overall Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
