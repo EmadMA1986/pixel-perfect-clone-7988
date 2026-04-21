@@ -577,8 +577,8 @@ const OtcDashboard = () => {
                       <span className="tabular-nums font-medium text-foreground">~100%</span>
                     </div>
                     <div className="flex justify-between text-xs pt-1.5 border-t border-border/30">
-                      <span className="text-muted-foreground">Source of Trading Income</span>
-                      <span className="tabular-nums font-bold text-success">{formatAEDCompact(totalTradingIncome)}</span>
+                      <span className="text-muted-foreground">Trading Income · {periodLabel}</span>
+                      <span className={`tabular-nums font-bold ${totalTradingIncome >= 0 ? "text-success" : "text-loss"}`}>{formatAEDCompact(totalTradingIncome)}</span>
                     </div>
                   </div>
                   <p className="text-[10px] text-muted-foreground mt-2 leading-tight">
