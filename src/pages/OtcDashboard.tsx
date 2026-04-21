@@ -797,8 +797,18 @@ const OtcDashboard = () => {
 
           <TabsContent value="monthly">
             <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-              <CardHeader className="pb-3">
+              <CardHeader className="pb-3 flex flex-row items-center justify-between">
                 <CardTitle className="text-lg font-serif text-foreground">Monthly Profit & Loss</CardTitle>
+                {isFiltered && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => setShowAllMonths((v) => !v)}
+                  >
+                    {showAllMonths ? "Show Selected Only" : "Show All Months"}
+                  </Button>
+                )}
               </CardHeader>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
@@ -813,7 +823,10 @@ const OtcDashboard = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {monthlyPL.map((row) => {
+                      {(isFiltered && !showAllMonths
+                        ? monthlyPL.filter((m) => m.month === selectedMonth)
+                        : monthlyPL
+                      ).map((row) => {
                         const isSel = selectedMonth !== "all" && row.month === selectedMonth;
                         return (
                           <TableRow
@@ -830,13 +843,24 @@ const OtcDashboard = () => {
                           </TableRow>
                         );
                       })}
-                      <TableRow className="border-border/50 bg-secondary/30 font-semibold">
-                        <TableCell className="text-sm text-foreground">{isFiltered ? `Selected: ${selectedMonth}` : "Total (YTD)"}</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(totalTradingIncome)}</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAED(totalDirectCosts)}</TableCell>
-                        <TableCell className="text-sm tabular-nums text-right text-loss">{formatAED(totalScam)}</TableCell>
-                        <TableCell className={`text-sm tabular-nums text-right font-bold ${totalNetProfit >= 0 ? "text-success" : "text-loss"}`}>{formatAED(totalNetProfit)}</TableCell>
-                      </TableRow>
+                      {(() => {
+                        const upTo = monthlyPL.slice(0, selectedIdx + 1);
+                        const tIncome = upTo.reduce((s, m) => s + m.grossProfit, 0);
+                        const tCosts = upTo.reduce((s, m) => s + m.cashExpenses, 0);
+                        const tScam = upTo.reduce((s, m) => s + m.scam, 0);
+                        const tNet = upTo.reduce((s, m) => s + m.netProfit, 0);
+                        return (
+                          <TableRow className="border-border/50 bg-secondary/30 font-semibold">
+                            <TableCell className="text-sm text-foreground">
+                              {isFiltered ? `Running Total (through ${selectedMonth})` : "Total (YTD)"}
+                            </TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(tIncome)}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAED(tCosts)}</TableCell>
+                            <TableCell className="text-sm tabular-nums text-right text-loss">{formatAED(tScam)}</TableCell>
+                            <TableCell className={`text-sm tabular-nums text-right font-bold ${tNet >= 0 ? "text-success" : "text-loss"}`}>{formatAED(tNet)}</TableCell>
+                          </TableRow>
+                        );
+                      })()}
                     </TableBody>
                   </Table>
                 </div>
