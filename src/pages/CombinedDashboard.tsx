@@ -9,7 +9,6 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import MonthFilter from "@/components/MonthFilter";
 import PortfolioInsights, { CompanySnapshot } from "@/components/PortfolioInsights";
 import ConsolidatedPLMatrix from "@/components/ConsolidatedPLMatrix";
-import PortfolioScorecard, { ScorecardRow } from "@/components/PortfolioScorecard";
 
 // Import data from all companies
 import { partnerCapital, otcSummary, monthlyPL as otcMonthlyPL } from "@/data/otcData";
@@ -530,33 +529,6 @@ const CombinedDashboard = () => {
             </CardContent>
           </Card>
         </div>
-
-        <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-
-        {/* Portfolio Scorecard */}
-        <PortfolioScorecard
-          rows={companies.map<ScorecardRow>((c) => {
-            // Build 6-month profit trend per company in display currency
-            const idx = ALL_MONTHS.indexOf(selectedMonth);
-            const end = idx >= 0 ? idx : ALL_MONTHS.length - 1;
-            const start = Math.max(0, end - 5);
-            const slice = ALL_MONTHS.slice(start, end + 1);
-            const trend = slice.map((m) => toDisplay(computeForMonth(m)[c.key].profit));
-            return {
-              name: c.name,
-              investment: toDisplay(c.investment),
-              profit: toDisplay(c.profit),
-              roi: c.roi,
-              trend,
-            };
-          })}
-          totals={{
-            investment: toDisplay(totalInvestment),
-            profit: toDisplay(totalProfit),
-            roi: overallROI,
-          }}
-          format={fmt}
-        />
 
         <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
