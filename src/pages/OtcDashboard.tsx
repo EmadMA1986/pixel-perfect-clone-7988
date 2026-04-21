@@ -344,7 +344,7 @@ const OtcDashboard = () => {
                   </LineChart>
                 </ResponsiveContainer>
                 <p className="text-[10px] text-muted-foreground mt-2">
-                  Spread efficiency. Trending down = margin compression.
+                  <span className="text-success font-medium">✓ Consistent spread maintained</span> — flat line indicates the desk holds a stable 0.40% margin (modeled assumption; wire live spread data to detect compression/expansion).
                 </p>
               </CardContent>
             </Card>
