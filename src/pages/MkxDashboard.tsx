@@ -291,8 +291,35 @@ const MkxDashboard = () => {
             />
           );
         })()}
+        {/* Inception-to-Date Period Banner */}
+        {!isFiltered && (
+          <div className="rounded-lg border border-success/30 bg-success/10 px-4 py-3 flex flex-wrap items-center gap-3">
+            <span className="text-lg" role="img" aria-label="calendar">📅</span>
+            <div className="flex-1 min-w-[200px]">
+              <p className="text-sm font-semibold text-foreground">Inception to Date — Jan 2025 to {monthlyData[monthlyData.length - 1].month}</p>
+              <p className="text-[11px] text-muted-foreground">Flow metrics shown as cumulative totals · Balance sheet metrics as latest snapshot · Ratios as period averages</p>
+            </div>
+            <div className="flex items-center gap-2 text-[10px]">
+              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">Cumulative</Badge>
+              <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">Latest</Badge>
+              <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">Average</Badge>
+            </div>
+          </div>
+        )}
+
         {/* Partners' Capital Position - only in All Time */}
-        {!isFiltered && (<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {!isFiltered && (() => {
+          const totalRetainedLoss = 8126209.49;
+          const ahmadShare = 5788933.98;
+          const mariaShare = 5573974.65;
+          const ahmadHalfLoss = totalRetainedLoss / 2;
+          return (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-serif font-semibold text-foreground">Shareholder Capital Position</h3>
+              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">Cumulative since inception</Badge>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Ahmad */}
           <Card className="border-border/50 bg-gradient-to-r from-violet-500/10 to-violet-700/5 backdrop-blur-sm">
             <CardContent className="p-5 space-y-3">
@@ -349,65 +376,103 @@ const MkxDashboard = () => {
               </div>
             </CardContent>
           </Card>
-        </div>
-        )}
-
-        {/* MKX Crypto Assets - only in All Time */}
-        {!isFiltered && (
-        <Card className="border-border/50 bg-gradient-to-r from-emerald-500/10 to-violet-500/5 backdrop-blur-sm">
-          <CardContent className="p-5">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center">
-                  <Shield className="h-5 w-5 text-success" />
+            </div>
+            {/* Crypto Capital Injection — moved here from MKX Assets */}
+            <Card className="border-border/50 bg-card/60 backdrop-blur-sm">
+              <CardContent className="p-4 flex flex-wrap items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-primary" />
+                  <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Crypto Capital Injection</p>
+                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px] ml-2">Cumulative</Badge>
                 </div>
                 <div>
-                  <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">MKX Assets in Fiat</p>
-                  <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(1640913 - 137968)}</p>
-                  <p className="text-[10px] text-muted-foreground">Client Money (1,640,913) − Fiat Due to Customers (137,968)</p>
+                  <p className="text-xs text-muted-foreground">Ahmad</p>
+                  <p className="text-sm font-bold font-serif text-foreground">{formatAEDFull(2147504.48)}</p>
                 </div>
-              </div>
-              <div className="text-center">
-                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">MKX Assets in VA</p>
-                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(128875 + 2628064 - 1999061)}</p>
-                <p className="text-[10px] text-muted-foreground">Cold Wallets + VA Holdings − VA Due to Customers</p>
-              </div>
-              <div className="text-center border-l border-r border-border/50 px-6">
-                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">March Gross Profit</p>
-                <p className="text-2xl font-bold font-serif text-success">{formatAEDFull(63906)}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Net MKX Assets</p>
-                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull((1640913 - 137968) + (128875 + 2628064 - 1999061))}</p>
-                <p className="text-[10px] text-muted-foreground">Fiat + VA Net Assets</p>
-              </div>
-            </div>
-            <div className="mt-4 pt-4 border-t border-border/50 flex flex-wrap items-center gap-6">
+                <div>
+                  <p className="text-xs text-muted-foreground">Maria</p>
+                  <p className="text-sm font-bold font-serif text-foreground">{formatAEDFull(200000)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Total</p>
+                  <p className="text-sm font-bold font-serif text-foreground">{formatAEDFull(2347504.48)}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          );
+        })()}
+
+        {/* MKX Crypto Assets - only in All Time */}
+        {!isFiltered && (() => {
+          const ytdGrossProfit = monthlyData.reduce((s, m) => s + m.grossProfit, 0);
+          const latestMonth = monthlyData[monthlyData.length - 1].month;
+          return (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-serif font-semibold text-foreground">MKX Asset Position</h3>
               <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-primary" />
-                <p className="text-xs text-muted-foreground">Crypto Capital Injection:</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Ahmad</p>
-                <p className="text-sm font-bold font-serif text-foreground">{formatAEDFull(2147504.48)}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Maria</p>
-                <p className="text-sm font-bold font-serif text-foreground">{formatAEDFull(200000)}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Total</p>
-                <p className="text-sm font-bold font-serif text-foreground">{formatAEDFull(2347504.48)}</p>
+                <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px]">Latest snapshot ({latestMonth})</Badge>
               </div>
             </div>
-          </CardContent>
-        </Card>
-        )}
+            <Card className="border-border/50 bg-gradient-to-r from-emerald-500/10 to-violet-500/5 backdrop-blur-sm">
+              <CardContent className="p-5">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center">
+                      <Shield className="h-5 w-5 text-success" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">MKX Assets in Fiat</p>
+                        <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[9px]">Latest</Badge>
+                      </div>
+                      <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(1640913 - 137968)}</p>
+                      <p className="text-[10px] text-muted-foreground">As at {latestMonth} · Client Money − Fiat Due to Customers</p>
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="flex items-center gap-2 justify-center">
+                      <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">MKX Assets in VA</p>
+                      <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[9px]">Latest</Badge>
+                    </div>
+                    <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(128875 + 2628064 - 1999061)}</p>
+                    <p className="text-[10px] text-muted-foreground">As at {latestMonth} · Cold Wallets + VA Holdings − VA Due</p>
+                  </div>
+                  <div className="text-center border-l border-r border-border/50 px-6">
+                    <div className="flex items-center gap-2 justify-center">
+                      <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">YTD Gross Profit</p>
+                      <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[9px]">Cumulative</Badge>
+                    </div>
+                    <p className={`text-2xl font-bold font-serif ${ytdGrossProfit >= 0 ? "text-success" : "text-loss"}`}>{formatAEDFull(ytdGrossProfit)}</p>
+                    <p className="text-[10px] text-muted-foreground">Inception to {latestMonth}</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="flex items-center gap-2 justify-end">
+                      <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Net MKX Assets</p>
+                      <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[9px]">Latest</Badge>
+                    </div>
+                    <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull((1640913 - 137968) + (128875 + 2628064 - 1999061))}</p>
+                    <p className="text-[10px] text-muted-foreground">As at {latestMonth} · Fiat + VA Net Assets</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          );
+        })()}
 
         {/* Client Liabilities vs Assets */}
         {!isFiltered && (
         <Card className="border-border/50 bg-gradient-to-r from-amber-500/10 to-amber-700/5 backdrop-blur-sm">
-          <CardContent className="p-5">
+          <CardContent className="p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Client Liabilities & Surplus</p>
+              <div className="flex items-center gap-2">
+                <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px]">Latest</Badge>
+                <span className="text-[10px] text-muted-foreground">Balance as at {monthlyData[monthlyData.length - 1].month}</span>
+              </div>
+            </div>
             <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 items-end">
               <div>
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Fiat Client Liabilities</p>
@@ -445,13 +510,13 @@ const MkxDashboard = () => {
           const totalShareCapital = 5788933.98 + 5573974.65; // Ahmad + Maria
           const totalRetainedLoss = 8126209.49;
           const remainingEquity = totalShareCapital - totalRetainedLoss;
-          // Average monthly net loss over last 6 months
-          const recentMonths = monthlyData.slice(-6);
-          const avgMonthlyLoss = Math.abs(recentMonths.reduce((s, m) => s + m.netProfit, 0) / recentMonths.length);
+          // Average monthly net loss across ALL months from inception
+          const avgMonthlyLoss = Math.abs(monthlyData.reduce((s, m) => s + m.netProfit, 0) / monthlyData.length);
           const runwayMonths = remainingEquity > 0 ? Math.floor(remainingEquity / avgMonthlyLoss) : 0;
           const lastMonthLoss = Math.abs(monthlyData[monthlyData.length - 1].netProfit);
           const prevMonthLoss = Math.abs(monthlyData[monthlyData.length - 2].netProfit);
           const burnImproving = lastMonthLoss < prevMonthLoss;
+          const latestMonth = monthlyData[monthlyData.length - 1].month;
 
           return (
             <Card className={`border-border/50 backdrop-blur-sm ${runwayMonths <= 6 ? "bg-gradient-to-r from-loss/10 to-loss/5 border-loss/30" : "bg-gradient-to-r from-amber-500/10 to-amber-500/5 border-amber-500/30"}`}>
@@ -460,9 +525,12 @@ const MkxDashboard = () => {
                   <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${runwayMonths <= 6 ? "bg-loss/20" : "bg-amber-500/20"}`}>
                     <AlertTriangle className={`h-5 w-5 ${runwayMonths <= 6 ? "text-loss" : "text-amber-500"}`} />
                   </div>
-                  <div>
-                    <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Burn Rate & Capital Runway</p>
-                    <p className="text-sm text-muted-foreground">At current loss rate, how long can MKX sustain operations</p>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Burn Rate & Capital Runway</p>
+                      <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-[10px]">Average</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Based on inception-to-date average burn rate</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
@@ -471,11 +539,18 @@ const MkxDashboard = () => {
                     <p className={`text-xl font-bold font-serif ${remainingEquity > 0 ? "text-foreground" : "text-loss"}`}>{formatAEDFull(remainingEquity)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Avg Monthly Burn (6mo)</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-muted-foreground">Avg Monthly Burn (inception)</p>
+                      <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-[9px]">Average</Badge>
+                    </div>
                     <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(-avgMonthlyLoss)}</p>
+                    <p className="text-[10px] text-muted-foreground">Across {monthlyData.length} months</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Last Month Burn</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-muted-foreground">Last Month Burn ({latestMonth})</p>
+                      <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[9px]">Latest</Badge>
+                    </div>
                     <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(-lastMonthLoss)}</p>
                     <p className={`text-[10px] font-medium ${burnImproving ? "text-success" : "text-loss"}`}>
                       {burnImproving ? "↓ Improving" : "↑ Worsening"} vs prev month
@@ -514,8 +589,11 @@ const MkxDashboard = () => {
                   <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                     <Shield className="h-5 w-5 text-primary" />
                   </div>
-                  <div>
-                    <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Revenue Productivity & Cost Efficiency</p>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Revenue Productivity & Cost Efficiency</p>
+                      <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">Cumulative since inception</Badge>
+                    </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
