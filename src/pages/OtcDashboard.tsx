@@ -279,32 +279,55 @@ const OtcDashboard = () => {
 
         {/* === OTC-Specific KPI Cards (6) === */}
         {(() => {
-          const isMarch2026 = selectedMonth === "Mar 2026";
-          const marchActiveDays = 23;
-          const marchRevPerM = 3066;
-          const marchSpread = 0.307;
-          const marchTxCount = 196;
+          // Per-month verified trading metrics. Add new months here.
+          const monthSpecifics: Record<string, {
+            volumeLabel: string;
+            volumeSubtitle: string;
+            txCount: number;
+            spreadPct: number;
+            revPerM: number;
+            realizedSpread: number;
+          }> = {
+            "Mar 2026": {
+              volumeLabel: "USDT 36.6M",
+              volumeSubtitle: "18.7M bought + 17.9M sold · 23/31 active days",
+              txCount: 196,
+              spreadPct: 0.307,
+              revPerM: 3066,
+              realizedSpread: 198690,
+            },
+            "Feb 2026": {
+              volumeLabel: "USDT 50.2M",
+              volumeSubtitle: "22.9M bought + 27.3M sold · 24/28 active days",
+              txCount: 254,
+              spreadPct: 0.260,
+              revPerM: 2599,
+              realizedSpread: 162891,
+            },
+          };
+          const spec = monthSpecifics[selectedMonth];
+          const hasSpec = !!spec;
 
-          const displaySpread = isMarch2026 ? marchSpread : avgSpreadPct;
-          const spreadSubtitle = isMarch2026
-            ? `Weighted avg across ${marchTxCount} transactions`
+          const displaySpread = hasSpec ? spec.spreadPct : avgSpreadPct;
+          const spreadSubtitle = hasSpec
+            ? `Weighted avg across ${spec.txCount} transactions`
             : "Income ÷ Volume";
 
           return (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
               <SummaryCard
                 title={`Trading Volume (${periodLabel})`}
-                value={isMarch2026 ? `USDT 36.6M` : formatAEDCompact(totalVolume)}
-                subtitle={isMarch2026
-                  ? `18.7M bought + 17.9M sold · ${marchActiveDays}/31 active days`
+                value={hasSpec ? spec.volumeLabel : formatAEDCompact(totalVolume)}
+                subtitle={hasSpec
+                  ? spec.volumeSubtitle
                   : `USDT↔AED · est. @ ${(ASSUMED_SPREAD * 100).toFixed(2)}% spread`}
                 icon={Repeat}
               />
               <SummaryCard
                 title="Trading Income"
                 value={formatAEDCompact(totalTradingIncome)}
-                subtitle={isMarch2026
-                  ? `AED ${marchRevPerM.toLocaleString()} per 1M USDT traded`
+                subtitle={hasSpec
+                  ? `AED ${spec.revPerM.toLocaleString()} per 1M USDT traded`
                   : "Spread / commission earned"}
                 icon={DollarSign}
                 trend="up"
@@ -340,12 +363,22 @@ const OtcDashboard = () => {
         })()}
 
         {/* Profit method note */}
-        <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 flex items-start gap-2">
-          <Activity className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            <span className="text-foreground font-medium">Profit method:</span> Calculated on USDT wallet balance movement (closing minus opening). Realized spread income for March 2026: <span className="text-primary font-semibold">AED 198,690</span>.
-          </p>
-        </div>
+        {(() => {
+          const realized: Record<string, number> = {
+            "Mar 2026": 198690,
+            "Feb 2026": 162891,
+          };
+          const r = realized[selectedMonth];
+          return (
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 flex items-start gap-2">
+              <Activity className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                <span className="text-foreground font-medium">Profit method:</span> Calculated on USDT wallet balance movement (closing minus opening).
+                {r ? <> Realized spread income for {selectedMonth}: <span className="text-primary font-semibold">{formatAEDWhole(r)}</span>.</> : null}
+              </p>
+            </div>
+          );
+        })()}
 
         {/* Gold divider */}
         <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
