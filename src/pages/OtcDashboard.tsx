@@ -162,7 +162,30 @@ const OtcDashboard = () => {
   const concentrationRisk = partnersByExposure[0].funding / totalPartnerFunding > 0.55;
 
   const isFiltered = selectedMonth !== "all";
-  const periodLabel = isFiltered ? selectedMonth : "YTD";
+  const periodLabel = isFiltered ? selectedMonth : "Inception to Date";
+
+  // ── Period-snapshot data (closing balances). ONLY months listed here have
+  // a verified end-of-period snapshot. Any other selected month → dash (-).
+  // "all" / Inception to Date resolves to the latest snapshot month.
+  // NOTE: this is the single source of truth for: Cash Position, AR (client
+  // funds in use), capital deployed, capital utilization, liquidity buffer.
+  type PeriodSnapshot = {
+    cashPosition: number;
+    ar: number; // negative = owed to clients
+    totalCash: number;
+  };
+  const periodSnapshots: Record<string, PeriodSnapshot> = {
+    "Mar 2026": {
+      cashPosition: otcSummary.cashPosition,
+      ar: otcSummary.ar,
+      totalCash: otcSummary.totalCash,
+    },
+  };
+  const LATEST_SNAPSHOT_MONTH = "Mar 2026";
+  const snapshotKey = selectedMonth === "all" ? LATEST_SNAPSHOT_MONTH : selectedMonth;
+  const snapshot: PeriodSnapshot | null = periodSnapshots[snapshotKey] ?? null;
+  const DASH = "—";
+  const NA_TOOLTIP = "Data not available for this period";
 
   const formatAEDCompact = (v: number) => {
     const abs = Math.abs(v);
