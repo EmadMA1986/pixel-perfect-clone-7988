@@ -465,7 +465,14 @@ const MkxDashboard = () => {
         {/* Client Liabilities vs Assets */}
         {!isFiltered && (
         <Card className="border-border/50 bg-gradient-to-r from-amber-500/10 to-amber-700/5 backdrop-blur-sm">
-          <CardContent className="p-5">
+          <CardContent className="p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Client Liabilities & Surplus</p>
+              <div className="flex items-center gap-2">
+                <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px]">Latest</Badge>
+                <span className="text-[10px] text-muted-foreground">Balance as at {monthlyData[monthlyData.length - 1].month}</span>
+              </div>
+            </div>
             <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 items-end">
               <div>
                 <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Fiat Client Liabilities</p>
