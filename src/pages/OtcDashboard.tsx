@@ -1087,7 +1087,7 @@ const OtcDashboard = () => {
             monthName: string;
             list: { name: string; pct: number }[];
             totalActive: number;
-            comparisonNote?: React.ReactNode;
+            comparisonNote?: ReactNode;
           };
           const cpData: Record<string, CpCfg> = {
             "Mar 2026": {
