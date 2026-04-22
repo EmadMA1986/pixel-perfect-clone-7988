@@ -539,11 +539,18 @@ const MkxDashboard = () => {
                     <p className={`text-xl font-bold font-serif ${remainingEquity > 0 ? "text-foreground" : "text-loss"}`}>{formatAEDFull(remainingEquity)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Avg Monthly Burn (6mo)</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-muted-foreground">Avg Monthly Burn (inception)</p>
+                      <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-[9px]">Average</Badge>
+                    </div>
                     <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(-avgMonthlyLoss)}</p>
+                    <p className="text-[10px] text-muted-foreground">Across {monthlyData.length} months</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Last Month Burn</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-muted-foreground">Last Month Burn ({latestMonth})</p>
+                      <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[9px]">Latest</Badge>
+                    </div>
                     <p className="text-xl font-bold font-serif text-loss">{formatAEDFull(-lastMonthLoss)}</p>
                     <p className={`text-[10px] font-medium ${burnImproving ? "text-success" : "text-loss"}`}>
                       {burnImproving ? "↓ Improving" : "↑ Worsening"} vs prev month
