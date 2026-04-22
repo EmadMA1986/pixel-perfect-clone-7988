@@ -1293,9 +1293,9 @@ const OtcDashboard = () => {
                       </div>
                     )}
 
-                    {cfg.comparisonNote && (
+                    {comparisonNote && (
                       <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground leading-relaxed">
-                        {cfg.comparisonNote}
+                        {comparisonNote}
                       </div>
                     )}
                   </CardContent>
