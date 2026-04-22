@@ -377,8 +377,8 @@ const OtcDashboard = () => {
               />
               <SummaryCard
                 title="Cash Position"
-                value={formatAEDCompact(otcSummary.cashPosition)}
-                subtitle="AED available for trading"
+                value={snapshot ? formatAEDCompact(snapshot.cashPosition) : DASH}
+                subtitle={snapshot ? "AED available for trading" : NA_TOOLTIP}
                 icon={Banknote}
               />
             </div>
