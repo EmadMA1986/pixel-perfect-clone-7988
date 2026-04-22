@@ -1165,13 +1165,18 @@ const OtcDashboard = () => {
         {(() => {
           type CpCfg = {
             monthName: string;
+            shortName: string;
             list: { name: string; pct: number }[];
             totalActive: number;
-            comparisonNote?: ReactNode;
+            volumeM: number;
+            spreadPct: number;
+            zeroDays: number;
+            zeroDaysNote: string;
           };
           const cpData: Record<string, CpCfg> = {
             "Mar 2026": {
               monthName: "March 2026",
+              shortName: "March",
               list: [
                 { name: "NICK", pct: 22.8 },
                 { name: "KKAA", pct: 16.8 },
@@ -1180,9 +1185,14 @@ const OtcDashboard = () => {
                 { name: "ROBERT", pct: 7.1 },
               ],
               totalActive: 28,
+              volumeM: 36.6,
+              spreadPct: 0.307,
+              zeroDays: 8,
+              zeroDaysNote: "8 zero days including 5 consecutive mid-month — irregular pattern",
             },
             "Feb 2026": {
               monthName: "February 2026",
+              shortName: "February",
               list: [
                 { name: "NICK", pct: 26.7 },
                 { name: "ROLEX", pct: 16.3 },
@@ -1191,21 +1201,36 @@ const OtcDashboard = () => {
                 { name: "GABE", pct: 5.4 },
               ],
               totalActive: 54,
-              comparisonNote: (
-                <>
-                  <p className="font-medium text-foreground mb-1">February vs March 2026 — comparative insight</p>
-                  <ul className="list-disc list-inside space-y-0.5">
-                    <li>February had higher volume (50.2M USDT) vs March (36.6M) but lower spread (0.260% vs 0.307%).</li>
-                    <li>February had more diversified counterparties (54) vs March (28).</li>
-                    <li>February zero days all fell on Sundays — consistent weekly pattern.</li>
-                    <li>March had 8 zero days including 5 consecutive mid-month — irregular pattern.</li>
-                  </ul>
-                </>
-              ),
+              volumeM: 50.2,
+              spreadPct: 0.260,
+              zeroDays: 4,
+              zeroDaysNote: "zero days all fell on Sundays — consistent weekly pattern",
             },
           };
           const cfg = cpData[selectedMonth];
           if (!cfg) return null;
+
+          // Build comparison vs previous month dynamically (only when both months have cp data)
+          const monthIdx = monthlyPL.findIndex((m) => m.month === selectedMonth);
+          const prevMonthLabel = monthIdx > 0 ? monthlyPL[monthIdx - 1].month : null;
+          const prevCfg = prevMonthLabel ? cpData[prevMonthLabel] : null;
+          const comparisonNote: ReactNode = prevCfg ? (
+            <>
+              <p className="font-medium text-foreground mb-1">
+                {prevCfg.shortName} vs {cfg.shortName} {cfg.monthName.split(" ")[1]} — comparative insight
+              </p>
+              <ul className="list-disc list-inside space-y-0.5">
+                <li>
+                  {prevCfg.shortName} {prevCfg.volumeM > cfg.volumeM ? "had higher" : "had lower"} volume ({prevCfg.volumeM}M USDT) vs {cfg.shortName} ({cfg.volumeM}M) {prevCfg.spreadPct < cfg.spreadPct ? "but lower" : "with higher"} spread ({prevCfg.spreadPct.toFixed(3)}% vs {cfg.spreadPct.toFixed(3)}%).
+                </li>
+                <li>
+                  {prevCfg.shortName} had {prevCfg.totalActive > cfg.totalActive ? "more" : "fewer"} diversified counterparties ({prevCfg.totalActive}) vs {cfg.shortName} ({cfg.totalActive}).
+                </li>
+                <li>{prevCfg.shortName} {prevCfg.zeroDaysNote}.</li>
+                <li>{cfg.shortName} {cfg.zeroDaysNote}.</li>
+              </ul>
+            </>
+          ) : null;
           const top3 = cfg.list.slice(0, 3).reduce((s, c) => s + c.pct, 0);
           const isCritical = top3 > 50;
           const maxPct = Math.max(...cfg.list.map((c) => c.pct));
@@ -1268,9 +1293,9 @@ const OtcDashboard = () => {
                       </div>
                     )}
 
-                    {cfg.comparisonNote && (
+                    {comparisonNote && (
                       <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground leading-relaxed">
-                        {cfg.comparisonNote}
+                        {comparisonNote}
                       </div>
                     )}
                   </CardContent>
