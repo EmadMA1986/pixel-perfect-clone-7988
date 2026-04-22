@@ -1343,7 +1343,7 @@ const OtcDashboard = () => {
                     </Badge>
                   )}
                 </div>
-                {liquidityRatio === null || aedCashOnHand === null ? (
+                {liquidityRatio === null || ownCashForLiquidity === null ? (
                   <>
                     <p className="text-2xl font-bold font-serif text-muted-foreground">—</p>
                     <p className="text-[10px] text-muted-foreground mt-1">Data not available for this period</p>
@@ -1354,11 +1354,9 @@ const OtcDashboard = () => {
                       {liquidityRatio.toFixed(2)}×
                     </p>
                     <p className="text-[10px] text-muted-foreground mt-1 leading-tight">
-                      {formatAEDCompact(aedCashOnHand)} AED cash vs {formatAEDCompact(MIN_LIQUIDITY)} minimum threshold
-                      {!liquidityHealthy && (
-                        <span className="block text-loss mt-1">
-                          ⚠ CRITICAL: 94.7% of position held in USDT inventory, not AED cash.
-                        </span>
+                      {formatAEDCompact(ownCashForLiquidity)} own cash vs {formatAEDCompact(MIN_LIQUIDITY)} minimum threshold
+                      {liquidityHealthy && (
+                        <span className="block text-success mt-1">✓ Above minimum</span>
                       )}
                     </p>
                   </>
