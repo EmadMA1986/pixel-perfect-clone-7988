@@ -852,7 +852,85 @@ const OtcDashboard = () => {
         {/* Gold divider */}
         <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
-        {/* === Risk Dashboard === */}
+        {/* === Counterparty Concentration Risk (March 2026) === */}
+        {selectedMonth === "Mar 2026" && (() => {
+          const counterparties = [
+            { name: "NICK", pct: 22.8 },
+            { name: "KKAA", pct: 16.8 },
+            { name: "UZPAY", pct: 13.8 },
+            { name: "ROLEX", pct: 11.2 },
+            { name: "ROBERT", pct: 7.1 },
+          ];
+          const top3 = counterparties.slice(0, 3).reduce((s, c) => s + c.pct, 0);
+          const totalActive = 28;
+          const isCritical = top3 > 50;
+          const maxPct = Math.max(...counterparties.map((c) => c.pct));
+          return (
+            <section className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-primary" />
+                <h2 className="text-sm font-serif font-semibold uppercase tracking-wider text-foreground">
+                  Counterparty Concentration Risk — March 2026
+                </h2>
+              </div>
+              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                <CardContent className="p-5 space-y-4">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">Top 5 counterparties by trading volume</span>
+                    <Badge variant="secondary" className="text-[10px]">
+                      {totalActive} active counterparties
+                    </Badge>
+                  </div>
+
+                  <div className="space-y-3">
+                    {counterparties.map((c, i) => {
+                      const widthPct = (c.pct / maxPct) * 100;
+                      const isTop3 = i < 3;
+                      return (
+                        <div key={c.name} className="space-y-1">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-medium text-foreground tabular-nums">
+                              <span className="text-muted-foreground mr-2">#{i + 1}</span>
+                              {c.name}
+                            </span>
+                            <span className={`font-bold font-serif tabular-nums ${isTop3 ? "text-primary" : "text-foreground"}`}>
+                              {c.pct.toFixed(1)}%
+                            </span>
+                          </div>
+                          <div className="h-2.5 w-full rounded bg-secondary/40 overflow-hidden">
+                            <div
+                              className={`h-full rounded transition-all ${isTop3 ? "bg-primary" : "bg-muted-foreground/40"}`}
+                              style={{ width: `${widthPct}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="pt-3 border-t border-border/30 flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground uppercase tracking-wider">Top 3 Concentration</span>
+                    <span className="text-lg font-bold font-serif text-loss tabular-nums">{top3.toFixed(1)}% of all volume</span>
+                  </div>
+
+                  {isCritical && (
+                    <div className="rounded-lg border border-loss/40 bg-loss/10 p-3 flex items-start gap-2">
+                      <AlertTriangle className="h-4 w-4 text-loss mt-0.5 shrink-0" />
+                      <p className="text-xs font-medium text-loss">
+                        Critical — top 3 counterparties control over 50% of volume. Diversify or set per-counterparty exposure limits.
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </section>
+          );
+        })()}
+
+        {selectedMonth === "Mar 2026" && (
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+        )}
+
         <section className="space-y-4">
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-primary" />
