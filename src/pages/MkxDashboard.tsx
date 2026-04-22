@@ -510,13 +510,13 @@ const MkxDashboard = () => {
           const totalShareCapital = 5788933.98 + 5573974.65; // Ahmad + Maria
           const totalRetainedLoss = 8126209.49;
           const remainingEquity = totalShareCapital - totalRetainedLoss;
-          // Average monthly net loss over last 6 months
-          const recentMonths = monthlyData.slice(-6);
-          const avgMonthlyLoss = Math.abs(recentMonths.reduce((s, m) => s + m.netProfit, 0) / recentMonths.length);
+          // Average monthly net loss across ALL months from inception
+          const avgMonthlyLoss = Math.abs(monthlyData.reduce((s, m) => s + m.netProfit, 0) / monthlyData.length);
           const runwayMonths = remainingEquity > 0 ? Math.floor(remainingEquity / avgMonthlyLoss) : 0;
           const lastMonthLoss = Math.abs(monthlyData[monthlyData.length - 1].netProfit);
           const prevMonthLoss = Math.abs(monthlyData[monthlyData.length - 2].netProfit);
           const burnImproving = lastMonthLoss < prevMonthLoss;
+          const latestMonth = monthlyData[monthlyData.length - 1].month;
 
           return (
             <Card className={`border-border/50 backdrop-blur-sm ${runwayMonths <= 6 ? "bg-gradient-to-r from-loss/10 to-loss/5 border-loss/30" : "bg-gradient-to-r from-amber-500/10 to-amber-500/5 border-amber-500/30"}`}>
@@ -525,9 +525,12 @@ const MkxDashboard = () => {
                   <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${runwayMonths <= 6 ? "bg-loss/20" : "bg-amber-500/20"}`}>
                     <AlertTriangle className={`h-5 w-5 ${runwayMonths <= 6 ? "text-loss" : "text-amber-500"}`} />
                   </div>
-                  <div>
-                    <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Burn Rate & Capital Runway</p>
-                    <p className="text-sm text-muted-foreground">At current loss rate, how long can MKX sustain operations</p>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Burn Rate & Capital Runway</p>
+                      <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-[10px]">Average</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Based on inception-to-date average burn rate</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
