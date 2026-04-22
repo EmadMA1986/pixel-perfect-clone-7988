@@ -829,6 +829,10 @@ const MkxDashboard = () => {
                       <TableBody>
                         {varaStandards.map((std, idx) => {
                           const { value, status } = getVARAStatus(std.kpiKey);
+                          const subtitle =
+                            std.kpiKey === "revenuePerTradingVolume"
+                              ? `AED ${(activeKPI.revenuePerTradingVolume * 1000).toFixed(2)} earned per AED 1,000 traded`
+                              : null;
                           return (
                             <TableRow key={idx} className="border-border/30 hover:bg-secondary/30">
                               <TableCell className="text-sm font-medium text-foreground">{std.ratio}</TableCell>
@@ -836,6 +840,11 @@ const MkxDashboard = () => {
                                 <span className={status === "healthy" ? "text-success" : status === "warning" ? "text-amber-400" : "text-loss"}>
                                   {value}
                                 </span>
+                                {subtitle && (
+                                  <div className="text-[10px] font-normal text-muted-foreground mt-0.5">
+                                    {subtitle}
+                                  </div>
+                                )}
                               </TableCell>
                               <TableCell className="text-center">
                                 {status === "healthy" ? (
