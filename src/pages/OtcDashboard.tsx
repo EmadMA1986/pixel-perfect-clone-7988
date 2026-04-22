@@ -455,117 +455,193 @@ const OtcDashboard = () => {
         {/* Gold divider */}
         <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
-        {/* === Trading Activity Calendar — March 2026 === */}
-        {selectedMonth === "Mar 2026" && (() => {
-          const zeroDays = new Set([1, 8, 15, 16, 20, 21, 22, 29]);
-          const consecutiveZero = new Set([15, 16, 20, 21, 22]);
-          const days = Array.from({ length: 31 }, (_, i) => i + 1);
-          const activeCount = 31 - zeroDays.size;
+        {/* === Trading Activity Calendar (per-month) === */}
+        {(() => {
+          type CalCfg = {
+            monthName: string;
+            monthAbbrev: string;
+            totalDays: number;
+            firstDayOffset: number; // 0=Sun … 6=Sat
+            zeroDays: number[];
+            consecutiveZero: number[];
+            consecutiveZeroLabel?: string;
+            zeroNote?: string; // e.g. "Sunday closures — consistent weekly pattern"
+            bestDay: { label: string; aed: number };
+            worstDay: { label: string; aed: number };
+            avgDailyProfit?: number; // active days only
+            avgDailyVolumeUSDT?: number;
+            totalCounterparties?: number;
+          };
+          const calendars: Record<string, CalCfg> = {
+            "Mar 2026": {
+              monthName: "March 2026",
+              monthAbbrev: "Mar",
+              totalDays: 31,
+              firstDayOffset: 0, // Mar 1, 2026 = Sunday
+              zeroDays: [1, 8, 15, 16, 20, 21, 22, 29],
+              consecutiveZero: [15, 16, 20, 21, 22],
+              consecutiveZeroLabel: "Mar 15, 16, 20, 21, 22",
+              bestDay: { label: "Mar 30", aed: 109835 },
+              worstDay: { label: "Mar 31", aed: -18039 },
+              avgDailyProfit: 8639,
+            },
+            "Feb 2026": {
+              monthName: "February 2026",
+              monthAbbrev: "Feb",
+              totalDays: 28,
+              firstDayOffset: 0, // Feb 1, 2026 = Sunday
+              zeroDays: [1, 8, 15, 22],
+              consecutiveZero: [],
+              zeroNote: "Sunday closures — consistent weekly pattern",
+              bestDay: { label: "—", aed: 0 },
+              worstDay: { label: "—", aed: 0 },
+              avgDailyVolumeUSDT: 2_093_516,
+              totalCounterparties: 54,
+            },
+          };
+          const cfg = calendars[selectedMonth];
+          if (!cfg) return null;
+
+          const zeroSet = new Set(cfg.zeroDays);
+          const consecSet = new Set(cfg.consecutiveZero);
+          const days = Array.from({ length: cfg.totalDays }, (_, i) => i + 1);
+          const activeCount = cfg.totalDays - zeroSet.size;
           const dayLabels = ["S", "M", "T", "W", "T", "F", "S"];
-          // Mar 1, 2026 = Sunday → starts at column index 0
-          const firstDayOffset = 0;
+          const formatUSDT = (v: number) => `${v.toLocaleString("en-US")} USDT`;
+
           return (
-            <section className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Activity className="h-4 w-4 text-primary" />
-                <h2 className="text-sm font-serif font-semibold uppercase tracking-wider text-foreground">
-                  Trading Activity Calendar — March 2026
-                </h2>
-              </div>
-              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-                <CardContent className="p-5 space-y-5">
-                  {/* Calendar grid */}
-                  <div>
-                    <div className="grid grid-cols-7 gap-2 mb-2">
-                      {dayLabels.map((d, i) => (
-                        <div key={i} className="text-[10px] uppercase tracking-wider text-muted-foreground text-center font-medium">
-                          {d}
-                        </div>
-                      ))}
-                    </div>
-                    <div className="grid grid-cols-7 gap-2">
-                      {Array.from({ length: firstDayOffset }).map((_, i) => (
-                        <div key={`pad-${i}`} />
-                      ))}
-                      {days.map((d) => {
-                        const isZero = zeroDays.has(d);
-                        const isConsecZero = consecutiveZero.has(d);
-                        return (
-                          <div
-                            key={d}
-                            title={
-                              isConsecZero
-                                ? `Mar ${d} — Consecutive zero day`
-                                : isZero
-                                ? `Mar ${d} — Zero trading day`
-                                : `Mar ${d} — Active trading day`
-                            }
-                            className={[
-                              "aspect-square rounded-md flex items-center justify-center text-xs font-medium border transition-colors",
-                              isZero
-                                ? "bg-muted/40 text-muted-foreground border-border/40"
-                                : "bg-success/15 text-success border-success/40",
-                              isConsecZero ? "!border-amber-500 border-2 ring-1 ring-amber-500/30" : "",
-                            ].join(" ")}
-                          >
+            <>
+              <section className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-primary" />
+                  <h2 className="text-sm font-serif font-semibold uppercase tracking-wider text-foreground">
+                    Trading Activity Calendar — {cfg.monthName}
+                  </h2>
+                </div>
+                <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                  <CardContent className="p-5 space-y-5">
+                    {/* Calendar grid */}
+                    <div>
+                      <div className="grid grid-cols-7 gap-2 mb-2">
+                        {dayLabels.map((d, i) => (
+                          <div key={i} className="text-[10px] uppercase tracking-wider text-muted-foreground text-center font-medium">
                             {d}
                           </div>
-                        );
-                      })}
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-7 gap-2">
+                        {Array.from({ length: cfg.firstDayOffset }).map((_, i) => (
+                          <div key={`pad-${i}`} />
+                        ))}
+                        {days.map((d) => {
+                          const isZero = zeroSet.has(d);
+                          const isConsecZero = consecSet.has(d);
+                          const zeroTitle = cfg.zeroNote ?? "Zero trading day";
+                          return (
+                            <div
+                              key={d}
+                              title={
+                                isConsecZero
+                                  ? `${cfg.monthAbbrev} ${d} — Consecutive zero day`
+                                  : isZero
+                                  ? `${cfg.monthAbbrev} ${d} — ${zeroTitle}`
+                                  : `${cfg.monthAbbrev} ${d} — Active trading day`
+                              }
+                              className={[
+                                "aspect-square rounded-md flex items-center justify-center text-xs font-medium border transition-colors",
+                                isZero
+                                  ? "bg-muted/40 text-muted-foreground border-border/40"
+                                  : "bg-success/15 text-success border-success/40",
+                                isConsecZero ? "!border-amber-500 border-2 ring-1 ring-amber-500/30" : "",
+                              ].join(" ")}
+                            >
+                              {d}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {/* Legend */}
+                      <div className="flex flex-wrap items-center gap-4 mt-4 text-[10px] text-muted-foreground">
+                        <div className="flex items-center gap-1.5">
+                          <span className="h-3 w-3 rounded-sm bg-success/15 border border-success/40 inline-block" />
+                          <span>Active trading day</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="h-3 w-3 rounded-sm bg-muted/40 border border-border/40 inline-block" />
+                          <span>Zero trading day{cfg.zeroNote ? ` — ${cfg.zeroNote}` : ""}</span>
+                        </div>
+                        {cfg.consecutiveZero.length > 0 && (
+                          <div className="flex items-center gap-1.5">
+                            <span className="h-3 w-3 rounded-sm border-2 border-amber-500 inline-block" />
+                            <span>Consecutive zero days{cfg.consecutiveZeroLabel ? ` (${cfg.consecutiveZeroLabel})` : ""}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    {/* Legend */}
-                    <div className="flex flex-wrap items-center gap-4 mt-4 text-[10px] text-muted-foreground">
-                      <div className="flex items-center gap-1.5">
-                        <span className="h-3 w-3 rounded-sm bg-success/15 border border-success/40 inline-block" />
-                        <span>Active trading day</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="h-3 w-3 rounded-sm bg-muted/40 border border-border/40 inline-block" />
-                        <span>Zero trading day</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="h-3 w-3 rounded-sm border-2 border-amber-500 inline-block" />
-                        <span>Consecutive zero days (Mar 15, 16, 20, 21, 22)</span>
-                      </div>
-                    </div>
-                  </div>
 
-                  {/* Stats row */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-border/40">
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Active Trading Days</p>
-                      <p className="text-lg font-serif font-bold text-foreground">{activeCount} <span className="text-sm text-muted-foreground font-normal">/ 31</span></p>
+                    {/* Stats row */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-border/40">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Active Trading Days</p>
+                        <p className="text-lg font-serif font-bold text-foreground">{activeCount} <span className="text-sm text-muted-foreground font-normal">/ {cfg.totalDays}</span></p>
+                        {cfg.zeroNote && (
+                          <p className="text-[10px] text-muted-foreground">{zeroSet.size} zero days (all Sundays)</p>
+                        )}
+                      </div>
+                      {cfg.bestDay.label !== "—" ? (
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Best Day</p>
+                          <p className="text-lg font-serif font-bold text-success">{formatAEDWhole(cfg.bestDay.aed)}</p>
+                          <p className="text-[10px] text-muted-foreground">{cfg.bestDay.label}</p>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Avg Daily Volume</p>
+                          <p className="text-lg font-serif font-bold text-primary tabular-nums">{cfg.avgDailyVolumeUSDT ? formatUSDT(cfg.avgDailyVolumeUSDT) : "—"}</p>
+                          <p className="text-[10px] text-muted-foreground">Across active days</p>
+                        </div>
+                      )}
+                      {cfg.worstDay.label !== "—" ? (
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Worst Day</p>
+                          <p className="text-lg font-serif font-bold text-loss">{formatAEDWhole(cfg.worstDay.aed)}</p>
+                          <p className="text-[10px] text-muted-foreground">{cfg.worstDay.label}</p>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Total Counterparties</p>
+                          <p className="text-lg font-serif font-bold text-foreground tabular-nums">{cfg.totalCounterparties ?? "—"}</p>
+                          <p className="text-[10px] text-muted-foreground">Active during month</p>
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{cfg.avgDailyProfit != null ? "Avg Daily Profit" : "Zero Days"}</p>
+                        {cfg.avgDailyProfit != null ? (
+                          <>
+                            <p className="text-lg font-serif font-bold text-primary">{formatAEDWhole(cfg.avgDailyProfit)}</p>
+                            <p className="text-[10px] text-muted-foreground">Active days only</p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-lg font-serif font-bold text-foreground">{zeroSet.size} <span className="text-sm text-muted-foreground font-normal">/ {cfg.totalDays}</span></p>
+                            <p className="text-[10px] text-muted-foreground">{cfg.zeroNote ? "All on Sundays" : "Non-trading days"}</p>
+                          </>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Best Day</p>
-                      <p className="text-lg font-serif font-bold text-success">AED 109,835</p>
-                      <p className="text-[10px] text-muted-foreground">Mar 30</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Worst Day</p>
-                      <p className="text-lg font-serif font-bold text-loss">-AED 18,039</p>
-                      <p className="text-[10px] text-muted-foreground">Mar 31</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Avg Daily Profit</p>
-                      <p className="text-lg font-serif font-bold text-primary">AED 8,639</p>
-                      <p className="text-[10px] text-muted-foreground">Active days only</p>
-                    </div>
-                  </div>
 
-                  <p className="text-[11px] italic text-muted-foreground leading-relaxed">
-                    Daily profit calculated on USDT wallet movement (closing minus opening balance). Large AED cash flow swings on individual days reflect pass-through USDT inventory trades and do not represent actual profit or loss.
-                  </p>
-                </CardContent>
-              </Card>
-            </section>
+                    <p className="text-[11px] italic text-muted-foreground leading-relaxed">
+                      Daily profit calculated on USDT wallet movement (closing minus opening balance). Large AED cash flow swings on individual days reflect pass-through USDT inventory trades and do not represent actual profit or loss.
+                    </p>
+                  </CardContent>
+                </Card>
+              </section>
+
+              {/* Gold divider */}
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+            </>
           );
         })()}
-
-        {/* Gold divider */}
-        {selectedMonth === "Mar 2026" && (
-          <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-        )}
 
         {/* === Liquidity & Capital Position === */}
         <section className="space-y-4">
