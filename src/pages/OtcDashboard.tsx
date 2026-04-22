@@ -414,7 +414,7 @@ const OtcDashboard = () => {
           <div className="flex items-center gap-2">
             <Activity className="h-4 w-4 text-primary" />
             <h2 className="text-sm font-serif font-semibold uppercase tracking-wider text-foreground">Trading Activity</h2>
-            <span className="text-[10px] text-muted-foreground">· Volume estimated from spread revenue @ {(ASSUMED_SPREAD * 100).toFixed(2)}%</span>
+            <span className="text-[10px] text-muted-foreground">· Volume estimated from spread revenue @ {effectiveSpreadPct.toFixed(activeSpec ? 3 : 2)}%</span>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
