@@ -640,7 +640,11 @@ const MkAutosCarsDashboard = () => {
                     <TableCell className="text-xs tabular-nums text-right text-foreground">{mkAutosSummary.overallROI}%</TableCell>
                     <TableCell className={`text-xs tabular-nums text-right ${mkAutosSummary.realROI >= 0 ? "text-success" : "text-loss"}`}>{mkAutosSummary.realROI}%</TableCell>
                     <TableCell className="text-xs tabular-nums text-right text-foreground">{formatAED(totals.monthly)}</TableCell>
+                    <TableCell className="text-xs tabular-nums text-right text-muted-foreground">{formatAED(TOTAL_MONTHLY_DEPR)}</TableCell>
                     <TableCell className="text-xs tabular-nums text-right text-foreground">{formatAED(totals.curMonth)}</TableCell>
+                    <TableCell className={`text-xs tabular-nums text-right ${(totals.curMonth - TOTAL_MONTHLY_DEPR) >= 0 ? "text-success" : "text-loss"}`}>
+                      {(totals.curMonth - TOTAL_MONTHLY_DEPR) >= 0 ? "▲" : "▼"} {formatAED(Math.abs(totals.curMonth - TOTAL_MONTHLY_DEPR))}
+                    </TableCell>
                     <TableCell className="text-center text-xs text-muted-foreground">—</TableCell>
                   </TableRow>
                 </TableBody>
