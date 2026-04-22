@@ -942,7 +942,9 @@ const OtcDashboard = () => {
                 )}
 
                 <p className="text-[11px] italic text-muted-foreground">
-                  Working capital = net capital injected after withdrawals + cumulative profit share. Client float of {formatAEDWhole(arFloat)} is excluded as it represents client obligations not distributable capital.
+                  Working capital = net capital injected after withdrawals + cumulative profit share. {arFloat != null
+                    ? <>Client float of {formatAEDWhole(arFloat)} is excluded as it represents client obligations not distributable capital.</>
+                    : <>Client float excluded as it represents client obligations not distributable capital.</>}
                 </p>
 
                 {/* Supplementary: Capital deployment metrics retained */}
@@ -950,27 +952,49 @@ const OtcDashboard = () => {
                   <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
                     <CardContent className="p-4">
                       <p className="text-xs text-muted-foreground uppercase tracking-wider">AED Cash on Hand</p>
-                      <p className="text-2xl font-bold font-serif text-foreground mt-1">{formatAEDCompact(otcSummary.cashPosition)}</p>
-                      <p className="text-[10px] text-muted-foreground mt-1">Total incl. AR: {formatAEDCompact(otcSummary.totalCash)}</p>
+                      <p
+                        className="text-2xl font-bold font-serif text-foreground mt-1"
+                        title={cashPos == null ? NA_TOOLTIP : undefined}
+                      >
+                        {cashPos == null ? DASH : formatAEDCompact(cashPos)}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        {totalCash == null ? NA_TOOLTIP : <>Total incl. AR: {formatAEDCompact(totalCash)}</>}
+                      </p>
                     </CardContent>
                   </Card>
                   <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
                     <CardContent className="p-4">
                       <p className="text-xs text-muted-foreground uppercase tracking-wider">Capital Deployed</p>
-                      <p className={`text-2xl font-bold font-serif mt-1 ${capitalDeployed >= 0 ? "text-foreground" : "text-loss"}`}>
-                        {formatAEDCompact(capitalDeployed)}
+                      <p
+                        className={`text-2xl font-bold font-serif mt-1 ${capDeployedPeriod == null ? "text-muted-foreground" : capDeployedPeriod >= 0 ? "text-foreground" : "text-loss"}`}
+                        title={capDeployedPeriod == null ? NA_TOOLTIP : undefined}
+                      >
+                        {capDeployedPeriod == null ? DASH : formatAEDCompact(capDeployedPeriod)}
                       </p>
-                      <p className="text-[10px] text-muted-foreground mt-1">Total funding − cash on hand</p>
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        {capDeployedPeriod == null ? NA_TOOLTIP : "Total funding − cash on hand"}
+                      </p>
                     </CardContent>
                   </Card>
                   <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
                     <CardContent className="p-4">
                       <p className="text-xs text-muted-foreground uppercase tracking-wider">Capital Utilization</p>
-                      <p className="text-2xl font-bold font-serif text-foreground mt-1">{utilizationPct.toFixed(1)}%</p>
+                      <p
+                        className="text-2xl font-bold font-serif text-foreground mt-1"
+                        title={utilizationPctPeriod == null ? NA_TOOLTIP : undefined}
+                      >
+                        {utilizationPctPeriod == null ? DASH : `${utilizationPctPeriod.toFixed(1)}%`}
+                      </p>
                       <div className="mt-2 h-1.5 w-full rounded-full bg-secondary/40 overflow-hidden">
-                        <div className="h-full bg-primary transition-all" style={{ width: `${Math.min(100, utilizationPct)}%` }} />
+                        <div
+                          className="h-full bg-primary transition-all"
+                          style={{ width: `${Math.min(100, utilizationPctPeriod ?? 0)}%` }}
+                        />
                       </div>
-                      <p className="text-[10px] text-muted-foreground mt-1">Of {formatAEDCompact(capitalBasis)} total partner funding</p>
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        {utilizationPctPeriod == null ? NA_TOOLTIP : <>Of {formatAEDCompact(capitalBasis)} total partner funding</>}
+                      </p>
                     </CardContent>
                   </Card>
                 </div>
