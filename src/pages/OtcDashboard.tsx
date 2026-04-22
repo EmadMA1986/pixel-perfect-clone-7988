@@ -17,6 +17,7 @@ import {
 } from "recharts";
 import { otcSummary, monthlyPL, expenseBreakdown, partnerCapital, formatAED, getExpensesForMonth } from "@/data/otcData";
 import ExecutiveSummary, { ExecMonthInput } from "@/components/ExecutiveSummary";
+import MonthlyExecutiveSummary, { ExecMetricRow } from "@/components/MonthlyExecutiveSummary";
 
 // Estimated average spread for OTC USDT/AED trades. Used to back-calculate
 // trading volume from spread/commission revenue (gross profit).
@@ -324,6 +325,140 @@ const OtcDashboard = () => {
             return issues;
           }}
         />
+
+        {/* === Monthly Executive Summary (dynamic MoM comparison) === */}
+        {(() => {
+          // Per-month metrics consumed by the summary (single source of truth here).
+          type MonthlyMetrics = {
+            netProfit: number;
+            volumeUSDT: number;
+            spreadPct: number;
+            activeDays: number;
+            totalDays: number;
+            counterparties: number;
+            top3Concentration: number;
+            costToRevenue: number;
+            breakEvenVolume: number;
+          };
+          const metricsByMonth: Record<string, MonthlyMetrics> = {
+            "Jan 2026": {
+              netProfit: 136454,
+              volumeUSDT: 72_900_000,
+              spreadPct: 0.120,
+              activeDays: 26,
+              totalDays: 31,
+              counterparties: 52,
+              top3Concentration: 60.5,
+              costToRevenue: (50104 / 186558) * 100,
+              breakEvenVolume: 50104 / (0.120 / 100),
+            },
+            "Feb 2026": {
+              netProfit: 162891,
+              volumeUSDT: 50_200_000,
+              spreadPct: 0.260,
+              activeDays: 24,
+              totalDays: 28,
+              counterparties: 54,
+              top3Concentration: 58.0,
+              costToRevenue: (49296 / 212187) * 100,
+              breakEvenVolume: 49296 / (0.260 / 100),
+            },
+            "Mar 2026": {
+              netProfit: 107462,
+              volumeUSDT: 36_600_000,
+              spreadPct: 0.307,
+              activeDays: 23,
+              totalDays: 31,
+              counterparties: 28,
+              top3Concentration: 53.4,
+              costToRevenue: (91229 / 198691) * 100,
+              breakEvenVolume: 91229 / (0.307 / 100),
+            },
+          };
+
+          // Resolve effective current month (use latest snapshot when "all").
+          const effectiveMonth =
+            selectedMonth === "all" ? "Mar 2026" : selectedMonth;
+          const cur = metricsByMonth[effectiveMonth];
+          if (!cur) return null;
+
+          const idx = monthlyPL.findIndex((m) => m.month === effectiveMonth);
+          const prevMonthLabel = idx > 0 ? monthlyPL[idx - 1].month : null;
+          const prev = prevMonthLabel ? metricsByMonth[prevMonthLabel] : null;
+          if (!prev || !prevMonthLabel) return null;
+
+          const rows: ExecMetricRow[] = [
+            { label: "Net Profit", current: cur.netProfit, previous: prev.netProfit, kind: "currency", goodDirection: "up" },
+            { label: "Trading Volume (USDT)", current: cur.volumeUSDT, previous: prev.volumeUSDT, kind: "number", unit: "USDT", goodDirection: "up" },
+            { label: "Spread %", current: cur.spreadPct, previous: prev.spreadPct, kind: "percent", goodDirection: "up", decimals: 3 },
+            { label: "Active Trading Days", current: cur.activeDays, previous: prev.activeDays, kind: "number", goodDirection: "up", deltaMode: "absolute" },
+            { label: "Active Counterparties", current: cur.counterparties, previous: prev.counterparties, kind: "number", goodDirection: "up", deltaMode: "absolute" },
+            { label: "Top 3 Concentration %", current: cur.top3Concentration, previous: prev.top3Concentration, kind: "percent", goodDirection: "down" },
+            { label: "Cost-to-Revenue Ratio", current: cur.costToRevenue, previous: prev.costToRevenue, kind: "percent", goodDirection: "down" },
+            { label: "Break-even Volume (AED)", current: cur.breakEvenVolume, previous: prev.breakEvenVolume, kind: "currency", goodDirection: "down", decimals: 0 },
+          ];
+
+          // Pre-written narratives + signal lists per month
+          const presets: Record<string, { narrative: string; improved: string[]; deteriorated: string[]; watch: string[] }> = {
+            "Mar 2026": {
+              narrative:
+                "March 2026 recorded a 34.0% decline in net profit vs February, driven by a 27.1% volume drop from 50.2M to 36.6M USDT. Spread improved from 0.260% to 0.307% partially offsetting the volume decline. Counterparty base contracted sharply from 54 to 28 active clients. Eight zero trading days including 5 consecutive mid-month days require investigation. Positive: concentration risk improved slightly with top 3 at 53.4% vs 58.0%.",
+              improved: ["Spread ▲18.1%", "Top 3 concentration eased (58.0% → 53.4%)"],
+              deteriorated: [
+                "Net Profit ▼34.0%",
+                "Volume ▼27.1%",
+                "Active Days down (24 → 23)",
+                "Counterparties ▼48.1% (54 → 28)",
+              ],
+              watch: [
+                "Monitor volume recovery",
+                "Investigate 5 consecutive mid-month zero days",
+                "Track NICK concentration",
+                "Maintain spread above 0.300%",
+              ],
+            },
+            "Feb 2026": {
+              narrative:
+                "February 2026 recorded a 19.4% increase in net profit vs January, despite a 31.1% volume decline from 72.9M to 50.2M USDT. Spread improved significantly from 0.120% to 0.260% — higher margin per trade compensated for lower volume. Counterparty base expanded from 52 to 54 active clients. Zero days all fell on Sundays — consistent and expected pattern.",
+              improved: [
+                "Net Profit ▲19.4%",
+                "Spread ▲116.7% (0.120% → 0.260%)",
+                "Counterparties +2 (52 → 54)",
+                "Top 3 concentration eased (60.5% → 58.0%)",
+              ],
+              deteriorated: ["Volume ▼31.1%", "Active Days down (26 → 24)"],
+              watch: [
+                "NICK still dominant at 26.7% of volume",
+                "Watch spread sustainability above 0.250%",
+                "Monitor MoM volume trend",
+              ],
+            },
+          };
+
+          const preset = presets[effectiveMonth];
+          const narrative = preset?.narrative ?? `${effectiveMonth} compared against ${prevMonthLabel}: see metrics table for movements.`;
+          const improved = preset?.improved ?? rows.filter((r) => {
+            if (r.current == null || r.previous == null) return false;
+            return r.goodDirection === "up" ? r.current > r.previous : r.current < r.previous;
+          }).map((r) => r.label);
+          const deteriorated = preset?.deteriorated ?? rows.filter((r) => {
+            if (r.current == null || r.previous == null) return false;
+            return r.goodDirection === "up" ? r.current < r.previous : r.current > r.previous;
+          }).map((r) => r.label);
+          const watch = preset?.watch ?? [];
+
+          return (
+            <MonthlyExecutiveSummary
+              currentLabel={effectiveMonth}
+              previousLabel={prevMonthLabel}
+              rows={rows}
+              narrative={narrative}
+              improved={improved}
+              deteriorated={deteriorated}
+              watch={watch}
+            />
+          );
+        })()}
 
         {/* === Ahmad's Capital Position — only in All Time === */}
         {!isFiltered && (
