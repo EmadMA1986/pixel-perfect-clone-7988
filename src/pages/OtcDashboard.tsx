@@ -552,11 +552,69 @@ const OtcDashboard = () => {
                 trend={costToRevenue < 30 ? "up" : "down"}
               />
               <SummaryCard
-                title="Cash Position"
-                value={snapshot ? formatAEDCompact(snapshot.cashPosition) : DASH}
-                subtitle={snapshot ? "AED available for trading" : NA_TOOLTIP}
-                icon={Banknote}
+                title="USDT Inventory"
+                value={snapshot ? formatAEDCompact(snapshot.usdtWalletAED) : DASH}
+                subtitle={snapshot ? `${(snapshot.usdtWalletAED / 3.67706).toLocaleString("en-US", { maximumFractionDigits: 0 })} USDT @ 3.67706` : NA_TOOLTIP}
+                icon={Wallet}
               />
+            </div>
+          );
+        })()}
+
+        {/* === Liquidity KPIs (Row 2) === */}
+        {(() => {
+          const cfr = snapshot && snapshot.totalCash > 0 ? (Math.abs(snapshot.ar) / snapshot.totalCash) * 100 : null;
+          const cfrTone = cfr == null
+            ? "text-muted-foreground"
+            : cfr > 50 ? "text-loss" : cfr > 30 ? "text-amber-400" : "text-success";
+          return (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                <CardContent className="p-4">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">AED Cash on Hand</p>
+                  <p className="text-2xl font-bold font-serif text-foreground mt-1" title={snapshot ? undefined : NA_TOOLTIP}>
+                    {snapshot ? formatAEDCompact(snapshot.totalCash) : DASH}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-1 leading-tight">
+                    {snapshot
+                      ? <>USDT wallet {formatAEDCompact(snapshot.usdtWalletAED)} + AED cash {formatAEDCompact(snapshot.aedClosing)}</>
+                      : "Closing position data available for March 2026 only"}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                <CardContent className="p-4">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Net Own Cash</p>
+                  <p className={`text-2xl font-bold font-serif mt-1 ${snapshot ? "text-foreground" : "text-muted-foreground"}`} title={snapshot ? undefined : NA_TOOLTIP}>
+                    {snapshot ? formatAEDCompact(snapshot.cashPosition) : DASH}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-1 leading-tight">
+                    {snapshot
+                      ? <>After client AR {formatAEDCompact(Math.abs(snapshot.ar))}</>
+                      : "Closing position data available for March 2026 only"}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Client Float Ratio</p>
+                    {cfr != null && (
+                      <Badge variant="outline" className={`text-[10px] ${cfr > 50 ? "border-loss/40 text-loss" : cfr > 30 ? "border-amber-500/40 text-amber-400" : "border-success/40 text-success"}`}>
+                        {cfr > 50 ? "Critical" : cfr > 30 ? "Elevated" : "Healthy"}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className={`text-2xl font-bold font-serif mt-1 ${cfrTone}`} title={cfr == null ? NA_TOOLTIP : undefined}>
+                    {cfr == null ? DASH : `${cfr.toFixed(1)}%`}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-1 leading-tight">
+                    {cfr == null
+                      ? "Closing position data available for March 2026 only"
+                      : "AR as % of total funds. Green if &lt;30%."}
+                  </p>
+                </CardContent>
+              </Card>
             </div>
           );
         })()}
@@ -656,206 +714,74 @@ const OtcDashboard = () => {
         {/* Gold divider */}
         <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
-        {/* === Trading Activity Calendar (per-month) === */}
+        {/* === Trading Activity one-liner + Best/Worst Day === */}
         {(() => {
-          type CalCfg = {
-            monthName: string;
-            monthAbbrev: string;
-            totalDays: number;
-            firstDayOffset: number; // 0=Sun … 6=Sat
-            zeroDays: number[];
-            consecutiveZero: number[];
-            consecutiveZeroLabel?: string;
-            zeroNote?: string; // e.g. "Sunday closures — consistent weekly pattern"
-            bestDay: { label: string; aed: number };
-            worstDay: { label: string; aed: number };
-            avgDailyProfit?: number; // active days only
-            avgDailyVolumeUSDT?: number;
-            totalCounterparties?: number;
+          type DailySummary = {
+            line: string;
+            best: { label: string; aed: number } | null;
+            worst: { label: string; aed: number } | null;
           };
-          const calendars: Record<string, CalCfg> = {
+          const summaries: Record<string, DailySummary> = {
             "Mar 2026": {
-              monthName: "March 2026",
-              monthAbbrev: "Mar",
-              totalDays: 31,
-              firstDayOffset: 0, // Mar 1, 2026 = Sunday
-              zeroDays: [1, 8, 15, 16, 20, 21, 22, 29],
-              consecutiveZero: [15, 16, 20, 21, 22],
-              consecutiveZeroLabel: "Mar 15, 16, 20, 21, 22",
-              bestDay: { label: "Mar 30", aed: 109835 },
-              worstDay: { label: "Mar 31", aed: -18039 },
-              avgDailyProfit: 8639,
+              line: "March 2026: 23 active days | 8 zero days | 5 consecutive zero days Mar 15–22 ⚠️",
+              best: { label: "Mar 30", aed: 109835 },
+              worst: { label: "Mar 31", aed: -18039 },
             },
             "Feb 2026": {
-              monthName: "February 2026",
-              monthAbbrev: "Feb",
-              totalDays: 28,
-              firstDayOffset: 0, // Feb 1, 2026 = Sunday
-              zeroDays: [1, 8, 15, 22],
-              consecutiveZero: [],
-              zeroNote: "Sunday closures — consistent weekly pattern",
-              bestDay: { label: "—", aed: 0 },
-              worstDay: { label: "—", aed: 0 },
-              avgDailyVolumeUSDT: 2_093_516,
-              totalCounterparties: 54,
+              line: "February 2026: 24 active days | 4 zero days | all Sundays ✅",
+              best: null,
+              worst: null,
             },
             "Jan 2026": {
-              monthName: "January 2026",
-              monthAbbrev: "Jan",
-              totalDays: 31,
-              firstDayOffset: 4, // Jan 1, 2026 = Thursday
-              zeroDays: [1, 4, 11, 18, 25],
-              consecutiveZero: [],
-              zeroNote: "New Year + Sundays — consistent weekly pattern",
-              bestDay: { label: "—", aed: 0 },
-              worstDay: { label: "—", aed: 0 },
-              avgDailyVolumeUSDT: 2_802_036,
-              totalCounterparties: 52,
+              line: "January 2026: 26 active days | 5 zero days | New Year + Sundays ✅",
+              best: null,
+              worst: null,
             },
           };
-          const cfg = calendars[selectedMonth];
-          if (!cfg) return null;
-
-          const zeroSet = new Set(cfg.zeroDays);
-          const consecSet = new Set(cfg.consecutiveZero);
-          const days = Array.from({ length: cfg.totalDays }, (_, i) => i + 1);
-          const activeCount = cfg.totalDays - zeroSet.size;
-          const dayLabels = ["S", "M", "T", "W", "T", "F", "S"];
-          const formatUSDT = (v: number) => `${v.toLocaleString("en-US")} USDT`;
-
+          const sum = summaries[selectedMonth] ?? null;
           return (
-            <>
-              <section className="space-y-4">
+            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+              <CardContent className="p-4 space-y-3">
                 <div className="flex items-center gap-2">
                   <Activity className="h-4 w-4 text-primary" />
-                  <h2 className="text-sm font-serif font-semibold uppercase tracking-wider text-foreground">
-                    Trading Activity Calendar — {cfg.monthName}
-                  </h2>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-foreground">Daily Activity</p>
                 </div>
-                <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-                  <CardContent className="p-5 space-y-5">
-                    {/* Calendar grid */}
-                    <div>
-                      <div className="grid grid-cols-7 gap-2 mb-2">
-                        {dayLabels.map((d, i) => (
-                          <div key={i} className="text-[10px] uppercase tracking-wider text-muted-foreground text-center font-medium">
-                            {d}
-                          </div>
-                        ))}
-                      </div>
-                      <div className="grid grid-cols-7 gap-2">
-                        {Array.from({ length: cfg.firstDayOffset }).map((_, i) => (
-                          <div key={`pad-${i}`} />
-                        ))}
-                        {days.map((d) => {
-                          const isZero = zeroSet.has(d);
-                          const isConsecZero = consecSet.has(d);
-                          const zeroTitle = cfg.zeroNote ?? "Zero trading day";
-                          return (
-                            <div
-                              key={d}
-                              title={
-                                isConsecZero
-                                  ? `${cfg.monthAbbrev} ${d} — Consecutive zero day`
-                                  : isZero
-                                  ? `${cfg.monthAbbrev} ${d} — ${zeroTitle}`
-                                  : `${cfg.monthAbbrev} ${d} — Active trading day`
-                              }
-                              className={[
-                                "aspect-square rounded-md flex items-center justify-center text-xs font-medium border transition-colors",
-                                isZero
-                                  ? "bg-muted/40 text-muted-foreground border-border/40"
-                                  : "bg-success/15 text-success border-success/40",
-                                isConsecZero ? "!border-amber-500 border-2 ring-1 ring-amber-500/30" : "",
-                              ].join(" ")}
-                            >
-                              {d}
-                            </div>
-                          );
-                        })}
-                      </div>
-                      {/* Legend */}
-                      <div className="flex flex-wrap items-center gap-4 mt-4 text-[10px] text-muted-foreground">
-                        <div className="flex items-center gap-1.5">
-                          <span className="h-3 w-3 rounded-sm bg-success/15 border border-success/40 inline-block" />
-                          <span>Active trading day</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="h-3 w-3 rounded-sm bg-muted/40 border border-border/40 inline-block" />
-                          <span>Zero trading day{cfg.zeroNote ? ` — ${cfg.zeroNote}` : ""}</span>
-                        </div>
-                        {cfg.consecutiveZero.length > 0 && (
-                          <div className="flex items-center gap-1.5">
-                            <span className="h-3 w-3 rounded-sm border-2 border-amber-500 inline-block" />
-                            <span>Consecutive zero days{cfg.consecutiveZeroLabel ? ` (${cfg.consecutiveZeroLabel})` : ""}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Stats row */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-border/40">
-                      <div>
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Active Trading Days</p>
-                        <p className="text-lg font-serif font-bold text-foreground">{activeCount} <span className="text-sm text-muted-foreground font-normal">/ {cfg.totalDays}</span></p>
-                        {cfg.zeroNote && (
-                          <p className="text-[10px] text-muted-foreground">{zeroSet.size} zero days (all Sundays)</p>
-                        )}
-                      </div>
-                      {cfg.bestDay.label !== "—" ? (
-                        <div>
-                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Best Day</p>
-                          <p className="text-lg font-serif font-bold text-success">{formatAEDWhole(cfg.bestDay.aed)}</p>
-                          <p className="text-[10px] text-muted-foreground">{cfg.bestDay.label}</p>
-                        </div>
-                      ) : (
-                        <div>
-                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Avg Daily Volume</p>
-                          <p className="text-lg font-serif font-bold text-primary tabular-nums">{cfg.avgDailyVolumeUSDT ? formatUSDT(cfg.avgDailyVolumeUSDT) : "—"}</p>
-                          <p className="text-[10px] text-muted-foreground">Across active days</p>
-                        </div>
-                      )}
-                      {cfg.worstDay.label !== "—" ? (
-                        <div>
-                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Worst Day</p>
-                          <p className="text-lg font-serif font-bold text-loss">{formatAEDWhole(cfg.worstDay.aed)}</p>
-                          <p className="text-[10px] text-muted-foreground">{cfg.worstDay.label}</p>
-                        </div>
-                      ) : (
-                        <div>
-                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Total Counterparties</p>
-                          <p className="text-lg font-serif font-bold text-foreground tabular-nums">{cfg.totalCounterparties ?? "—"}</p>
-                          <p className="text-[10px] text-muted-foreground">Active during month</p>
-                        </div>
-                      )}
-                      <div>
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{cfg.avgDailyProfit != null ? "Avg Daily Profit" : "Zero Days"}</p>
-                        {cfg.avgDailyProfit != null ? (
-                          <>
-                            <p className="text-lg font-serif font-bold text-primary">{formatAEDWhole(cfg.avgDailyProfit)}</p>
-                            <p className="text-[10px] text-muted-foreground">Active days only</p>
-                          </>
-                        ) : (
-                          <>
-                            <p className="text-lg font-serif font-bold text-foreground">{zeroSet.size} <span className="text-sm text-muted-foreground font-normal">/ {cfg.totalDays}</span></p>
-                            <p className="text-[10px] text-muted-foreground">{cfg.zeroNote ? "All on Sundays" : "Non-trading days"}</p>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    <p className="text-[11px] italic text-muted-foreground leading-relaxed">
-                      Daily profit calculated on USDT wallet movement (closing minus opening balance). Large AED cash flow swings on individual days reflect pass-through USDT inventory trades and do not represent actual profit or loss.
-                    </p>
-                  </CardContent>
-                </Card>
-              </section>
-
-              {/* Gold divider */}
-              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-            </>
+                {sum ? (
+                  <p className="text-sm text-foreground leading-relaxed">{sum.line}</p>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">— Daily activity data available for Jan–Mar 2026 only</p>
+                )}
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <div className="rounded-lg border border-border/40 bg-secondary/20 p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Best Day</p>
+                    {sum?.best ? (
+                      <>
+                        <p className="text-base font-serif font-bold text-success">{formatAEDWhole(sum.best.aed)}</p>
+                        <p className="text-[10px] text-muted-foreground">{sum.best.label}</p>
+                      </>
+                    ) : (
+                      <p className="text-base font-serif font-bold text-muted-foreground">—</p>
+                    )}
+                  </div>
+                  <div className="rounded-lg border border-border/40 bg-secondary/20 p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Worst Day</p>
+                    {sum?.worst ? (
+                      <>
+                        <p className="text-base font-serif font-bold text-loss">{formatAEDWhole(sum.worst.aed)}</p>
+                        <p className="text-[10px] text-muted-foreground">{sum.worst.label}</p>
+                      </>
+                    ) : (
+                      <p className="text-base font-serif font-bold text-muted-foreground">—</p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           );
         })()}
+
+        {/* Gold divider */}
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
         {/* === Liquidity & Capital Position === */}
         <section className="space-y-4">
@@ -1135,184 +1061,9 @@ const OtcDashboard = () => {
                     : <>Client float excluded as it represents client obligations not distributable capital.</>}
                 </p>
 
-                {/* Supplementary: Capital deployment metrics retained */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-                  {/* AED Cash on Hand — total funds (USDT wallet + AED closing) */}
-                  <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-                    <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground uppercase tracking-wider">AED Cash on Hand</p>
-                      <p
-                        className="text-2xl font-bold font-serif text-foreground mt-1"
-                        title={snapshot ? undefined : NA_TOOLTIP}
-                      >
-                        {snapshot ? formatAEDCompact(snapshot.totalCash) : DASH}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground mt-1 leading-tight">
-                        {snapshot
-                          ? <>USDT wallet {formatAEDCompact(snapshot.usdtWalletAED)} + AED cash {formatAEDCompact(snapshot.aedClosing)}</>
-                          : "Closing position data available for March 2026 only"}
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  {/* Net Own Cash — total funds minus AR obligations */}
-                  <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-                    <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground uppercase tracking-wider">Net Own Cash</p>
-                      <p
-                        className={`text-2xl font-bold font-serif mt-1 ${snapshot ? "text-foreground" : "text-muted-foreground"}`}
-                        title={snapshot ? undefined : NA_TOOLTIP}
-                      >
-                        {snapshot ? formatAEDCompact(snapshot.cashPosition) : DASH}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground mt-1 leading-tight">
-                        {snapshot
-                          ? <>Total funds {formatAEDCompact(snapshot.totalCash)} less client AR {formatAEDCompact(Math.abs(snapshot.ar))}</>
-                          : "Closing position data available for March 2026 only"}
-                      </p>
-                      {snapshot && (
-                        <p className="text-[10px] text-success mt-1.5">✓ Distributable partner capital only</p>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  {/* Client Float Ratio — AR as % of total funds */}
-                  {(() => {
-                    const cfr = floatPct;
-                    const cfrTone = cfr == null
-                      ? "text-muted-foreground"
-                      : cfr > 50 ? "text-loss" : cfr > 30 ? "text-amber-400" : "text-success";
-                    const cfrFlag = cfr == null
-                      ? null
-                      : cfr > 50
-                      ? { label: "Critical — above 50%", cls: "text-loss" }
-                      : cfr > 30
-                      ? { label: "Elevated — above 30%", cls: "text-amber-400" }
-                      : { label: "Healthy — below 30% threshold", cls: "text-success" };
-                    return (
-                      <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-                        <CardContent className="p-4">
-                          <p className="text-xs text-muted-foreground uppercase tracking-wider">Client Float Ratio</p>
-                          <p
-                            className={`text-2xl font-bold font-serif mt-1 ${cfrTone}`}
-                            title={cfr == null ? NA_TOOLTIP : undefined}
-                          >
-                            {cfr == null ? DASH : `${cfr.toFixed(1)}%`}
-                          </p>
-                          <div className="mt-2 h-1.5 w-full rounded-full bg-secondary/40 overflow-hidden">
-                            <div
-                              className={`h-full transition-all ${
-                                cfr == null ? "bg-muted" : cfr > 50 ? "bg-loss" : cfr > 30 ? "bg-amber-500" : "bg-success"
-                              }`}
-                              style={{ width: `${Math.min(100, cfr ?? 0)}%` }}
-                            />
-                          </div>
-                          {cfrFlag && (
-                            <p className={`text-[10px] mt-1.5 font-medium ${cfrFlag.cls}`}>✓ {cfrFlag.label}</p>
-                          )}
-                          <p className="text-[10px] text-muted-foreground mt-1 leading-tight">
-                            {cfr == null
-                              ? "Closing position data available for March 2026 only"
-                              : "Client AR as % of total funds. Amber if >30%, Red if >50%."}
-                          </p>
-                        </CardContent>
-                      </Card>
-                    );
-                  })()}
-                </div>
               </>
             );
           })()}
-        </section>
-
-        {/* Gold divider */}
-        <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-
-        {/* === Counterparty / Partner Exposure === */}
-        <section className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-primary" />
-            <h2 className="text-sm font-serif font-semibold uppercase tracking-wider text-foreground">Counterparty / Partner Exposure</h2>
-          </div>
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-            <CardContent className="p-5">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                {partnersByExposure.slice(0, 2).map((p, idx) => {
-                  const sharePct = (p.funding / totalPartnerFunding) * 100;
-                  const isTopRisky = idx === 0 && sharePct > 55;
-                  return (
-                    <div key={p.name} className={`p-4 rounded-lg border ${isTopRisky ? "border-loss/40 bg-loss/5" : "border-border/40 bg-secondary/20"}`}>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs uppercase tracking-wider text-muted-foreground">#{idx + 1} Capital Partner</span>
-                        <Badge variant={isTopRisky ? "destructive" : "secondary"} className="text-[10px]">
-                          {sharePct.toFixed(1)}% share
-                        </Badge>
-                      </div>
-                      <p className="text-lg font-serif font-bold text-foreground">{p.name}</p>
-                      <div className="mt-3 space-y-1.5">
-                        <div className="flex justify-between text-xs">
-                          <span className="text-muted-foreground">Capital Funding</span>
-                          <span className="tabular-nums font-medium text-foreground">{formatAEDCompact(p.funding)}</span>
-                        </div>
-                        <div className="flex justify-between text-xs">
-                          <span className="text-muted-foreground">Profit Contribution (50%) · {periodLabel}</span>
-                          <span className={`tabular-nums font-medium ${totalNetProfit >= 0 ? "text-success" : "text-loss"}`}>{formatAEDCompact(totalNetProfit / 2)}</span>
-                        </div>
-                        <div className="flex justify-between text-xs pt-1.5 border-t border-border/30">
-                          <span className="text-muted-foreground">Net Position</span>
-                          <span className={`tabular-nums font-bold ${p.net >= 0 ? "text-success" : "text-loss"}`}>{formatAEDCompact(p.net)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {/* Direct Clients (trading flow, no capital exposure) */}
-                <div className="p-4 rounded-lg border border-border/40 bg-secondary/10">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs uppercase tracking-wider text-muted-foreground">Trading Flow</span>
-                    <Badge variant="secondary" className="text-[10px]">Walk-in volume</Badge>
-                  </div>
-                  <p className="text-lg font-serif font-bold text-foreground">Direct Clients</p>
-                  <div className="mt-3 space-y-1.5">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">Capital Funding</span>
-                      <span className="tabular-nums font-medium text-muted-foreground">—</span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">Volume Contribution</span>
-                      <span className="tabular-nums font-medium text-foreground">~100%</span>
-                    </div>
-                    <div className="flex justify-between text-xs pt-1.5 border-t border-border/30">
-                      <span className="text-muted-foreground">Trading Income · {periodLabel}</span>
-                      <span className={`tabular-nums font-bold ${totalTradingIncome >= 0 ? "text-success" : "text-loss"}`}>{formatAEDCompact(totalTradingIncome)}</span>
-                    </div>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground mt-2 leading-tight">
-                    All USDT↔AED trades flow through direct/walk-in clients — Maria & Ahmad are capital-funding partners only.
-                  </p>
-                </div>
-              </div>
-              {concentrationRisk ? (
-                <div className="mt-4 p-3 rounded-lg border border-loss/40 bg-loss/10 flex items-start gap-2">
-                  <AlertTriangle className="h-4 w-4 text-loss mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-xs font-semibold text-loss">Concentration Risk</p>
-                    <p className="text-[11px] text-muted-foreground">
-                      Top partner holds {((partnersByExposure[0].funding / totalPartnerFunding) * 100).toFixed(1)}% of capital exposure — above the 55% concentration threshold.
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="mt-4 p-3 rounded-lg border border-success/30 bg-success/5 flex items-start gap-2">
-                  <Users className="h-4 w-4 text-success mt-0.5 shrink-0" />
-                  <p className="text-xs text-muted-foreground">
-                    Partner exposure is balanced — no single counterparty above the 55% concentration threshold.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </section>
 
         {/* Gold divider */}
@@ -1814,7 +1565,7 @@ const OtcDashboard = () => {
                             className={`border-border/30 hover:bg-secondary/30 ${isSel ? "bg-primary/15 hover:bg-primary/20 border-l-2 border-l-primary" : ""}`}
                           >
                             <TableCell className={`text-sm font-medium ${isSel ? "text-primary font-bold" : "text-foreground"}`}>
-                              {row.month}{isSel && " ●"}
+                              {row.month}
                             </TableCell>
                             <TableCell className="text-sm tabular-nums text-right text-foreground">{formatAED(row.grossProfit)}</TableCell>
                             <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatAED(row.cashExpenses)}</TableCell>
