@@ -376,8 +376,32 @@ const MkxDashboard = () => {
               </div>
             </CardContent>
           </Card>
-        </div>
-        )}
+            </div>
+            {/* Crypto Capital Injection — moved here from MKX Assets */}
+            <Card className="border-border/50 bg-card/60 backdrop-blur-sm">
+              <CardContent className="p-4 flex flex-wrap items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-primary" />
+                  <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Crypto Capital Injection</p>
+                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px] ml-2">Cumulative</Badge>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Ahmad</p>
+                  <p className="text-sm font-bold font-serif text-foreground">{formatAEDFull(2147504.48)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Maria</p>
+                  <p className="text-sm font-bold font-serif text-foreground">{formatAEDFull(200000)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Total</p>
+                  <p className="text-sm font-bold font-serif text-foreground">{formatAEDFull(2347504.48)}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          );
+        })()}
 
         {/* MKX Crypto Assets - only in All Time */}
         {!isFiltered && (
