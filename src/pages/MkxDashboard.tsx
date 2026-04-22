@@ -732,7 +732,7 @@ const MkxDashboard = () => {
             <TabsTrigger value="fullpl">Full Year P&L</TabsTrigger>
             <TabsTrigger value="balance">Balance Sheet</TabsTrigger>
             <TabsTrigger value="kpi">KPI Analysis</TabsTrigger>
-            <TabsTrigger value="vara">VARA Ratios</TabsTrigger>
+            
             <TabsTrigger value="flows">Client Flows</TabsTrigger>
           </TabsList>
 
@@ -976,109 +976,7 @@ const MkxDashboard = () => {
             </Card>
           </TabsContent>
 
-          {/* VARA Ratios */}
-          <TabsContent value="vara">
-            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-primary" />
-                  <div>
-                    <CardTitle className="text-lg font-serif text-foreground">VARA Required Ratios — Compliance Assessment</CardTitle>
-                    <p className="text-xs text-muted-foreground mt-1">Current values as of {activeKPI.month} vs UAE VARA Standards</p>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-border/50 hover:bg-transparent">
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider min-w-[200px]">Ratio</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-center min-w-[120px]">Current Value</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-center min-w-[80px]">Status</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider min-w-[200px]">Healthy (VARA Standard)</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider min-w-[200px]">Risky (Warning Flags)</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {varaStandards.map((std, idx) => {
-                        const { value, status } = getVARAStatus(std.kpiKey);
-                        return (
-                          <TableRow key={idx} className="border-border/30 hover:bg-secondary/30">
-                            <TableCell className="text-sm font-medium text-foreground">{std.ratio}</TableCell>
-                            <TableCell className="text-sm tabular-nums text-center font-semibold">
-                              <span className={status === "healthy" ? "text-success" : status === "warning" ? "text-amber-400" : "text-loss"}>
-                                {value}
-                              </span>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {status === "healthy" ? (
-                                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">
-                                  <CheckCircle2 className="h-3 w-3 mr-1" />OK
-                                </Badge>
-                              ) : status === "warning" ? (
-                                <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs">
-                                  <AlertTriangle className="h-3 w-3 mr-1" />Watch
-                                </Badge>
-                              ) : (
-                                <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-xs">
-                                  <AlertTriangle className="h-3 w-3 mr-1" />Risk
-                                </Badge>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-xs text-success/80">{std.healthy}</TableCell>
-                            <TableCell className="text-xs text-loss/80">{std.risky}</TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* VARA Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-              {(() => {
-                const results = varaStandards.map(s => getVARAStatus(s.kpiKey));
-                const healthy = results.filter(r => r.status === "healthy").length;
-                const warning = results.filter(r => r.status === "warning").length;
-                const risky = results.filter(r => r.status === "risky").length;
-                return (
-                  <>
-                    <Card className="border-emerald-500/30 bg-emerald-500/5">
-                      <CardContent className="p-4 flex items-center gap-3">
-                        <CheckCircle2 className="h-8 w-8 text-emerald-400" />
-                        <div>
-                          <p className="text-2xl font-bold font-serif text-emerald-400">{healthy}</p>
-                          <p className="text-xs text-muted-foreground">Healthy Ratios</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card className="border-amber-500/30 bg-amber-500/5">
-                      <CardContent className="p-4 flex items-center gap-3">
-                        <AlertTriangle className="h-8 w-8 text-amber-400" />
-                        <div>
-                          <p className="text-2xl font-bold font-serif text-amber-400">{warning}</p>
-                          <p className="text-xs text-muted-foreground">Watch Items</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card className="border-red-500/30 bg-red-500/5">
-                      <CardContent className="p-4 flex items-center gap-3">
-                        <AlertTriangle className="h-8 w-8 text-red-400" />
-                        <div>
-                          <p className="text-2xl font-bold font-serif text-red-400">{risky}</p>
-                          <p className="text-xs text-muted-foreground">Risk Flags</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </>
-                );
-              })()}
-            </div>
-          </TabsContent>
-
+          {/* VARA moved out of tabs — see Section 9 above */}
           {/* Client Flows */}
           <TabsContent value="flows">
             <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
