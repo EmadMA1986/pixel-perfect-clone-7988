@@ -190,15 +190,19 @@ const OtcDashboard = () => {
   // NOTE: this is the single source of truth for: Cash Position, AR (client
   // funds in use), capital deployed, capital utilization, liquidity buffer.
   type PeriodSnapshot = {
-    cashPosition: number;
+    cashPosition: number; // own cash (after AR settlement)
     ar: number; // negative = owed to clients
-    totalCash: number;
+    totalCash: number; // total funds (USDT wallet + AED closing)
+    usdtWalletAED: number; // USDT wallet valued in AED
+    aedClosing: number; // AED closing balance (DR + DFZ)
   };
   const periodSnapshots: Record<string, PeriodSnapshot> = {
     "Mar 2026": {
-      cashPosition: otcSummary.cashPosition,
-      ar: otcSummary.ar,
-      totalCash: otcSummary.totalCash,
+      cashPosition: otcSummary.cashPosition, // 2,844,091.67
+      ar: otcSummary.ar,                      // -1,124,521.79
+      totalCash: otcSummary.totalCash,        // 3,968,613.46
+      usdtWalletAED: 2565782.46,
+      aedClosing: 1402831.00,
     },
   };
   const LATEST_SNAPSHOT_MONTH = "Mar 2026";
