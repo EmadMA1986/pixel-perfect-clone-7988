@@ -3,10 +3,8 @@ import { Link } from "react-router-dom";
 import {
   TrendingUp,
   TrendingDown,
-  DollarSign,
   Wallet,
   ArrowLeft,
-  BarChart3,
   Shield,
   Activity,
   FileText,
@@ -14,7 +12,6 @@ import {
   AlertTriangle,
   CheckCircle2,
 } from "lucide-react";
-import SummaryCard from "@/components/SummaryCard";
 import MonthFilter from "@/components/MonthFilter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,19 +25,6 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  CartesianGrid,
-  Area,
-  AreaChart,
-} from "recharts";
 import {
   monthlyData,
   kpiData,
@@ -73,25 +57,7 @@ const MkxDashboard = () => {
   const isFiltered = selectedMonth !== "all";
   const hasMonthlyData = filteredMonthly.length > 0;
 
-  const revenueChartData = useMemo(
-    () => filteredMonthly.map((m) => ({ name: m.month, revenue: Math.round(m.revenue), grossProfit: Math.round(m.grossProfit), expenses: Math.round(m.totalExpenses) })),
-    [filteredMonthly]
-  );
 
-  const profitChartData = useMemo(
-    () => filteredMonthly.map((m) => ({ name: m.month, netProfit: Math.round(m.netProfit) })),
-    [filteredMonthly]
-  );
-
-  const volumeChartData = useMemo(
-    () => filteredMonthly.map((m) => ({ name: m.month, volume: Math.round(m.tradingVolume) })),
-    [filteredMonthly]
-  );
-
-  const liquidityChartData = useMemo(
-    () => filteredKPI.map((k) => ({ name: k.month, buffer: Math.round(k.liquidityBuffer), coverage: k.assetCoverageRatio })),
-    [filteredKPI]
-  );
 
   const formatPLValue = (v: number) => {
     if (v === 0) return "—";
@@ -580,189 +546,6 @@ const MkxDashboard = () => {
             </Card>
           );
         })()}
-
-        {/* Summary Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-            <CardContent className="p-4 space-y-1">
-              <div className="flex items-center gap-2 mb-1">
-                <DollarSign className="h-4 w-4 text-primary" />
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Revenue (Convert + Withdrawal)</p>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-muted-foreground">2025 (Jan–Dec)</span>
-                <span className="text-sm font-semibold text-foreground">{formatAEDFull(168104.47)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-muted-foreground">2026 YTD (Jan–Mar)</span>
-                <span className="text-sm font-semibold text-foreground">{formatAEDFull(370104.01)}</span>
-              </div>
-              <div className="border-t border-border/50 pt-1 flex justify-between items-center">
-                <span className="text-xs font-bold text-foreground">Total</span>
-                <span className="text-sm font-bold text-foreground">{formatAEDFull(538208.48)}</span>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-            <CardContent className="p-4 space-y-1">
-              <div className="flex items-center gap-2 mb-1">
-                <TrendingUp className="h-4 w-4 text-success" />
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Gross Profit</p>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-muted-foreground">2025 (Jan–Dec)</span>
-                <span className="text-sm font-semibold text-foreground">{formatAEDFull(152213)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-muted-foreground">2026 YTD (Jan–Mar)</span>
-                <span className="text-sm font-semibold text-foreground">{formatAEDFull(351913)}</span>
-              </div>
-              <div className="border-t border-border/50 pt-1 flex justify-between items-center">
-                <span className="text-xs font-bold text-foreground">Total</span>
-                <span className="text-sm font-bold text-success">{formatAEDFull(504126)}</span>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-            <CardContent className="p-4 space-y-1">
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Cumulative Net Loss Breakdown</p>
-              {[
-                { year: "2023", value: -783860.87 },
-                { year: "2024", value: -2571547.87 },
-                { year: "2025", value: -3905605.53 },
-                { year: "2026 YTD", value: -865195.22 },
-              ].map((item) => (
-                <div key={item.year} className="flex justify-between items-center">
-                  <span className="text-xs text-muted-foreground">{item.year}</span>
-                  <span className="text-sm font-semibold text-loss">{formatAEDFull(item.value)}</span>
-                </div>
-              ))}
-              <div className="border-t border-border/50 pt-1 flex justify-between items-center">
-                <span className="text-xs font-bold text-foreground">Total Retained Loss</span>
-                <span className="text-sm font-bold text-loss">{formatAEDFull(-8126209.49)}</span>
-              </div>
-            </CardContent>
-          </Card>
-          <SummaryCard
-            title="Current Assets"
-            value={formatAED(2628064 + 128875 + 938.60 + 50647 + 1640913)}
-            subtitle="VA + Cold + Zand + Mashreq + CMA"
-            icon={Building2}
-          />
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-            <CardContent className="p-4 space-y-1">
-              <div className="flex items-center gap-2 mb-1">
-                <FileText className="h-4 w-4 text-loss" />
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Current Liabilities</p>
-              </div>
-              {[
-                { label: "Accounts Payable", value: 86285 },
-                { label: "Fiat Due to Customers", value: 137968 },
-                { label: "Payroll Staff Payable", value: 196278 },
-                { label: "VAT Control", value: -113961 },
-                { label: "VA Due to Customers", value: 1999061 },
-              ].map((item) => (
-                <div key={item.label} className="flex justify-between items-center">
-                  <span className="text-xs text-muted-foreground">{item.label}</span>
-                  <span className="text-sm font-semibold text-foreground">{formatAEDFull(item.value)}</span>
-                </div>
-              ))}
-              <div className="border-t border-border/50 pt-1 flex justify-between items-center">
-                <span className="text-xs font-bold text-foreground">Total</span>
-                <span className="text-sm font-bold text-loss">{formatAEDFull(2345385)}</span>
-              </div>
-            </CardContent>
-          </Card>
-          <SummaryCard
-            title="Asset Coverage"
-            value={`${mkxSummary.latestAssetCoverage.toFixed(2)}x`}
-            subtitle="Latest ratio"
-            icon={Shield}
-          />
-          <SummaryCard
-            title="Trading Volume"
-            value={formatAED(mkxSummary.totalTradingVolume)}
-            subtitle={`Avg ${formatAED(mkxSummary.avgTradingVolume)}/mo`}
-            icon={BarChart3}
-          />
-        </div>
-
-        {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-serif text-foreground">Revenue vs Gross Profit</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={revenueChartData} margin={{ top: 5, right: 5, bottom: 40, left: 5 }}>
-                  <XAxis dataKey="name" tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} angle={-45} textAnchor="end" axisLine={{ stroke: "hsl(220 14% 18%)" }} tickLine={false} />
-                  <YAxis tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                  <Tooltip contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }} formatter={(value: number) => [formatAEDFull(value), ""]} />
-                  <Bar dataKey="revenue" name="Revenue" fill="hsl(263, 50%, 55%)" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="grossProfit" name="Gross Profit" fill="hsl(160, 50%, 40%)" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-serif text-foreground">Trading Volume</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={volumeChartData} margin={{ top: 5, right: 5, bottom: 40, left: 5 }}>
-                  <defs>
-                    <linearGradient id="volumeGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(263, 50%, 55%)" stopOpacity={0.4} />
-                      <stop offset="100%" stopColor="hsl(263, 50%, 55%)" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="name" tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} angle={-45} textAnchor="end" axisLine={{ stroke: "hsl(220 14% 18%)" }} tickLine={false} />
-                  <YAxis tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
-                  <Tooltip contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }} formatter={(value: number) => [formatAEDFull(value), ""]} />
-                  <Area type="monotone" dataKey="volume" stroke="hsl(263, 50%, 55%)" fill="url(#volumeGrad)" strokeWidth={2} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-serif text-foreground">Net Profit Trend</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={profitChartData} margin={{ top: 5, right: 5, bottom: 40, left: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 18%)" />
-                  <XAxis dataKey="name" tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} angle={-45} textAnchor="end" axisLine={{ stroke: "hsl(220 14% 18%)" }} tickLine={false} />
-                  <YAxis tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                  <Tooltip contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }} formatter={(value: number) => [formatAEDFull(value), ""]} />
-                  <Line type="monotone" dataKey="netProfit" stroke="hsl(0, 60%, 50%)" strokeWidth={2} dot={{ fill: "hsl(0, 60%, 50%)", r: 4 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-serif text-foreground">Liquidity Buffer</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={liquidityChartData} margin={{ top: 5, right: 5, bottom: 40, left: 5 }}>
-                  <XAxis dataKey="name" tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} angle={-45} textAnchor="end" axisLine={{ stroke: "hsl(220 14% 18%)" }} tickLine={false} />
-                  <YAxis tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                  <Tooltip contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }} formatter={(value: number) => [formatAEDFull(value), ""]} />
-                  <Bar dataKey="buffer" name="Liquidity Buffer" fill="hsl(43, 74%, 52%)" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* === Section 9 — VARA Compliance Dashboard (standalone) === */}
         {(() => {
