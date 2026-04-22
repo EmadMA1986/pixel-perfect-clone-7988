@@ -405,7 +405,9 @@ const MkAutosCarsDashboard = () => {
                         <TrendingUp className="h-4 w-4 text-success" />
                         <p className="text-xs font-semibold uppercase tracking-wider text-success">Improved</p>
                       </div>
-                      <p className="text-xs text-muted-foreground italic">Nothing improved vs last month.</p>
+                      <ul className="text-xs text-foreground space-y-1 list-disc list-inside">
+                        <li>Corvette income stable at AED 7,763</li>
+                      </ul>
                     </div>
                     <div className="rounded-lg border border-border/40 border-l-4 border-l-loss bg-card/60 p-3">
                       <div className="flex items-center gap-2 mb-2">
@@ -427,6 +429,7 @@ const MkAutosCarsDashboard = () => {
                         <li>Lamborghini idle since Feb — review pricing</li>
                         <li>Patrol idle since Feb</li>
                         <li>C200 idle since Jul 2025</li>
+                        <li>BMW generating only AED 470 in March — near idle</li>
                       </ul>
                     </div>
                   </div>
@@ -661,33 +664,24 @@ const MkAutosCarsDashboard = () => {
             <CardTitle className="text-base font-serif text-foreground">Fleet Optimization — Keep vs Sell</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="rounded-lg border-2 border-success/40 bg-success/5 p-4">
-                <p className="text-xs uppercase tracking-wider text-success font-bold mb-2">✅ Keep ({keepVehicles.length} vehicles)</p>
-                <p className="text-sm font-semibold text-foreground mb-2">
-                  {keepVehicles.map((v) => v.displayName.split("-")[0]).join(", ")}
-                </p>
-                <p className="text-xs text-muted-foreground">Annual net profit exceeds or approaches annual depreciation.</p>
-              </div>
-              <div className="rounded-lg border-2 border-loss/40 bg-loss/5 p-4 space-y-3">
-                <p className="text-xs uppercase tracking-wider text-loss font-bold">🔴 Sell Recommended ({sellVehicles.length} vehicles)</p>
-                {sellVehicles.map((v) => {
-                  const annualDepr = (monthlyDepreciation[v.key] ?? 0) * 12;
-                  const annualNetProfit = v.avgMonthlyProfit * 12;
-                  const gap = annualDepr - annualNetProfit;
-                  return (
-                    <div key={v.key} className="text-xs space-y-0.5">
-                      <p className="font-bold text-foreground">{v.displayName}</p>
-                      <p className="text-muted-foreground">
-                        Sale value {formatAED(v.saleValue)} | Annual depreciation {formatAED(annualDepr)} | Annual net profit {formatAED(annualNetProfit)}
-                      </p>
-                      <p className="text-loss">
-                        {gap > 0 ? `Depreciation exceeds profit by ${formatAED(gap)}/year` : `Nearly break-even`} → SELL
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
+            <div className="rounded-lg border-2 border-loss/40 bg-loss/5 p-4 space-y-3">
+              <p className="text-xs uppercase tracking-wider text-loss font-bold">🔴 Sell Recommended ({sellVehicles.length} vehicles)</p>
+              {sellVehicles.map((v) => {
+                const annualDepr = (monthlyDepreciation[v.key] ?? 0) * 12;
+                const annualNetProfit = v.avgMonthlyProfit * 12;
+                const gap = annualDepr - annualNetProfit;
+                return (
+                  <div key={v.key} className="text-xs space-y-0.5">
+                    <p className="font-bold text-foreground">{v.displayName}</p>
+                    <p className="text-muted-foreground">
+                      Sale value {formatAED(v.saleValue)} | Annual depreciation {formatAED(annualDepr)} | Annual net profit {formatAED(annualNetProfit)}
+                    </p>
+                    <p className="text-loss">
+                      {gap > 0 ? `Depreciation exceeds profit by ${formatAED(gap)}/year` : `Nearly break-even`} → SELL
+                    </p>
+                  </div>
+                );
+              })}
             </div>
             <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
               <p className="text-xs text-foreground">
@@ -742,7 +736,7 @@ const MkAutosCarsDashboard = () => {
         {/* ═════ SECTION 10 — Monthly Income by Vehicle (stacked) ═════ */}
         <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-serif text-foreground">Monthly Income by Vehicle — Last 12 Months</CardTitle>
+            <CardTitle className="text-base font-serif text-foreground">Monthly Income by Vehicle — Last 6 Months</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={320}>
@@ -763,89 +757,6 @@ const MkAutosCarsDashboard = () => {
           </CardContent>
         </Card>
 
-        <Divider />
-
-        {/* ═════ SECTION 11 — Depreciation Schedule ═════ */}
-        <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-serif text-foreground">Monthly Depreciation by Vehicle</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-border/50 hover:bg-transparent">
-                  <TableHead className="text-[10px] uppercase tracking-wider">Vehicle</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider text-right">Monthly Depreciation</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {trackedKeys.map((k) => (
-                  <TableRow key={k} className="border-border/30 hover:bg-secondary/30">
-                    <TableCell className="text-xs font-medium text-foreground">{vehicleDisplayName[k]}</TableCell>
-                    <TableCell className="text-xs tabular-nums text-right text-muted-foreground">{formatAED(monthlyDepreciation[k])}</TableCell>
-                  </TableRow>
-                ))}
-                <TableRow className="border-border/50 bg-secondary/30 font-semibold">
-                  <TableCell className="text-xs text-foreground">TOTAL</TableCell>
-                  <TableCell className="text-xs tabular-nums text-right text-foreground">{formatAED(TOTAL_MONTHLY_DEPR)}</TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-            <div className={`rounded-lg border p-3 ${incomeVsDepr >= 0 ? "border-success/30 bg-success/5" : "border-loss/30 bg-loss/5"}`}>
-              <p className={`text-xs ${incomeVsDepr >= 0 ? "text-success" : "text-loss"}`}>
-                Monthly depreciation {formatAED(TOTAL_MONTHLY_DEPR)} — fleet must generate at least this much income to avoid real value destruction.
-                {" "}{selectedMonth} income {formatAED(curIncome)} = {incomeVsDepr >= 0 ? "surplus" : "shortfall"} of {formatAED(Math.abs(incomeVsDepr))}
-                {incomeVsDepr >= 0 ? " 🟢" : " 🔴"}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Divider />
-
-        {/* ═════ SECTION 12 — Monthly Income by Vehicle (table with depr & real profit) ═════ */}
-        <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-serif text-foreground">Monthly Income by Vehicle — Detail</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-border/50 hover:bg-transparent">
-                    <TableHead className="text-[10px] uppercase tracking-wider">Month</TableHead>
-                    {trackedKeys.map((k) => (
-                      <TableHead key={k} className="text-[10px] uppercase tracking-wider text-right">{vehicleLabels[k]}</TableHead>
-                    ))}
-                    <TableHead className="text-[10px] uppercase tracking-wider text-right font-bold">Total</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider text-right">vs Depr</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {monthlyIncome.slice(Math.max(0, selectedIdx - 11), selectedIdx + 1).map((row) => {
-                    const diff = row.total - TOTAL_MONTHLY_DEPR;
-                    const isSel = row.month === selectedMonth;
-                    return (
-                      <TableRow key={row.month} className={isSel ? "bg-primary/10 hover:bg-primary/15 border-primary/30" : "border-border/30 hover:bg-secondary/30"}>
-                        <TableCell className={`text-xs font-medium whitespace-nowrap ${isSel ? "text-primary font-bold" : "text-foreground"}`}>{row.month}</TableCell>
-                        {trackedKeys.map((k) => {
-                          const v = (row as any)[k] as number;
-                          return (
-                            <TableCell key={k} className={`text-xs tabular-nums text-right ${v === 0 ? "text-loss/60" : "text-muted-foreground"}`}>
-                              {v > 0 ? formatAED(v) : "—"}
-                            </TableCell>
-                          );
-                        })}
-                        <TableCell className="text-xs tabular-nums text-right font-medium text-success">{formatAED(row.total)}</TableCell>
-                        <TableCell className={`text-xs tabular-nums text-right font-semibold ${diff >= 0 ? "text-success" : "text-loss"}`}>{formatAED(diff)}</TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
       </main>
     </div>
   );
