@@ -53,6 +53,7 @@ import {
   varaStandards,
 } from "@/data/mkxData";
 import ExecutiveSummary, { ExecMonthInput } from "@/components/ExecutiveSummary";
+import MonthlyExecutiveSummary, { ExecMetricRow } from "@/components/MonthlyExecutiveSummary";
 
 const MkxDashboard = () => {
   const [selectedMonth, setSelectedMonth] = useState("all");
