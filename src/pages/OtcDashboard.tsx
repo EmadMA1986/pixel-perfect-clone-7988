@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell,
-  LineChart, Line, CartesianGrid, Legend, ComposedChart, Area, AreaChart,
+  LineChart, Line, CartesianGrid, Legend, ComposedChart, Area, AreaChart, ReferenceLine,
 } from "recharts";
 import { otcSummary, monthlyPL, expenseBreakdown, partnerCapital, formatAED, getExpensesForMonth } from "@/data/otcData";
 import ExecutiveSummary, { ExecMonthInput } from "@/components/ExecutiveSummary";
@@ -441,66 +441,72 @@ const OtcDashboard = () => {
             <h2 className="text-sm font-serif font-semibold uppercase tracking-wider text-foreground">Trading Activity</h2>
             <span className="text-[10px] text-muted-foreground">· Volume estimated from spread revenue @ {effectiveSpreadPct.toFixed(activeSpec ? 3 : 2)}%</span>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base font-serif text-foreground">Monthly Trading Volume (AED M)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={280}>
-                  <BarChart data={chartData} margin={{ top: 5, right: 5, bottom: 40, left: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 18%)" />
-                    <XAxis dataKey="name" tick={{ fill: "hsl(220 10% 50%)", fontSize: 9 }} angle={-45} textAnchor="end" />
-                    <YAxis tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} tickFormatter={(v) => `${v}M`} />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }}
-                      formatter={(value: number) => [`AED ${value.toFixed(2)}M`, "Volume"]}
-                    />
-                    <Bar dataKey="volumeM" name="Volume (AED M)" fill={COLOR_GOLD_DIM} radius={[4, 4, 0, 0]}>
-                      {chartData.map((d, i) => (
-                        <Cell key={i} fill={d.isSelected ? COLOR_GOLD : COLOR_GOLD_DIM} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-                <p className="text-[10px] text-muted-foreground mt-2">
-                  Note: <span className="text-foreground font-medium">"2024"</span> bar aggregates 12 months (Jan–Dec 2024) into a single period — that's why it appears as a spike vs individual monthly bars after.
-                </p>
-                <div className="mt-3 p-3 rounded-lg border border-primary/30 bg-primary/5 flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Break-even Volume / Month</p>
-                    <p className="text-base font-bold font-serif text-primary">{formatAEDCompact(breakEvenVolume)}</p>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground text-right max-w-[55%]">
-                    Min monthly volume to cover {formatAEDCompact(avgMonthlyBurn)} avg costs @ {(ASSUMED_SPREAD * 100).toFixed(2)}% spread
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+          {(() => {
+            // Dynamic break-even: selected month's total costs ÷ selected month's spread %
+            // Falls back to avg burn ÷ assumed spread when no month is selected.
+            const selectedRow = selectedMonth !== "all"
+              ? monthlyPL.find((m) => m.month === selectedMonth)
+              : null;
+            const beCosts = selectedRow ? selectedRow.cashExpenses : avgMonthlyBurn;
+            const beSpreadPct = activeSpec ? activeSpec.spreadPct : ASSUMED_SPREAD * 100;
+            const beVolume = beSpreadPct > 0 ? beCosts / (beSpreadPct / 100) : 0;
+            const beVolumeM = parseFloat((beVolume / 1_000_000).toFixed(2));
+            const beLabel = selectedRow ? selectedMonth : "avg of last 6 months";
 
-            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base font-serif text-foreground">Revenue per AED 1M Traded</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={280}>
-                  <LineChart data={chartData} margin={{ top: 5, right: 5, bottom: 40, left: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 18%)" />
-                    <XAxis dataKey="name" tick={{ fill: "hsl(220 10% 50%)", fontSize: 9 }} angle={-45} textAnchor="end" />
-                    <YAxis tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} tickFormatter={(v) => `${(v/1000).toFixed(1)}k`} />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }}
-                      formatter={(value: number) => [formatAED(value), "Per AED 1M"]}
-                    />
-                    <Line type="monotone" dataKey="revPerM" stroke={COLOR_GREEN} strokeWidth={2} dot={makeHighlightDot(COLOR_GREEN)} />
-                  </LineChart>
-                </ResponsiveContainer>
-                <p className="text-[10px] text-muted-foreground mt-2">
-                  <span className="text-success font-medium">✓ Consistent spread maintained</span> — flat line indicates the desk holds a stable 0.40% margin (modeled assumption; wire live spread data to detect compression/expansion).
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+            return (
+              <>
+                <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-serif text-foreground">Monthly Trading Volume (AED M)</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={320}>
+                      <BarChart data={chartData} margin={{ top: 5, right: 5, bottom: 40, left: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 18%)" />
+                        <XAxis dataKey="name" tick={{ fill: "hsl(220 10% 50%)", fontSize: 9 }} angle={-45} textAnchor="end" />
+                        <YAxis tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} tickFormatter={(v) => `${v}M`} />
+                        <Tooltip
+                          contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }}
+                          formatter={(value: number) => [`AED ${value.toFixed(2)}M`, "Volume"]}
+                        />
+                        <Bar dataKey="volumeM" name="Volume (AED M)" fill={COLOR_GOLD_DIM} radius={[4, 4, 0, 0]}>
+                          {chartData.map((d, i) => (
+                            <Cell key={i} fill={d.isSelected ? COLOR_GOLD : COLOR_GOLD_DIM} />
+                          ))}
+                        </Bar>
+                        {beVolumeM > 0 && (
+                          <ReferenceLine
+                            y={beVolumeM}
+                            stroke="hsl(0 70% 60%)"
+                            strokeDasharray="5 4"
+                            strokeWidth={1.5}
+                            label={{
+                              value: `Break-even ${beVolumeM}M`,
+                              position: "insideTopRight",
+                              fill: "hsl(0 70% 70%)",
+                              fontSize: 10,
+                            }}
+                          />
+                        )}
+                      </BarChart>
+                    </ResponsiveContainer>
+                    <p className="text-[10px] text-muted-foreground mt-2">
+                      Note: <span className="text-foreground font-medium">"2024"</span> bar aggregates 12 months (Jan–Dec 2024) into a single period — that's why it appears as a spike vs individual monthly bars after. Dashed red line = break-even volume for {beLabel}; bars above the line covered costs that month.
+                    </p>
+                    <div className="mt-3 p-3 rounded-lg border border-primary/30 bg-primary/5 flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Break-even Volume — {beLabel}</p>
+                        <p className="text-base font-bold font-serif text-primary">{formatAEDCompact(beVolume)}</p>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground text-right max-w-[60%]">
+                        {formatAEDCompact(beCosts)} costs ÷ {beSpreadPct.toFixed(3)}% spread = minimum monthly volume to break even
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            );
+          })()}
         </section>
 
         {/* Gold divider */}
