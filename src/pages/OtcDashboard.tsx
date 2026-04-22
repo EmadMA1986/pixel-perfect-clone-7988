@@ -680,14 +680,23 @@ const OtcDashboard = () => {
             const mariaCap = partnerCapital.maria.netPosition;
             const ahmadCap = partnerCapital.ahmad.netPosition;
             const ownCapital = mariaCap + ahmadCap;
-            const arFloat = Math.abs(otcSummary.ar);
-            const totalFunds = ownCapital + arFloat;
-            const floatPct = totalFunds > 0 ? (arFloat / totalFunds) * 100 : 0;
-            const ownRunwayDays = avgMonthlyBurn > 0
-              ? Math.round((ownCapital / avgMonthlyBurn) * 30)
-              : 999;
+            // Period-snapshot derived values — only available for months
+            // that have a verified end-of-period balance. Other months → null.
+            const arFloat = snapshot ? Math.abs(snapshot.ar) : null;
+            const totalFunds = snapshot && arFloat != null ? ownCapital + arFloat : null;
+            const floatPct = snapshot && totalFunds && totalFunds > 0 && arFloat != null
+              ? (arFloat / totalFunds) * 100
+              : null;
+            const cashPos = snapshot ? snapshot.cashPosition : null;
+            const totalCash = snapshot ? snapshot.totalCash : null;
+            const capDeployedPeriod = snapshot ? Math.max(0, capitalBasis - snapshot.cashPosition) : null;
+            const utilizationPctPeriod = snapshot && capitalBasis > 0
+              ? (Math.max(0, capitalBasis - snapshot.cashPosition) / capitalBasis) * 100
+              : null;
 
-            const floatBadge = floatPct > 50
+            const floatBadge = floatPct == null
+              ? { label: "—", cls: "border-border/40 bg-muted/20 text-muted-foreground" }
+              : floatPct > 50
               ? { label: "Critical", cls: "border-loss/40 bg-loss/10 text-loss" }
               : floatPct > 30
               ? { label: "Elevated", cls: "border-amber-500/40 bg-amber-500/10 text-amber-400" }
@@ -705,7 +714,7 @@ const OtcDashboard = () => {
                 text: `Capital imbalance between partners (${lowerPartner} ${imbalancePct.toFixed(1)}% lower) — review profit distribution`,
               });
             }
-            if (floatPct > 35) {
+            if (floatPct != null && floatPct > 35) {
               alerts.push({
                 tone: "danger",
                 text: `High client float dependency (${floatPct.toFixed(1)}% of total funds) — liquidity risk`,
