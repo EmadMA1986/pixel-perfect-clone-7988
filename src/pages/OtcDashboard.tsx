@@ -422,6 +422,118 @@ const OtcDashboard = () => {
         {/* Gold divider */}
         <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
+        {/* === Trading Activity Calendar — March 2026 === */}
+        {selectedMonth === "Mar 2026" && (() => {
+          const zeroDays = new Set([1, 8, 15, 16, 20, 21, 22, 29]);
+          const consecutiveZero = new Set([15, 16, 20, 21, 22]);
+          const days = Array.from({ length: 31 }, (_, i) => i + 1);
+          const activeCount = 31 - zeroDays.size;
+          const dayLabels = ["S", "M", "T", "W", "T", "F", "S"];
+          // Mar 1, 2026 = Sunday → starts at column index 0
+          const firstDayOffset = 0;
+          return (
+            <section className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Activity className="h-4 w-4 text-primary" />
+                <h2 className="text-sm font-serif font-semibold uppercase tracking-wider text-foreground">
+                  Trading Activity Calendar — March 2026
+                </h2>
+              </div>
+              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                <CardContent className="p-5 space-y-5">
+                  {/* Calendar grid */}
+                  <div>
+                    <div className="grid grid-cols-7 gap-2 mb-2">
+                      {dayLabels.map((d, i) => (
+                        <div key={i} className="text-[10px] uppercase tracking-wider text-muted-foreground text-center font-medium">
+                          {d}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-7 gap-2">
+                      {Array.from({ length: firstDayOffset }).map((_, i) => (
+                        <div key={`pad-${i}`} />
+                      ))}
+                      {days.map((d) => {
+                        const isZero = zeroDays.has(d);
+                        const isConsecZero = consecutiveZero.has(d);
+                        return (
+                          <div
+                            key={d}
+                            title={
+                              isConsecZero
+                                ? `Mar ${d} — Consecutive zero day`
+                                : isZero
+                                ? `Mar ${d} — Zero trading day`
+                                : `Mar ${d} — Active trading day`
+                            }
+                            className={[
+                              "aspect-square rounded-md flex items-center justify-center text-xs font-medium border transition-colors",
+                              isZero
+                                ? "bg-muted/40 text-muted-foreground border-border/40"
+                                : "bg-success/15 text-success border-success/40",
+                              isConsecZero ? "!border-amber-500 border-2 ring-1 ring-amber-500/30" : "",
+                            ].join(" ")}
+                          >
+                            {d}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {/* Legend */}
+                    <div className="flex flex-wrap items-center gap-4 mt-4 text-[10px] text-muted-foreground">
+                      <div className="flex items-center gap-1.5">
+                        <span className="h-3 w-3 rounded-sm bg-success/15 border border-success/40 inline-block" />
+                        <span>Active trading day</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="h-3 w-3 rounded-sm bg-muted/40 border border-border/40 inline-block" />
+                        <span>Zero trading day</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="h-3 w-3 rounded-sm border-2 border-amber-500 inline-block" />
+                        <span>Consecutive zero days (Mar 15, 16, 20, 21, 22)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stats row */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-border/40">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Active Trading Days</p>
+                      <p className="text-lg font-serif font-bold text-foreground">{activeCount} <span className="text-sm text-muted-foreground font-normal">/ 31</span></p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Best Day</p>
+                      <p className="text-lg font-serif font-bold text-success">AED 109,835</p>
+                      <p className="text-[10px] text-muted-foreground">Mar 30</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Worst Day</p>
+                      <p className="text-lg font-serif font-bold text-loss">-AED 18,039</p>
+                      <p className="text-[10px] text-muted-foreground">Mar 31</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Avg Daily Profit</p>
+                      <p className="text-lg font-serif font-bold text-primary">AED 8,639</p>
+                      <p className="text-[10px] text-muted-foreground">Active days only</p>
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] italic text-muted-foreground leading-relaxed">
+                    Daily profit calculated on USDT wallet movement (closing minus opening balance). Large AED cash flow swings on individual days reflect pass-through USDT inventory trades and do not represent actual profit or loss.
+                  </p>
+                </CardContent>
+              </Card>
+            </section>
+          );
+        })()}
+
+        {/* Gold divider */}
+        {selectedMonth === "Mar 2026" && (
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+        )}
+
         {/* === Liquidity & Capital Position === */}
         <section className="space-y-4">
           <div className="flex items-center gap-2">
