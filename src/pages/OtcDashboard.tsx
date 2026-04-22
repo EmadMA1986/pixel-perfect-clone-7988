@@ -79,8 +79,28 @@ const OtcDashboard = () => {
   );
   const negativeMonths = last12.filter((m) => m.netProfit < 0).length;
   const MIN_LIQUIDITY = 500_000; // AED 500K minimum
-  const liquidityHealthy = otcSummary.cashPosition >= MIN_LIQUIDITY;
-  const liquidityRatio = (otcSummary.cashPosition / MIN_LIQUIDITY) * 100;
+
+  // Per-month actual AED cash on hand (excludes USDT inventory). Only populated
+  // for months where the closing AED-cash split is verified.
+  const aedCashByMonth: Record<string, number> = {
+    "Mar 2026": 151698,
+  };
+  const aedCashOnHand: number | null =
+    selectedMonth === "all"
+      ? aedCashByMonth["Mar 2026"]
+      : aedCashByMonth[selectedMonth] ?? null;
+  const liquidityHealthy = aedCashOnHand !== null && aedCashOnHand >= MIN_LIQUIDITY;
+  const liquidityRatio = aedCashOnHand !== null ? aedCashOnHand / MIN_LIQUIDITY : null;
+
+  // Top counterparty per month (sourced from same data as Counterparty Concentration section).
+  const topCounterpartyByMonth: Record<string, { name: string; pct: number }> = {
+    "Mar 2026": { name: "NICK", pct: 22.8 },
+    "Feb 2026": { name: "NICK", pct: 26.7 },
+  };
+  const topCp =
+    selectedMonth === "all"
+      ? topCounterpartyByMonth["Mar 2026"]
+      : topCounterpartyByMonth[selectedMonth] ?? null;
 
   // === Trend data: last 6 months ending at the selected month (or last 6 overall when "all") ===
   const trendMonths = useMemo(() => {
@@ -1306,17 +1326,32 @@ const OtcDashboard = () => {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {/* Counterparty concentration */}
-            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+            <Card className={`border-border/50 backdrop-blur-sm ${topCp && topCp.pct >= 20 ? "bg-loss/5 border-loss/30" : "bg-card/80"}`}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-1">
                   <p className="text-xs text-muted-foreground uppercase tracking-wider">Top Counterparty</p>
-                  <Badge variant="secondary" className="text-[10px]">Volume share</Badge>
+                  <Badge variant={topCp && topCp.pct >= 20 ? "destructive" : "secondary"} className="text-[10px]">
+                    {topCp && topCp.pct >= 20 ? "🔴 HIGH RISK" : "Volume share"}
+                  </Badge>
                 </div>
-                <p className="text-2xl font-bold font-serif text-foreground">~100%</p>
-                <p className="text-[10px] text-muted-foreground mt-1 leading-tight">
-                  All trading volume routes through direct walk-in clients — no single named client exposure tracked yet.
-                </p>
-                <p className="text-[10px] text-primary mt-1.5">⚠ Recommend tracking per-client volume to surface concentration.</p>
+                {topCp ? (
+                  <>
+                    <p className={`text-2xl font-bold font-serif ${topCp.pct >= 20 ? "text-loss" : "text-foreground"}`}>
+                      {topCp.name} <span className="text-base font-normal text-muted-foreground">· {topCp.pct.toFixed(1)}%</span>
+                    </p>
+                    <p className="text-[10px] text-muted-foreground mt-1 leading-tight">
+                      Largest single counterparty share of {selectedMonth === "all" ? "March 2026" : selectedMonth} trading volume.
+                    </p>
+                    {topCp.pct >= 20 && (
+                      <p className="text-[10px] text-loss mt-1.5">⚠ Concentration above 20% — single-counterparty dependency risk.</p>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <p className="text-2xl font-bold font-serif text-muted-foreground">—</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">Data not available for this period</p>
+                  </>
+                )}
               </CardContent>
             </Card>
 
@@ -1339,20 +1374,38 @@ const OtcDashboard = () => {
             </Card>
 
             {/* Liquidity */}
-            <Card className={`border-border/50 backdrop-blur-sm ${liquidityHealthy ? "bg-card/80" : "bg-loss/5 border-loss/30"}`}>
+            <Card className={`border-border/50 backdrop-blur-sm ${liquidityRatio === null || liquidityHealthy ? "bg-card/80" : "bg-loss/5 border-loss/30"}`}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-1">
                   <p className="text-xs text-muted-foreground uppercase tracking-wider">Liquidity vs Minimum</p>
-                  <Badge variant={liquidityHealthy ? "default" : "destructive"} className="text-[10px]">
-                    {liquidityHealthy ? "✓ Above min" : "✗ Below min"}
-                  </Badge>
+                  {liquidityRatio === null ? (
+                    <Badge variant="secondary" className="text-[10px]">N/A</Badge>
+                  ) : (
+                    <Badge variant={liquidityHealthy ? "default" : "destructive"} className="text-[10px]">
+                      {liquidityHealthy ? "✓ Above min" : "🔴 Below minimum"}
+                    </Badge>
+                  )}
                 </div>
-                <p className={`text-2xl font-bold font-serif ${liquidityHealthy ? "text-success" : "text-loss"}`}>
-                  {(liquidityRatio / 100).toFixed(1)}×
-                </p>
-                <p className="text-[10px] text-muted-foreground mt-1">
-                  {formatAEDCompact(otcSummary.cashPosition)} cash vs {formatAEDCompact(MIN_LIQUIDITY)} min threshold
-                </p>
+                {liquidityRatio === null || aedCashOnHand === null ? (
+                  <>
+                    <p className="text-2xl font-bold font-serif text-muted-foreground">—</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">Data not available for this period</p>
+                  </>
+                ) : (
+                  <>
+                    <p className={`text-2xl font-bold font-serif ${liquidityHealthy ? "text-success" : "text-loss"}`}>
+                      {liquidityRatio.toFixed(2)}×
+                    </p>
+                    <p className="text-[10px] text-muted-foreground mt-1 leading-tight">
+                      {formatAEDCompact(aedCashOnHand)} AED cash vs {formatAEDCompact(MIN_LIQUIDITY)} minimum threshold
+                      {!liquidityHealthy && (
+                        <span className="block text-loss mt-1">
+                          ⚠ CRITICAL: 94.7% of position held in USDT inventory, not AED cash.
+                        </span>
+                      )}
+                    </p>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>
