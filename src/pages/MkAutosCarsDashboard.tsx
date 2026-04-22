@@ -509,7 +509,7 @@ const MkAutosCarsDashboard = () => {
                   formatter={(v: number) => formatAED(v)}
                 />
                 <ReferenceLine y={TOTAL_MONTHLY_DEPR} stroke="hsl(var(--loss))" strokeDasharray="4 4" label={{ value: `Depreciation ${breakEvenLabel}`, position: "right", fill: "hsl(var(--loss))", fontSize: 10 }} />
-                <ReferenceLine y={TOTAL_MONTHLY_DEPR} stroke="hsl(38, 92%, 50%)" strokeDasharray="4 4" />
+                <ReferenceLine y={TOTAL_MONTHLY_DEPR} stroke="hsl(38, 92%, 50%)" strokeDasharray="4 4" label={{ value: `Depreciation ${breakEvenLabel}`, position: "right", fill: "hsl(38, 92%, 50%)", fontSize: 10 }} />
                 <Bar dataKey="Income" radius={[4, 4, 0, 0]}>
                   {trendData.map((d, i) => (
                     <Cell key={i} fill={d.isSelected ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.55)"} />
