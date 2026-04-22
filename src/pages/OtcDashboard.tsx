@@ -1374,20 +1374,38 @@ const OtcDashboard = () => {
             </Card>
 
             {/* Liquidity */}
-            <Card className={`border-border/50 backdrop-blur-sm ${liquidityHealthy ? "bg-card/80" : "bg-loss/5 border-loss/30"}`}>
+            <Card className={`border-border/50 backdrop-blur-sm ${liquidityRatio === null || liquidityHealthy ? "bg-card/80" : "bg-loss/5 border-loss/30"}`}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-1">
                   <p className="text-xs text-muted-foreground uppercase tracking-wider">Liquidity vs Minimum</p>
-                  <Badge variant={liquidityHealthy ? "default" : "destructive"} className="text-[10px]">
-                    {liquidityHealthy ? "✓ Above min" : "✗ Below min"}
-                  </Badge>
+                  {liquidityRatio === null ? (
+                    <Badge variant="secondary" className="text-[10px]">N/A</Badge>
+                  ) : (
+                    <Badge variant={liquidityHealthy ? "default" : "destructive"} className="text-[10px]">
+                      {liquidityHealthy ? "✓ Above min" : "🔴 Below minimum"}
+                    </Badge>
+                  )}
                 </div>
-                <p className={`text-2xl font-bold font-serif ${liquidityHealthy ? "text-success" : "text-loss"}`}>
-                  {(liquidityRatio / 100).toFixed(1)}×
-                </p>
-                <p className="text-[10px] text-muted-foreground mt-1">
-                  {formatAEDCompact(otcSummary.cashPosition)} cash vs {formatAEDCompact(MIN_LIQUIDITY)} min threshold
-                </p>
+                {liquidityRatio === null || aedCashOnHand === null ? (
+                  <>
+                    <p className="text-2xl font-bold font-serif text-muted-foreground">—</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">Data not available for this period</p>
+                  </>
+                ) : (
+                  <>
+                    <p className={`text-2xl font-bold font-serif ${liquidityHealthy ? "text-success" : "text-loss"}`}>
+                      {liquidityRatio.toFixed(2)}×
+                    </p>
+                    <p className="text-[10px] text-muted-foreground mt-1 leading-tight">
+                      {formatAEDCompact(aedCashOnHand)} AED cash vs {formatAEDCompact(MIN_LIQUIDITY)} minimum threshold
+                      {!liquidityHealthy && (
+                        <span className="block text-loss mt-1">
+                          ⚠ CRITICAL: 94.7% of position held in USDT inventory, not AED cash.
+                        </span>
+                      )}
+                    </p>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>
