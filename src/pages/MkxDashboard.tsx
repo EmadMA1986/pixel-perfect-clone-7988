@@ -291,8 +291,35 @@ const MkxDashboard = () => {
             />
           );
         })()}
+        {/* Inception-to-Date Period Banner */}
+        {!isFiltered && (
+          <div className="rounded-lg border border-success/30 bg-success/10 px-4 py-3 flex flex-wrap items-center gap-3">
+            <span className="text-lg" role="img" aria-label="calendar">📅</span>
+            <div className="flex-1 min-w-[200px]">
+              <p className="text-sm font-semibold text-foreground">Inception to Date — Jan 2025 to {monthlyData[monthlyData.length - 1].month}</p>
+              <p className="text-[11px] text-muted-foreground">Flow metrics shown as cumulative totals · Balance sheet metrics as latest snapshot · Ratios as period averages</p>
+            </div>
+            <div className="flex items-center gap-2 text-[10px]">
+              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">Cumulative</Badge>
+              <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">Latest</Badge>
+              <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">Average</Badge>
+            </div>
+          </div>
+        )}
+
         {/* Partners' Capital Position - only in All Time */}
-        {!isFiltered && (<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {!isFiltered && (() => {
+          const totalRetainedLoss = 8126209.49;
+          const ahmadShare = 5788933.98;
+          const mariaShare = 5573974.65;
+          const ahmadHalfLoss = totalRetainedLoss / 2;
+          return (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-serif font-semibold text-foreground">Shareholder Capital Position</h3>
+              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">Cumulative since inception</Badge>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Ahmad */}
           <Card className="border-border/50 bg-gradient-to-r from-violet-500/10 to-violet-700/5 backdrop-blur-sm">
             <CardContent className="p-5 space-y-3">
