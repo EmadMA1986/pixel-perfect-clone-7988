@@ -162,7 +162,63 @@ const OtcDashboard = () => {
   const concentrationRisk = partnersByExposure[0].funding / totalPartnerFunding > 0.55;
 
   const isFiltered = selectedMonth !== "all";
-  const periodLabel = isFiltered ? selectedMonth : "YTD";
+  const periodLabel = isFiltered ? selectedMonth : "Inception to Date";
+
+  // ── Period-snapshot data (closing balances). ONLY months listed here have
+  // a verified end-of-period snapshot. Any other selected month → dash (-).
+  // "all" / Inception to Date resolves to the latest snapshot month.
+  // NOTE: this is the single source of truth for: Cash Position, AR (client
+  // funds in use), capital deployed, capital utilization, liquidity buffer.
+  type PeriodSnapshot = {
+    cashPosition: number;
+    ar: number; // negative = owed to clients
+    totalCash: number;
+  };
+  const periodSnapshots: Record<string, PeriodSnapshot> = {
+    "Mar 2026": {
+      cashPosition: otcSummary.cashPosition,
+      ar: otcSummary.ar,
+      totalCash: otcSummary.totalCash,
+    },
+  };
+  const LATEST_SNAPSHOT_MONTH = "Mar 2026";
+  const snapshotKey = selectedMonth === "all" ? LATEST_SNAPSHOT_MONTH : selectedMonth;
+  const snapshot: PeriodSnapshot | null = periodSnapshots[snapshotKey] ?? null;
+  const DASH = "—";
+  const NA_TOOLTIP = "Data not available for this period";
+
+  // Per-month verified trading metrics — single source of truth, used by KPI
+  // cards, spread/volume subtitles and the realized-spread note.
+  type MonthSpec = {
+    volumeLabel: string;
+    volumeSubtitle: string;
+    txCount: number;
+    spreadPct: number;
+    revPerM: number;
+    realizedSpread: number;
+  };
+  const monthSpecifics: Record<string, MonthSpec> = {
+    "Mar 2026": {
+      volumeLabel: "USDT 36.6M",
+      volumeSubtitle: "18.7M bought + 17.9M sold · 23/31 active days",
+      txCount: 196,
+      spreadPct: 0.307,
+      revPerM: 3066,
+      realizedSpread: 198690,
+    },
+    "Feb 2026": {
+      volumeLabel: "USDT 50.2M",
+      volumeSubtitle: "22.9M bought + 27.3M sold · 24/28 active days",
+      txCount: 254,
+      spreadPct: 0.260,
+      revPerM: 2599,
+      realizedSpread: 162891,
+    },
+  };
+  const activeSpec: MonthSpec | null = monthSpecifics[selectedMonth] ?? null;
+  // Effective spread for any subtitle/headline that references "@ X%".
+  // Falls back to the modeled assumption when no per-month spec exists.
+  const effectiveSpreadPct = activeSpec ? activeSpec.spreadPct : ASSUMED_SPREAD * 100;
 
   const formatAEDCompact = (v: number) => {
     const abs = Math.abs(v);
@@ -279,39 +335,13 @@ const OtcDashboard = () => {
 
         {/* === OTC-Specific KPI Cards (6) === */}
         {(() => {
-          // Per-month verified trading metrics. Add new months here.
-          const monthSpecifics: Record<string, {
-            volumeLabel: string;
-            volumeSubtitle: string;
-            txCount: number;
-            spreadPct: number;
-            revPerM: number;
-            realizedSpread: number;
-          }> = {
-            "Mar 2026": {
-              volumeLabel: "USDT 36.6M",
-              volumeSubtitle: "18.7M bought + 17.9M sold · 23/31 active days",
-              txCount: 196,
-              spreadPct: 0.307,
-              revPerM: 3066,
-              realizedSpread: 198690,
-            },
-            "Feb 2026": {
-              volumeLabel: "USDT 50.2M",
-              volumeSubtitle: "22.9M bought + 27.3M sold · 24/28 active days",
-              txCount: 254,
-              spreadPct: 0.260,
-              revPerM: 2599,
-              realizedSpread: 162891,
-            },
-          };
-          const spec = monthSpecifics[selectedMonth];
+          const spec = activeSpec;
           const hasSpec = !!spec;
-
           const displaySpread = hasSpec ? spec.spreadPct : avgSpreadPct;
           const spreadSubtitle = hasSpec
             ? `Weighted avg across ${spec.txCount} transactions`
             : "Income ÷ Volume";
+
 
           return (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -354,8 +384,8 @@ const OtcDashboard = () => {
               />
               <SummaryCard
                 title="Cash Position"
-                value={formatAEDCompact(otcSummary.cashPosition)}
-                subtitle="AED available for trading"
+                value={snapshot ? formatAEDCompact(snapshot.cashPosition) : DASH}
+                subtitle={snapshot ? "AED available for trading" : NA_TOOLTIP}
                 icon={Banknote}
               />
             </div>
@@ -364,11 +394,7 @@ const OtcDashboard = () => {
 
         {/* Profit method note */}
         {(() => {
-          const realized: Record<string, number> = {
-            "Mar 2026": 198690,
-            "Feb 2026": 162891,
-          };
-          const r = realized[selectedMonth];
+          const r = activeSpec?.realizedSpread;
           return (
             <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 flex items-start gap-2">
               <Activity className="h-4 w-4 text-primary mt-0.5 shrink-0" />
@@ -388,7 +414,7 @@ const OtcDashboard = () => {
           <div className="flex items-center gap-2">
             <Activity className="h-4 w-4 text-primary" />
             <h2 className="text-sm font-serif font-semibold uppercase tracking-wider text-foreground">Trading Activity</h2>
-            <span className="text-[10px] text-muted-foreground">· Volume estimated from spread revenue @ {(ASSUMED_SPREAD * 100).toFixed(2)}%</span>
+            <span className="text-[10px] text-muted-foreground">· Volume estimated from spread revenue @ {effectiveSpreadPct.toFixed(activeSpec ? 3 : 2)}%</span>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
@@ -654,14 +680,23 @@ const OtcDashboard = () => {
             const mariaCap = partnerCapital.maria.netPosition;
             const ahmadCap = partnerCapital.ahmad.netPosition;
             const ownCapital = mariaCap + ahmadCap;
-            const arFloat = Math.abs(otcSummary.ar);
-            const totalFunds = ownCapital + arFloat;
-            const floatPct = totalFunds > 0 ? (arFloat / totalFunds) * 100 : 0;
-            const ownRunwayDays = avgMonthlyBurn > 0
-              ? Math.round((ownCapital / avgMonthlyBurn) * 30)
-              : 999;
+            // Period-snapshot derived values — only available for months
+            // that have a verified end-of-period balance. Other months → null.
+            const arFloat = snapshot ? Math.abs(snapshot.ar) : null;
+            const totalFunds = snapshot && arFloat != null ? ownCapital + arFloat : null;
+            const floatPct = snapshot && totalFunds && totalFunds > 0 && arFloat != null
+              ? (arFloat / totalFunds) * 100
+              : null;
+            const cashPos = snapshot ? snapshot.cashPosition : null;
+            const totalCash = snapshot ? snapshot.totalCash : null;
+            const capDeployedPeriod = snapshot ? Math.max(0, capitalBasis - snapshot.cashPosition) : null;
+            const utilizationPctPeriod = snapshot && capitalBasis > 0
+              ? (Math.max(0, capitalBasis - snapshot.cashPosition) / capitalBasis) * 100
+              : null;
 
-            const floatBadge = floatPct > 50
+            const floatBadge = floatPct == null
+              ? { label: "—", cls: "border-border/40 bg-muted/20 text-muted-foreground" }
+              : floatPct > 50
               ? { label: "Critical", cls: "border-loss/40 bg-loss/10 text-loss" }
               : floatPct > 30
               ? { label: "Elevated", cls: "border-amber-500/40 bg-amber-500/10 text-amber-400" }
@@ -679,7 +714,7 @@ const OtcDashboard = () => {
                 text: `Capital imbalance between partners (${lowerPartner} ${imbalancePct.toFixed(1)}% lower) — review profit distribution`,
               });
             }
-            if (floatPct > 35) {
+            if (floatPct != null && floatPct > 35) {
               alerts.push({
                 tone: "danger",
                 text: `High client float dependency (${floatPct.toFixed(1)}% of total funds) — liquidity risk`,
@@ -796,15 +831,29 @@ const OtcDashboard = () => {
                         <p className="text-xs text-muted-foreground uppercase tracking-wider">Client Funds in Use</p>
                         <AlertTriangle className="h-4 w-4 text-amber-400" />
                       </div>
-                      <p className="text-2xl font-bold font-serif text-amber-400 mt-2">{formatAEDCompact(arFloat)}</p>
-                      <p className="text-[10px] text-muted-foreground mt-1">AR float — owed to clients, not own capital</p>
+                      <p
+                        className="text-2xl font-bold font-serif text-amber-400 mt-2"
+                        title={arFloat == null ? NA_TOOLTIP : undefined}
+                      >
+                        {arFloat == null ? DASH : formatAEDCompact(arFloat)}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        {arFloat == null ? NA_TOOLTIP : "AR float — owed to clients, not own capital"}
+                      </p>
                     </CardContent>
                   </Card>
                   <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
                     <CardContent className="p-4">
                       <p className="text-xs text-muted-foreground uppercase tracking-wider">Total Funds Available</p>
-                      <p className="text-2xl font-bold font-serif text-foreground mt-2">{formatAEDCompact(totalFunds)}</p>
-                      <p className="text-[10px] text-muted-foreground mt-1">Own Capital + Client Float</p>
+                      <p
+                        className="text-2xl font-bold font-serif text-foreground mt-2"
+                        title={totalFunds == null ? NA_TOOLTIP : undefined}
+                      >
+                        {totalFunds == null ? DASH : formatAEDCompact(totalFunds)}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        {totalFunds == null ? NA_TOOLTIP : "Own Capital + Client Float"}
+                      </p>
                     </CardContent>
                   </Card>
                   <Card className={`backdrop-blur-sm border ${floatBadge.cls}`}>
@@ -813,15 +862,28 @@ const OtcDashboard = () => {
                         <p className="text-xs text-muted-foreground uppercase tracking-wider">Client Float % of Total</p>
                         <Badge variant="outline" className={`text-[10px] ${floatBadge.cls}`}>{floatBadge.label}</Badge>
                       </div>
-                      <p className="text-2xl font-bold font-serif mt-2">{floatPct.toFixed(1)}%</p>
-                      <p className="text-[10px] text-muted-foreground mt-1">Thresholds: amber &gt;30% · red &gt;50%</p>
+                      <p
+                        className="text-2xl font-bold font-serif mt-2"
+                        title={floatPct == null ? NA_TOOLTIP : undefined}
+                      >
+                        {floatPct == null ? DASH : `${floatPct.toFixed(1)}%`}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        {floatPct == null ? NA_TOOLTIP : "Thresholds: amber >30% · red >50%"}
+                      </p>
                     </CardContent>
                   </Card>
                   {(() => {
-                    const netFreeCapital = otcSummary.cashPosition;
-                    const coverage = arFloat > 0 ? netFreeCapital / arFloat : 999;
-                    const tone = coverage >= 2 ? "text-success" : coverage >= 1 ? "text-primary" : "text-loss";
-                    const badge = coverage >= 2
+                    const netFreeCapital = cashPos;
+                    const coverage = netFreeCapital != null && arFloat != null && arFloat > 0
+                      ? netFreeCapital / arFloat
+                      : null;
+                    const tone = coverage == null
+                      ? "text-muted-foreground"
+                      : coverage >= 2 ? "text-success" : coverage >= 1 ? "text-primary" : "text-loss";
+                    const badge = coverage == null
+                      ? { label: "—", cls: "border-border/40 text-muted-foreground" }
+                      : coverage >= 2
                       ? { label: "Healthy", cls: "border-success/40 text-success" }
                       : coverage >= 1
                       ? { label: "Watch", cls: "border-primary/40 text-primary" }
@@ -833,16 +895,27 @@ const OtcDashboard = () => {
                             <p className="text-xs text-muted-foreground uppercase tracking-wider">Liquidity Buffer</p>
                             <Badge variant="outline" className={`text-[10px] ${badge.cls}`}>{badge.label}</Badge>
                           </div>
-                          <p className={`text-2xl font-bold font-serif mt-2 ${tone}`}>{formatAEDCompact(netFreeCapital)}</p>
+                          <p
+                            className={`text-2xl font-bold font-serif mt-2 ${tone}`}
+                            title={netFreeCapital == null ? NA_TOOLTIP : undefined}
+                          >
+                            {netFreeCapital == null ? DASH : formatAEDCompact(netFreeCapital)}
+                          </p>
                           <p className="text-[10px] text-muted-foreground mt-1 leading-tight">
-                            Net Free Capital — available after covering all client obligations.
+                            {netFreeCapital == null
+                              ? NA_TOOLTIP
+                              : "Net Free Capital — available after covering all client obligations."}
                           </p>
-                          <p className={`text-[11px] mt-1.5 font-medium ${tone}`}>
-                            Client Float Coverage: {coverage >= 999 ? "∞" : `${coverage.toFixed(1)}x`}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground leading-tight">
-                            Own capital covers client obligations {coverage >= 999 ? "fully" : `${coverage.toFixed(1)} times over`}.
-                          </p>
+                          {coverage != null && (
+                            <>
+                              <p className={`text-[11px] mt-1.5 font-medium ${tone}`}>
+                                Client Float Coverage: {coverage >= 999 ? "∞" : `${coverage.toFixed(1)}x`}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground leading-tight">
+                                Own capital covers client obligations {coverage >= 999 ? "fully" : `${coverage.toFixed(1)} times over`}.
+                              </p>
+                            </>
+                          )}
                         </CardContent>
                       </Card>
                     );
@@ -869,7 +942,9 @@ const OtcDashboard = () => {
                 )}
 
                 <p className="text-[11px] italic text-muted-foreground">
-                  Working capital = net capital injected after withdrawals + cumulative profit share. Client float of {formatAEDWhole(arFloat)} is excluded as it represents client obligations not distributable capital.
+                  Working capital = net capital injected after withdrawals + cumulative profit share. {arFloat != null
+                    ? <>Client float of {formatAEDWhole(arFloat)} is excluded as it represents client obligations not distributable capital.</>
+                    : <>Client float excluded as it represents client obligations not distributable capital.</>}
                 </p>
 
                 {/* Supplementary: Capital deployment metrics retained */}
@@ -877,27 +952,49 @@ const OtcDashboard = () => {
                   <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
                     <CardContent className="p-4">
                       <p className="text-xs text-muted-foreground uppercase tracking-wider">AED Cash on Hand</p>
-                      <p className="text-2xl font-bold font-serif text-foreground mt-1">{formatAEDCompact(otcSummary.cashPosition)}</p>
-                      <p className="text-[10px] text-muted-foreground mt-1">Total incl. AR: {formatAEDCompact(otcSummary.totalCash)}</p>
+                      <p
+                        className="text-2xl font-bold font-serif text-foreground mt-1"
+                        title={cashPos == null ? NA_TOOLTIP : undefined}
+                      >
+                        {cashPos == null ? DASH : formatAEDCompact(cashPos)}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        {totalCash == null ? NA_TOOLTIP : <>Total incl. AR: {formatAEDCompact(totalCash)}</>}
+                      </p>
                     </CardContent>
                   </Card>
                   <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
                     <CardContent className="p-4">
                       <p className="text-xs text-muted-foreground uppercase tracking-wider">Capital Deployed</p>
-                      <p className={`text-2xl font-bold font-serif mt-1 ${capitalDeployed >= 0 ? "text-foreground" : "text-loss"}`}>
-                        {formatAEDCompact(capitalDeployed)}
+                      <p
+                        className={`text-2xl font-bold font-serif mt-1 ${capDeployedPeriod == null ? "text-muted-foreground" : capDeployedPeriod >= 0 ? "text-foreground" : "text-loss"}`}
+                        title={capDeployedPeriod == null ? NA_TOOLTIP : undefined}
+                      >
+                        {capDeployedPeriod == null ? DASH : formatAEDCompact(capDeployedPeriod)}
                       </p>
-                      <p className="text-[10px] text-muted-foreground mt-1">Total funding − cash on hand</p>
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        {capDeployedPeriod == null ? NA_TOOLTIP : "Total funding − cash on hand"}
+                      </p>
                     </CardContent>
                   </Card>
                   <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
                     <CardContent className="p-4">
                       <p className="text-xs text-muted-foreground uppercase tracking-wider">Capital Utilization</p>
-                      <p className="text-2xl font-bold font-serif text-foreground mt-1">{utilizationPct.toFixed(1)}%</p>
+                      <p
+                        className="text-2xl font-bold font-serif text-foreground mt-1"
+                        title={utilizationPctPeriod == null ? NA_TOOLTIP : undefined}
+                      >
+                        {utilizationPctPeriod == null ? DASH : `${utilizationPctPeriod.toFixed(1)}%`}
+                      </p>
                       <div className="mt-2 h-1.5 w-full rounded-full bg-secondary/40 overflow-hidden">
-                        <div className="h-full bg-primary transition-all" style={{ width: `${Math.min(100, utilizationPct)}%` }} />
+                        <div
+                          className="h-full bg-primary transition-all"
+                          style={{ width: `${Math.min(100, utilizationPctPeriod ?? 0)}%` }}
+                        />
                       </div>
-                      <p className="text-[10px] text-muted-foreground mt-1">Of {formatAEDCompact(capitalBasis)} total partner funding</p>
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        {utilizationPctPeriod == null ? NA_TOOLTIP : <>Of {formatAEDCompact(capitalBasis)} total partner funding</>}
+                      </p>
                     </CardContent>
                   </Card>
                 </div>
