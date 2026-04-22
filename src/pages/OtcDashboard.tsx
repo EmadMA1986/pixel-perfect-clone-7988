@@ -973,54 +973,88 @@ const OtcDashboard = () => {
 
                 {/* Supplementary: Capital deployment metrics retained */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                  {/* AED Cash on Hand — total funds (USDT wallet + AED closing) */}
                   <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
                     <CardContent className="p-4">
                       <p className="text-xs text-muted-foreground uppercase tracking-wider">AED Cash on Hand</p>
                       <p
                         className="text-2xl font-bold font-serif text-foreground mt-1"
-                        title={cashPos == null ? NA_TOOLTIP : undefined}
+                        title={snapshot ? undefined : NA_TOOLTIP}
                       >
-                        {cashPos == null ? DASH : formatAEDCompact(cashPos)}
+                        {snapshot ? formatAEDCompact(snapshot.totalCash) : DASH}
                       </p>
-                      <p className="text-[10px] text-muted-foreground mt-1">
-                        {totalCash == null ? NA_TOOLTIP : <>Total incl. AR: {formatAEDCompact(totalCash)}</>}
+                      <p className="text-[10px] text-muted-foreground mt-1 leading-tight">
+                        {snapshot
+                          ? <>USDT wallet {formatAEDCompact(snapshot.usdtWalletAED)} + AED cash {formatAEDCompact(snapshot.aedClosing)}</>
+                          : "Closing position data available for March 2026 only"}
                       </p>
                     </CardContent>
                   </Card>
+
+                  {/* Net Own Cash — total funds minus AR obligations */}
                   <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
                     <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground uppercase tracking-wider">Capital Deployed</p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider">Net Own Cash</p>
                       <p
-                        className={`text-2xl font-bold font-serif mt-1 ${capDeployedPeriod == null ? "text-muted-foreground" : capDeployedPeriod >= 0 ? "text-foreground" : "text-loss"}`}
-                        title={capDeployedPeriod == null ? NA_TOOLTIP : undefined}
+                        className={`text-2xl font-bold font-serif mt-1 ${snapshot ? "text-foreground" : "text-muted-foreground"}`}
+                        title={snapshot ? undefined : NA_TOOLTIP}
                       >
-                        {capDeployedPeriod == null ? DASH : formatAEDCompact(capDeployedPeriod)}
+                        {snapshot ? formatAEDCompact(snapshot.cashPosition) : DASH}
                       </p>
-                      <p className="text-[10px] text-muted-foreground mt-1">
-                        {capDeployedPeriod == null ? NA_TOOLTIP : "Total funding − cash on hand"}
+                      <p className="text-[10px] text-muted-foreground mt-1 leading-tight">
+                        {snapshot
+                          ? <>Total funds {formatAEDCompact(snapshot.totalCash)} less client AR {formatAEDCompact(Math.abs(snapshot.ar))}</>
+                          : "Closing position data available for March 2026 only"}
                       </p>
+                      {snapshot && (
+                        <p className="text-[10px] text-success mt-1.5">✓ Distributable partner capital only</p>
+                      )}
                     </CardContent>
                   </Card>
-                  <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-                    <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground uppercase tracking-wider">Capital Utilization</p>
-                      <p
-                        className="text-2xl font-bold font-serif text-foreground mt-1"
-                        title={utilizationPctPeriod == null ? NA_TOOLTIP : undefined}
-                      >
-                        {utilizationPctPeriod == null ? DASH : `${utilizationPctPeriod.toFixed(1)}%`}
-                      </p>
-                      <div className="mt-2 h-1.5 w-full rounded-full bg-secondary/40 overflow-hidden">
-                        <div
-                          className="h-full bg-primary transition-all"
-                          style={{ width: `${Math.min(100, utilizationPctPeriod ?? 0)}%` }}
-                        />
-                      </div>
-                      <p className="text-[10px] text-muted-foreground mt-1">
-                        {utilizationPctPeriod == null ? NA_TOOLTIP : <>Of {formatAEDCompact(capitalBasis)} total partner funding</>}
-                      </p>
-                    </CardContent>
-                  </Card>
+
+                  {/* Client Float Ratio — AR as % of total funds */}
+                  {(() => {
+                    const cfr = floatPct;
+                    const cfrTone = cfr == null
+                      ? "text-muted-foreground"
+                      : cfr > 50 ? "text-loss" : cfr > 30 ? "text-amber-400" : "text-success";
+                    const cfrFlag = cfr == null
+                      ? null
+                      : cfr > 50
+                      ? { label: "Critical — above 50%", cls: "text-loss" }
+                      : cfr > 30
+                      ? { label: "Elevated — above 30%", cls: "text-amber-400" }
+                      : { label: "Healthy — below 30% threshold", cls: "text-success" };
+                    return (
+                      <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                        <CardContent className="p-4">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wider">Client Float Ratio</p>
+                          <p
+                            className={`text-2xl font-bold font-serif mt-1 ${cfrTone}`}
+                            title={cfr == null ? NA_TOOLTIP : undefined}
+                          >
+                            {cfr == null ? DASH : `${cfr.toFixed(1)}%`}
+                          </p>
+                          <div className="mt-2 h-1.5 w-full rounded-full bg-secondary/40 overflow-hidden">
+                            <div
+                              className={`h-full transition-all ${
+                                cfr == null ? "bg-muted" : cfr > 50 ? "bg-loss" : cfr > 30 ? "bg-amber-500" : "bg-success"
+                              }`}
+                              style={{ width: `${Math.min(100, cfr ?? 0)}%` }}
+                            />
+                          </div>
+                          {cfrFlag && (
+                            <p className={`text-[10px] mt-1.5 font-medium ${cfrFlag.cls}`}>✓ {cfrFlag.label}</p>
+                          )}
+                          <p className="text-[10px] text-muted-foreground mt-1 leading-tight">
+                            {cfr == null
+                              ? "Closing position data available for March 2026 only"
+                              : "Client AR as % of total funds. Amber if >30%, Red if >50%."}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    );
+                  })()}
                 </div>
               </>
             );
