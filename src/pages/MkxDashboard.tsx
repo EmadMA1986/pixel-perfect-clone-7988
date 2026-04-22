@@ -98,10 +98,49 @@ const MkxDashboard = () => {
     return formatAEDFull(v);
   };
 
-  // KPI for VARA assessment — use selected month or latest
+  // KPI for VARA assessment — selected month, or cumulative inception-to-date when "all"
   const activeKPI = useMemo(() => {
     if (selectedMonth !== "all" && filteredKPI.length > 0) return filteredKPI[0];
-    return kpiData[kpiData.length - 1];
+
+    // Build a cumulative KPI from raw monthly data (inception-to-date)
+    const sum = (fn: (m: typeof monthlyData[number]) => number) => monthlyData.reduce((s, m) => s + fn(m), 0);
+    const totalRevenue = sum((m) => m.revenue);
+    const totalGasFees = sum((m) => m.gasFees);
+    const totalGrossProfit = sum((m) => m.grossProfit);
+    const totalExpenses = sum((m) => m.totalExpenses);
+    const totalNetProfit = sum((m) => m.netProfit);
+    const totalVolume = sum((m) => m.tradingVolume);
+    const totalDepFiat = sum((m) => m.clientDepositsFiat);
+    const totalWdFiat = sum((m) => m.clientWithdrawalsFiat);
+    const totalDepVA = sum((m) => m.clientDepositsVA);
+    const totalWdVA = sum((m) => m.clientWithdrawalsVA);
+    const totalDeposits = totalDepFiat + totalDepVA;
+    const totalFlow = totalDepFiat + totalWdFiat + totalDepVA + totalWdVA;
+    const netFiat = totalDepFiat - totalWdFiat;
+    const netVA = totalDepVA - totalWdVA;
+    const last = kpiData[kpiData.length - 1];
+    const lastM = monthlyData[monthlyData.length - 1];
+
+    return {
+      month: "Inception to Date",
+      grossMarginPct: totalRevenue > 0 ? (totalGrossProfit / totalRevenue) * 100 : 0,
+      netMarginPct: totalRevenue > 0 ? (totalNetProfit / totalRevenue) * 100 : 0,
+      // Balance-sheet style ratios use latest month snapshot
+      assetCoverageRatio: last.assetCoverageRatio,
+      liquidityBuffer: last.liquidityBuffer,
+      fiatDepositWithdrawalRatio: totalWdFiat > 0 ? totalDepFiat / totalWdFiat : 0,
+      vaDepositWithdrawalRatio: totalWdVA > 0 ? totalDepVA / totalWdVA : 0,
+      netFiatFlow: netFiat,
+      netVAFlow: netVA,
+      tradingVolumePerTotalDeposits: totalDeposits > 0 ? totalVolume / totalDeposits : 0,
+      netFlowPerTradingVolume: totalVolume > 0 ? (netFiat + netVA) / totalVolume : 0,
+      revenuePerTradingVolume: totalVolume > 0 ? totalRevenue / totalVolume : 0,
+      breakEvenTradingVolume: 0,
+      revenuePerTotalClientFlow: totalFlow > 0 ? totalRevenue / totalFlow : 0,
+      netProfitPerTradingVolume: totalVolume > 0 ? totalNetProfit / totalVolume : 0,
+      assetValuationDiff: lastM.assetMarketValue - lastM.assetBookValue,
+      assetValuationRatio: lastM.assetBookValue > 0 ? (lastM.assetMarketValue - lastM.assetBookValue) / lastM.assetBookValue : 0,
+    };
   }, [selectedMonth, filteredKPI]);
 
   const getVARAStatus = (kpiKey: string): { value: string; status: "healthy" | "warning" | "risky" } => {
@@ -790,6 +829,10 @@ const MkxDashboard = () => {
                       <TableBody>
                         {varaStandards.map((std, idx) => {
                           const { value, status } = getVARAStatus(std.kpiKey);
+                          const subtitle =
+                            std.kpiKey === "revenuePerTradingVolume"
+                              ? `AED ${(activeKPI.revenuePerTradingVolume * 1000).toFixed(2)} earned per AED 1,000 traded`
+                              : null;
                           return (
                             <TableRow key={idx} className="border-border/30 hover:bg-secondary/30">
                               <TableCell className="text-sm font-medium text-foreground">{std.ratio}</TableCell>
@@ -797,6 +840,11 @@ const MkxDashboard = () => {
                                 <span className={status === "healthy" ? "text-success" : status === "warning" ? "text-amber-400" : "text-loss"}>
                                   {value}
                                 </span>
+                                {subtitle && (
+                                  <div className="text-[10px] font-normal text-muted-foreground mt-0.5">
+                                    {subtitle}
+                                  </div>
+                                )}
                               </TableCell>
                               <TableCell className="text-center">
                                 {status === "healthy" ? (
