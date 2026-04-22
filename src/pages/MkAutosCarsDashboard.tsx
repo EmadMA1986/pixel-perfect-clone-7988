@@ -130,8 +130,8 @@ const MkAutosCarsDashboard = () => {
     isSelected: m.month === selectedMonth,
   }));
 
-  // ── Monthly income by vehicle (last 12 months) — stacked
-  const last12 = monthlyIncome.slice(Math.max(0, selectedIdx - 11), selectedIdx + 1);
+  // ── Monthly income by vehicle (last 6 months) — stacked
+  const last12 = monthlyIncome.slice(Math.max(0, selectedIdx - 5), selectedIdx + 1);
   const stackedData = last12.map((m) => {
     const r: Record<string, number | string> = { month: m.month };
     trackedKeys.forEach((k) => { r[vehicleLabels[k]] = Math.round((m as any)[k] || 0); });
@@ -180,7 +180,6 @@ const MkAutosCarsDashboard = () => {
       pct: prev.total > 0 ? ((curIncome - prev.total) / prev.total) * 100 : 0,
       reason: idleVehicles.length > 0 ? `${idleVehicles.length} vehicles idle` : "Active fleet",
     },
-    { label: "Maintenance", prev: null, cur: null, pct: 0, reason: "—" },
     {
       label: "Net Profit",
       prev: prevCashProfit ?? null, cur: curCashProfit ?? null,
@@ -510,9 +509,10 @@ const MkAutosCarsDashboard = () => {
                   formatter={(v: number) => formatAED(v)}
                 />
                 <ReferenceLine y={TOTAL_MONTHLY_DEPR} stroke="hsl(var(--loss))" strokeDasharray="4 4" label={{ value: `Depreciation ${breakEvenLabel}`, position: "right", fill: "hsl(var(--loss))", fontSize: 10 }} />
+                <ReferenceLine y={TOTAL_MONTHLY_DEPR} stroke="hsl(38, 92%, 50%)" strokeDasharray="4 4" />
                 <Bar dataKey="Income" radius={[4, 4, 0, 0]}>
                   {trendData.map((d, i) => (
-                    <Cell key={i} fill={d.isSelected ? "hsl(var(--primary))" : "hsl(160, 50%, 40%)"} />
+                    <Cell key={i} fill={d.isSelected ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.55)"} />
                   ))}
                 </Bar>
                 <Line type="monotone" dataKey="Income" stroke="hsl(var(--loss))" strokeWidth={2} dot={{ r: 3 }} />
