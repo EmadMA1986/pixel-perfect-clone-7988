@@ -80,17 +80,18 @@ const OtcDashboard = () => {
   const negativeMonths = last12.filter((m) => m.netProfit < 0).length;
   const MIN_LIQUIDITY = 500_000; // AED 500K minimum
 
-  // Per-month actual AED cash on hand (excludes USDT inventory). Only populated
-  // for months where the closing AED-cash split is verified.
-  const aedCashByMonth: Record<string, number> = {
-    "Mar 2026": 151698,
+  // Per-month "own cash" (cashPosition = total funds − AR obligations). Only
+  // populated for months with a verified end-of-period snapshot. Used by the
+  // Risk Dashboard "Liquidity vs Minimum" card.
+  const ownCashByMonth: Record<string, number> = {
+    "Mar 2026": otcSummary.cashPosition, // 2,844,091.67
   };
-  const aedCashOnHand: number | null =
+  const ownCashForLiquidity: number | null =
     selectedMonth === "all"
-      ? aedCashByMonth["Mar 2026"]
-      : aedCashByMonth[selectedMonth] ?? null;
-  const liquidityHealthy = aedCashOnHand !== null && aedCashOnHand >= MIN_LIQUIDITY;
-  const liquidityRatio = aedCashOnHand !== null ? aedCashOnHand / MIN_LIQUIDITY : null;
+      ? ownCashByMonth["Mar 2026"]
+      : ownCashByMonth[selectedMonth] ?? null;
+  const liquidityHealthy = ownCashForLiquidity !== null && ownCashForLiquidity >= MIN_LIQUIDITY;
+  const liquidityRatio = ownCashForLiquidity !== null ? ownCashForLiquidity / MIN_LIQUIDITY : null;
 
   // Top counterparty per month (sourced from same data as Counterparty Concentration section).
   const topCounterpartyByMonth: Record<string, { name: string; pct: number }> = {
