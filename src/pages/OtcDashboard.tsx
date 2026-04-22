@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
   TrendingUp, TrendingDown, DollarSign, Wallet, Users, AlertTriangle, Building, ArrowLeft,
@@ -279,32 +279,55 @@ const OtcDashboard = () => {
 
         {/* === OTC-Specific KPI Cards (6) === */}
         {(() => {
-          const isMarch2026 = selectedMonth === "Mar 2026";
-          const marchActiveDays = 23;
-          const marchRevPerM = 3066;
-          const marchSpread = 0.307;
-          const marchTxCount = 196;
+          // Per-month verified trading metrics. Add new months here.
+          const monthSpecifics: Record<string, {
+            volumeLabel: string;
+            volumeSubtitle: string;
+            txCount: number;
+            spreadPct: number;
+            revPerM: number;
+            realizedSpread: number;
+          }> = {
+            "Mar 2026": {
+              volumeLabel: "USDT 36.6M",
+              volumeSubtitle: "18.7M bought + 17.9M sold · 23/31 active days",
+              txCount: 196,
+              spreadPct: 0.307,
+              revPerM: 3066,
+              realizedSpread: 198690,
+            },
+            "Feb 2026": {
+              volumeLabel: "USDT 50.2M",
+              volumeSubtitle: "22.9M bought + 27.3M sold · 24/28 active days",
+              txCount: 254,
+              spreadPct: 0.260,
+              revPerM: 2599,
+              realizedSpread: 162891,
+            },
+          };
+          const spec = monthSpecifics[selectedMonth];
+          const hasSpec = !!spec;
 
-          const displaySpread = isMarch2026 ? marchSpread : avgSpreadPct;
-          const spreadSubtitle = isMarch2026
-            ? `Weighted avg across ${marchTxCount} transactions`
+          const displaySpread = hasSpec ? spec.spreadPct : avgSpreadPct;
+          const spreadSubtitle = hasSpec
+            ? `Weighted avg across ${spec.txCount} transactions`
             : "Income ÷ Volume";
 
           return (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
               <SummaryCard
                 title={`Trading Volume (${periodLabel})`}
-                value={isMarch2026 ? `USDT 36.6M` : formatAEDCompact(totalVolume)}
-                subtitle={isMarch2026
-                  ? `18.7M bought + 17.9M sold · ${marchActiveDays}/31 active days`
+                value={hasSpec ? spec.volumeLabel : formatAEDCompact(totalVolume)}
+                subtitle={hasSpec
+                  ? spec.volumeSubtitle
                   : `USDT↔AED · est. @ ${(ASSUMED_SPREAD * 100).toFixed(2)}% spread`}
                 icon={Repeat}
               />
               <SummaryCard
                 title="Trading Income"
                 value={formatAEDCompact(totalTradingIncome)}
-                subtitle={isMarch2026
-                  ? `AED ${marchRevPerM.toLocaleString()} per 1M USDT traded`
+                subtitle={hasSpec
+                  ? `AED ${spec.revPerM.toLocaleString()} per 1M USDT traded`
                   : "Spread / commission earned"}
                 icon={DollarSign}
                 trend="up"
@@ -340,12 +363,22 @@ const OtcDashboard = () => {
         })()}
 
         {/* Profit method note */}
-        <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 flex items-start gap-2">
-          <Activity className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            <span className="text-foreground font-medium">Profit method:</span> Calculated on USDT wallet balance movement (closing minus opening). Realized spread income for March 2026: <span className="text-primary font-semibold">AED 198,690</span>.
-          </p>
-        </div>
+        {(() => {
+          const realized: Record<string, number> = {
+            "Mar 2026": 198690,
+            "Feb 2026": 162891,
+          };
+          const r = realized[selectedMonth];
+          return (
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 flex items-start gap-2">
+              <Activity className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                <span className="text-foreground font-medium">Profit method:</span> Calculated on USDT wallet balance movement (closing minus opening).
+                {r ? <> Realized spread income for {selectedMonth}: <span className="text-primary font-semibold">{formatAEDWhole(r)}</span>.</> : null}
+              </p>
+            </div>
+          );
+        })()}
 
         {/* Gold divider */}
         <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
@@ -422,117 +455,193 @@ const OtcDashboard = () => {
         {/* Gold divider */}
         <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
-        {/* === Trading Activity Calendar — March 2026 === */}
-        {selectedMonth === "Mar 2026" && (() => {
-          const zeroDays = new Set([1, 8, 15, 16, 20, 21, 22, 29]);
-          const consecutiveZero = new Set([15, 16, 20, 21, 22]);
-          const days = Array.from({ length: 31 }, (_, i) => i + 1);
-          const activeCount = 31 - zeroDays.size;
+        {/* === Trading Activity Calendar (per-month) === */}
+        {(() => {
+          type CalCfg = {
+            monthName: string;
+            monthAbbrev: string;
+            totalDays: number;
+            firstDayOffset: number; // 0=Sun … 6=Sat
+            zeroDays: number[];
+            consecutiveZero: number[];
+            consecutiveZeroLabel?: string;
+            zeroNote?: string; // e.g. "Sunday closures — consistent weekly pattern"
+            bestDay: { label: string; aed: number };
+            worstDay: { label: string; aed: number };
+            avgDailyProfit?: number; // active days only
+            avgDailyVolumeUSDT?: number;
+            totalCounterparties?: number;
+          };
+          const calendars: Record<string, CalCfg> = {
+            "Mar 2026": {
+              monthName: "March 2026",
+              monthAbbrev: "Mar",
+              totalDays: 31,
+              firstDayOffset: 0, // Mar 1, 2026 = Sunday
+              zeroDays: [1, 8, 15, 16, 20, 21, 22, 29],
+              consecutiveZero: [15, 16, 20, 21, 22],
+              consecutiveZeroLabel: "Mar 15, 16, 20, 21, 22",
+              bestDay: { label: "Mar 30", aed: 109835 },
+              worstDay: { label: "Mar 31", aed: -18039 },
+              avgDailyProfit: 8639,
+            },
+            "Feb 2026": {
+              monthName: "February 2026",
+              monthAbbrev: "Feb",
+              totalDays: 28,
+              firstDayOffset: 0, // Feb 1, 2026 = Sunday
+              zeroDays: [1, 8, 15, 22],
+              consecutiveZero: [],
+              zeroNote: "Sunday closures — consistent weekly pattern",
+              bestDay: { label: "—", aed: 0 },
+              worstDay: { label: "—", aed: 0 },
+              avgDailyVolumeUSDT: 2_093_516,
+              totalCounterparties: 54,
+            },
+          };
+          const cfg = calendars[selectedMonth];
+          if (!cfg) return null;
+
+          const zeroSet = new Set(cfg.zeroDays);
+          const consecSet = new Set(cfg.consecutiveZero);
+          const days = Array.from({ length: cfg.totalDays }, (_, i) => i + 1);
+          const activeCount = cfg.totalDays - zeroSet.size;
           const dayLabels = ["S", "M", "T", "W", "T", "F", "S"];
-          // Mar 1, 2026 = Sunday → starts at column index 0
-          const firstDayOffset = 0;
+          const formatUSDT = (v: number) => `${v.toLocaleString("en-US")} USDT`;
+
           return (
-            <section className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Activity className="h-4 w-4 text-primary" />
-                <h2 className="text-sm font-serif font-semibold uppercase tracking-wider text-foreground">
-                  Trading Activity Calendar — March 2026
-                </h2>
-              </div>
-              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-                <CardContent className="p-5 space-y-5">
-                  {/* Calendar grid */}
-                  <div>
-                    <div className="grid grid-cols-7 gap-2 mb-2">
-                      {dayLabels.map((d, i) => (
-                        <div key={i} className="text-[10px] uppercase tracking-wider text-muted-foreground text-center font-medium">
-                          {d}
-                        </div>
-                      ))}
-                    </div>
-                    <div className="grid grid-cols-7 gap-2">
-                      {Array.from({ length: firstDayOffset }).map((_, i) => (
-                        <div key={`pad-${i}`} />
-                      ))}
-                      {days.map((d) => {
-                        const isZero = zeroDays.has(d);
-                        const isConsecZero = consecutiveZero.has(d);
-                        return (
-                          <div
-                            key={d}
-                            title={
-                              isConsecZero
-                                ? `Mar ${d} — Consecutive zero day`
-                                : isZero
-                                ? `Mar ${d} — Zero trading day`
-                                : `Mar ${d} — Active trading day`
-                            }
-                            className={[
-                              "aspect-square rounded-md flex items-center justify-center text-xs font-medium border transition-colors",
-                              isZero
-                                ? "bg-muted/40 text-muted-foreground border-border/40"
-                                : "bg-success/15 text-success border-success/40",
-                              isConsecZero ? "!border-amber-500 border-2 ring-1 ring-amber-500/30" : "",
-                            ].join(" ")}
-                          >
+            <>
+              <section className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-primary" />
+                  <h2 className="text-sm font-serif font-semibold uppercase tracking-wider text-foreground">
+                    Trading Activity Calendar — {cfg.monthName}
+                  </h2>
+                </div>
+                <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                  <CardContent className="p-5 space-y-5">
+                    {/* Calendar grid */}
+                    <div>
+                      <div className="grid grid-cols-7 gap-2 mb-2">
+                        {dayLabels.map((d, i) => (
+                          <div key={i} className="text-[10px] uppercase tracking-wider text-muted-foreground text-center font-medium">
                             {d}
                           </div>
-                        );
-                      })}
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-7 gap-2">
+                        {Array.from({ length: cfg.firstDayOffset }).map((_, i) => (
+                          <div key={`pad-${i}`} />
+                        ))}
+                        {days.map((d) => {
+                          const isZero = zeroSet.has(d);
+                          const isConsecZero = consecSet.has(d);
+                          const zeroTitle = cfg.zeroNote ?? "Zero trading day";
+                          return (
+                            <div
+                              key={d}
+                              title={
+                                isConsecZero
+                                  ? `${cfg.monthAbbrev} ${d} — Consecutive zero day`
+                                  : isZero
+                                  ? `${cfg.monthAbbrev} ${d} — ${zeroTitle}`
+                                  : `${cfg.monthAbbrev} ${d} — Active trading day`
+                              }
+                              className={[
+                                "aspect-square rounded-md flex items-center justify-center text-xs font-medium border transition-colors",
+                                isZero
+                                  ? "bg-muted/40 text-muted-foreground border-border/40"
+                                  : "bg-success/15 text-success border-success/40",
+                                isConsecZero ? "!border-amber-500 border-2 ring-1 ring-amber-500/30" : "",
+                              ].join(" ")}
+                            >
+                              {d}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {/* Legend */}
+                      <div className="flex flex-wrap items-center gap-4 mt-4 text-[10px] text-muted-foreground">
+                        <div className="flex items-center gap-1.5">
+                          <span className="h-3 w-3 rounded-sm bg-success/15 border border-success/40 inline-block" />
+                          <span>Active trading day</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="h-3 w-3 rounded-sm bg-muted/40 border border-border/40 inline-block" />
+                          <span>Zero trading day{cfg.zeroNote ? ` — ${cfg.zeroNote}` : ""}</span>
+                        </div>
+                        {cfg.consecutiveZero.length > 0 && (
+                          <div className="flex items-center gap-1.5">
+                            <span className="h-3 w-3 rounded-sm border-2 border-amber-500 inline-block" />
+                            <span>Consecutive zero days{cfg.consecutiveZeroLabel ? ` (${cfg.consecutiveZeroLabel})` : ""}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    {/* Legend */}
-                    <div className="flex flex-wrap items-center gap-4 mt-4 text-[10px] text-muted-foreground">
-                      <div className="flex items-center gap-1.5">
-                        <span className="h-3 w-3 rounded-sm bg-success/15 border border-success/40 inline-block" />
-                        <span>Active trading day</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="h-3 w-3 rounded-sm bg-muted/40 border border-border/40 inline-block" />
-                        <span>Zero trading day</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="h-3 w-3 rounded-sm border-2 border-amber-500 inline-block" />
-                        <span>Consecutive zero days (Mar 15, 16, 20, 21, 22)</span>
-                      </div>
-                    </div>
-                  </div>
 
-                  {/* Stats row */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-border/40">
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Active Trading Days</p>
-                      <p className="text-lg font-serif font-bold text-foreground">{activeCount} <span className="text-sm text-muted-foreground font-normal">/ 31</span></p>
+                    {/* Stats row */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-border/40">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Active Trading Days</p>
+                        <p className="text-lg font-serif font-bold text-foreground">{activeCount} <span className="text-sm text-muted-foreground font-normal">/ {cfg.totalDays}</span></p>
+                        {cfg.zeroNote && (
+                          <p className="text-[10px] text-muted-foreground">{zeroSet.size} zero days (all Sundays)</p>
+                        )}
+                      </div>
+                      {cfg.bestDay.label !== "—" ? (
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Best Day</p>
+                          <p className="text-lg font-serif font-bold text-success">{formatAEDWhole(cfg.bestDay.aed)}</p>
+                          <p className="text-[10px] text-muted-foreground">{cfg.bestDay.label}</p>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Avg Daily Volume</p>
+                          <p className="text-lg font-serif font-bold text-primary tabular-nums">{cfg.avgDailyVolumeUSDT ? formatUSDT(cfg.avgDailyVolumeUSDT) : "—"}</p>
+                          <p className="text-[10px] text-muted-foreground">Across active days</p>
+                        </div>
+                      )}
+                      {cfg.worstDay.label !== "—" ? (
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Worst Day</p>
+                          <p className="text-lg font-serif font-bold text-loss">{formatAEDWhole(cfg.worstDay.aed)}</p>
+                          <p className="text-[10px] text-muted-foreground">{cfg.worstDay.label}</p>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Total Counterparties</p>
+                          <p className="text-lg font-serif font-bold text-foreground tabular-nums">{cfg.totalCounterparties ?? "—"}</p>
+                          <p className="text-[10px] text-muted-foreground">Active during month</p>
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{cfg.avgDailyProfit != null ? "Avg Daily Profit" : "Zero Days"}</p>
+                        {cfg.avgDailyProfit != null ? (
+                          <>
+                            <p className="text-lg font-serif font-bold text-primary">{formatAEDWhole(cfg.avgDailyProfit)}</p>
+                            <p className="text-[10px] text-muted-foreground">Active days only</p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-lg font-serif font-bold text-foreground">{zeroSet.size} <span className="text-sm text-muted-foreground font-normal">/ {cfg.totalDays}</span></p>
+                            <p className="text-[10px] text-muted-foreground">{cfg.zeroNote ? "All on Sundays" : "Non-trading days"}</p>
+                          </>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Best Day</p>
-                      <p className="text-lg font-serif font-bold text-success">AED 109,835</p>
-                      <p className="text-[10px] text-muted-foreground">Mar 30</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Worst Day</p>
-                      <p className="text-lg font-serif font-bold text-loss">-AED 18,039</p>
-                      <p className="text-[10px] text-muted-foreground">Mar 31</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Avg Daily Profit</p>
-                      <p className="text-lg font-serif font-bold text-primary">AED 8,639</p>
-                      <p className="text-[10px] text-muted-foreground">Active days only</p>
-                    </div>
-                  </div>
 
-                  <p className="text-[11px] italic text-muted-foreground leading-relaxed">
-                    Daily profit calculated on USDT wallet movement (closing minus opening balance). Large AED cash flow swings on individual days reflect pass-through USDT inventory trades and do not represent actual profit or loss.
-                  </p>
-                </CardContent>
-              </Card>
-            </section>
+                    <p className="text-[11px] italic text-muted-foreground leading-relaxed">
+                      Daily profit calculated on USDT wallet movement (closing minus opening balance). Large AED cash flow swings on individual days reflect pass-through USDT inventory trades and do not represent actual profit or loss.
+                    </p>
+                  </CardContent>
+                </Card>
+              </section>
+
+              {/* Gold divider */}
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+            </>
           );
         })()}
-
-        {/* Gold divider */}
-        {selectedMonth === "Mar 2026" && (
-          <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-        )}
 
         {/* === Liquidity & Capital Position === */}
         <section className="space-y-4">
@@ -972,84 +1081,126 @@ const OtcDashboard = () => {
         {/* Gold divider */}
         <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
-        {/* === Counterparty Concentration Risk (March 2026) === */}
-        {selectedMonth === "Mar 2026" && (() => {
-          const counterparties = [
-            { name: "NICK", pct: 22.8 },
-            { name: "KKAA", pct: 16.8 },
-            { name: "UZPAY", pct: 13.8 },
-            { name: "ROLEX", pct: 11.2 },
-            { name: "ROBERT", pct: 7.1 },
-          ];
-          const top3 = counterparties.slice(0, 3).reduce((s, c) => s + c.pct, 0);
-          const totalActive = 28;
+        {/* === Counterparty Concentration Risk (per-month) === */}
+        {(() => {
+          type CpCfg = {
+            monthName: string;
+            list: { name: string; pct: number }[];
+            totalActive: number;
+            comparisonNote?: ReactNode;
+          };
+          const cpData: Record<string, CpCfg> = {
+            "Mar 2026": {
+              monthName: "March 2026",
+              list: [
+                { name: "NICK", pct: 22.8 },
+                { name: "KKAA", pct: 16.8 },
+                { name: "UZPAY", pct: 13.8 },
+                { name: "ROLEX", pct: 11.2 },
+                { name: "ROBERT", pct: 7.1 },
+              ],
+              totalActive: 28,
+            },
+            "Feb 2026": {
+              monthName: "February 2026",
+              list: [
+                { name: "NICK", pct: 26.7 },
+                { name: "ROLEX", pct: 16.3 },
+                { name: "UZPAY", pct: 15.0 },
+                { name: "KKAA", pct: 14.3 },
+                { name: "GABE", pct: 5.4 },
+              ],
+              totalActive: 54,
+              comparisonNote: (
+                <>
+                  <p className="font-medium text-foreground mb-1">February vs March 2026 — comparative insight</p>
+                  <ul className="list-disc list-inside space-y-0.5">
+                    <li>February had higher volume (50.2M USDT) vs March (36.6M) but lower spread (0.260% vs 0.307%).</li>
+                    <li>February had more diversified counterparties (54) vs March (28).</li>
+                    <li>February zero days all fell on Sundays — consistent weekly pattern.</li>
+                    <li>March had 8 zero days including 5 consecutive mid-month — irregular pattern.</li>
+                  </ul>
+                </>
+              ),
+            },
+          };
+          const cfg = cpData[selectedMonth];
+          if (!cfg) return null;
+          const top3 = cfg.list.slice(0, 3).reduce((s, c) => s + c.pct, 0);
           const isCritical = top3 > 50;
-          const maxPct = Math.max(...counterparties.map((c) => c.pct));
+          const maxPct = Math.max(...cfg.list.map((c) => c.pct));
+
           return (
-            <section className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-primary" />
-                <h2 className="text-sm font-serif font-semibold uppercase tracking-wider text-foreground">
-                  Counterparty Concentration Risk — March 2026
-                </h2>
-              </div>
-              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-                <CardContent className="p-5 space-y-4">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Top 5 counterparties by trading volume</span>
-                    <Badge variant="secondary" className="text-[10px]">
-                      {totalActive} active counterparties
-                    </Badge>
-                  </div>
-
-                  <div className="space-y-3">
-                    {counterparties.map((c, i) => {
-                      const widthPct = (c.pct / maxPct) * 100;
-                      const isTop3 = i < 3;
-                      return (
-                        <div key={c.name} className="space-y-1">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="font-medium text-foreground tabular-nums">
-                              <span className="text-muted-foreground mr-2">#{i + 1}</span>
-                              {c.name}
-                            </span>
-                            <span className={`font-bold font-serif tabular-nums ${isTop3 ? "text-primary" : "text-foreground"}`}>
-                              {c.pct.toFixed(1)}%
-                            </span>
-                          </div>
-                          <div className="h-2.5 w-full rounded bg-secondary/40 overflow-hidden">
-                            <div
-                              className={`h-full rounded transition-all ${isTop3 ? "bg-primary" : "bg-muted-foreground/40"}`}
-                              style={{ width: `${widthPct}%` }}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="pt-3 border-t border-border/30 flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground uppercase tracking-wider">Top 3 Concentration</span>
-                    <span className="text-lg font-bold font-serif text-loss tabular-nums">{top3.toFixed(1)}% of all volume</span>
-                  </div>
-
-                  {isCritical && (
-                    <div className="rounded-lg border border-loss/40 bg-loss/10 p-3 flex items-start gap-2">
-                      <AlertTriangle className="h-4 w-4 text-loss mt-0.5 shrink-0" />
-                      <p className="text-xs font-medium text-loss">
-                        Critical — top 3 counterparties control over 50% of volume. Diversify or set per-counterparty exposure limits.
-                      </p>
+            <>
+              <section className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-primary" />
+                  <h2 className="text-sm font-serif font-semibold uppercase tracking-wider text-foreground">
+                    Counterparty Concentration Risk — {cfg.monthName}
+                  </h2>
+                </div>
+                <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                  <CardContent className="p-5 space-y-4">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Top 5 counterparties by trading volume</span>
+                      <Badge variant="secondary" className="text-[10px]">
+                        {cfg.totalActive} active counterparties
+                      </Badge>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            </section>
+
+                    <div className="space-y-3">
+                      {cfg.list.map((c, i) => {
+                        const widthPct = (c.pct / maxPct) * 100;
+                        const isTop3 = i < 3;
+                        return (
+                          <div key={c.name} className="space-y-1">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="font-medium text-foreground tabular-nums">
+                                <span className="text-muted-foreground mr-2">#{i + 1}</span>
+                                {c.name}
+                              </span>
+                              <span className={`font-bold font-serif tabular-nums ${isTop3 ? "text-primary" : "text-foreground"}`}>
+                                {c.pct.toFixed(1)}%
+                              </span>
+                            </div>
+                            <div className="h-2.5 w-full rounded bg-secondary/40 overflow-hidden">
+                              <div
+                                className={`h-full rounded transition-all ${isTop3 ? "bg-primary" : "bg-muted-foreground/40"}`}
+                                style={{ width: `${widthPct}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="pt-3 border-t border-border/30 flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground uppercase tracking-wider">Top 3 Concentration</span>
+                      <span className="text-lg font-bold font-serif text-loss tabular-nums">{top3.toFixed(1)}% of all volume</span>
+                    </div>
+
+                    {isCritical && (
+                      <div className="rounded-lg border border-loss/40 bg-loss/10 p-3 flex items-start gap-2">
+                        <AlertTriangle className="h-4 w-4 text-loss mt-0.5 shrink-0" />
+                        <p className="text-xs font-medium text-loss">
+                          Critical — top 3 counterparties control over 50% of volume. Diversify or set per-counterparty exposure limits.
+                        </p>
+                      </div>
+                    )}
+
+                    {cfg.comparisonNote && (
+                      <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground leading-relaxed">
+                        {cfg.comparisonNote}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </section>
+
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+            </>
           );
         })()}
-
-        {selectedMonth === "Mar 2026" && (
-          <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-        )}
 
         <section className="space-y-4">
           <div className="flex items-center gap-2">
