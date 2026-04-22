@@ -404,56 +404,63 @@ const MkxDashboard = () => {
         })()}
 
         {/* MKX Crypto Assets - only in All Time */}
-        {!isFiltered && (
-        <Card className="border-border/50 bg-gradient-to-r from-emerald-500/10 to-violet-500/5 backdrop-blur-sm">
-          <CardContent className="p-5">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center">
-                  <Shield className="h-5 w-5 text-success" />
-                </div>
-                <div>
-                  <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">MKX Assets in Fiat</p>
-                  <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(1640913 - 137968)}</p>
-                  <p className="text-[10px] text-muted-foreground">Client Money (1,640,913) − Fiat Due to Customers (137,968)</p>
-                </div>
-              </div>
-              <div className="text-center">
-                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">MKX Assets in VA</p>
-                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(128875 + 2628064 - 1999061)}</p>
-                <p className="text-[10px] text-muted-foreground">Cold Wallets + VA Holdings − VA Due to Customers</p>
-              </div>
-              <div className="text-center border-l border-r border-border/50 px-6">
-                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">March Gross Profit</p>
-                <p className="text-2xl font-bold font-serif text-success">{formatAEDFull(63906)}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Net MKX Assets</p>
-                <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull((1640913 - 137968) + (128875 + 2628064 - 1999061))}</p>
-                <p className="text-[10px] text-muted-foreground">Fiat + VA Net Assets</p>
-              </div>
-            </div>
-            <div className="mt-4 pt-4 border-t border-border/50 flex flex-wrap items-center gap-6">
+        {!isFiltered && (() => {
+          const ytdGrossProfit = monthlyData.reduce((s, m) => s + m.grossProfit, 0);
+          const latestMonth = monthlyData[monthlyData.length - 1].month;
+          return (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-serif font-semibold text-foreground">MKX Asset Position</h3>
               <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-primary" />
-                <p className="text-xs text-muted-foreground">Crypto Capital Injection:</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Ahmad</p>
-                <p className="text-sm font-bold font-serif text-foreground">{formatAEDFull(2147504.48)}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Maria</p>
-                <p className="text-sm font-bold font-serif text-foreground">{formatAEDFull(200000)}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Total</p>
-                <p className="text-sm font-bold font-serif text-foreground">{formatAEDFull(2347504.48)}</p>
+                <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px]">Latest snapshot ({latestMonth})</Badge>
               </div>
             </div>
-          </CardContent>
-        </Card>
-        )}
+            <Card className="border-border/50 bg-gradient-to-r from-emerald-500/10 to-violet-500/5 backdrop-blur-sm">
+              <CardContent className="p-5">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center">
+                      <Shield className="h-5 w-5 text-success" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">MKX Assets in Fiat</p>
+                        <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[9px]">Latest</Badge>
+                      </div>
+                      <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(1640913 - 137968)}</p>
+                      <p className="text-[10px] text-muted-foreground">As at {latestMonth} · Client Money − Fiat Due to Customers</p>
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="flex items-center gap-2 justify-center">
+                      <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">MKX Assets in VA</p>
+                      <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[9px]">Latest</Badge>
+                    </div>
+                    <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull(128875 + 2628064 - 1999061)}</p>
+                    <p className="text-[10px] text-muted-foreground">As at {latestMonth} · Cold Wallets + VA Holdings − VA Due</p>
+                  </div>
+                  <div className="text-center border-l border-r border-border/50 px-6">
+                    <div className="flex items-center gap-2 justify-center">
+                      <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">YTD Gross Profit</p>
+                      <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[9px]">Cumulative</Badge>
+                    </div>
+                    <p className={`text-2xl font-bold font-serif ${ytdGrossProfit >= 0 ? "text-success" : "text-loss"}`}>{formatAEDFull(ytdGrossProfit)}</p>
+                    <p className="text-[10px] text-muted-foreground">Inception to {latestMonth}</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="flex items-center gap-2 justify-end">
+                      <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Net MKX Assets</p>
+                      <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[9px]">Latest</Badge>
+                    </div>
+                    <p className="text-2xl font-bold font-serif text-foreground">{formatAEDFull((1640913 - 137968) + (128875 + 2628064 - 1999061))}</p>
+                    <p className="text-[10px] text-muted-foreground">As at {latestMonth} · Fiat + VA Net Assets</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          );
+        })()}
 
         {/* Client Liabilities vs Assets */}
         {!isFiltered && (
