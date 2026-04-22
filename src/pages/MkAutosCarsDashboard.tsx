@@ -151,7 +151,7 @@ const MkAutosCarsDashboard = () => {
       const decision: "KEEP" | "SELL" = v.realROI < -20 ? "SELL" : "KEEP";
       return { ...v, key, marIncome, decision, displayName: vehicleDisplayName[key] ?? v.name };
     })
-    .sort((a, b) => b.realProfit - a.realProfit);
+    .sort((a, b) => b.realROI - a.realROI);
 
   const totals = fleetVehicles.reduce(
     (a, v) => ({
@@ -590,7 +590,7 @@ const MkAutosCarsDashboard = () => {
                     <TableHead className="text-[10px] uppercase tracking-wider text-right">Real Profit</TableHead>
                     <TableHead className="text-[10px] uppercase tracking-wider text-right">Cash ROI</TableHead>
                     <TableHead className="text-[10px] uppercase tracking-wider text-right">Real ROI</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider text-right">Monthly Avg</TableHead>
+                    <TableHead className="text-[10px] uppercase tracking-wider text-right">Avg Monthly Income</TableHead>
                     <TableHead className="text-[10px] uppercase tracking-wider text-right">Monthly Depr</TableHead>
                     <TableHead className="text-[10px] uppercase tracking-wider text-right">{selectedMonth}</TableHead>
                     <TableHead className="text-[10px] uppercase tracking-wider text-right">{selectedMonth} vs Depr</TableHead>
@@ -599,12 +599,18 @@ const MkAutosCarsDashboard = () => {
                 </TableHeader>
                 <TableBody>
                   {fleetVehicles.map((v) => {
-                    const realRoiCls = v.realROI > 5 ? "text-success" : v.realROI >= 0 ? "text-amber-500" : "text-loss";
+                    const realRoiBand =
+                      v.realROI > 5 ? "bg-success/20 text-success"
+                      : v.realROI >= 0 ? "bg-success/10 text-success"
+                      : v.realROI >= -5 ? "bg-amber-500/15 text-amber-500"
+                      : "bg-loss/20 text-loss";
                     const realProfitCls = v.realProfit >= 0 ? "text-success" : "text-loss";
                     const idle = v.marIncome === 0;
                     const monDepr = monthlyDepreciation[v.key] ?? 0;
                     const vsDepr = v.marIncome - monDepr;
+                    const vsDeprIcon = idle ? "⚠️ IDLE" : vsDepr >= 0 ? "✅" : "🔴";
                     const vsDeprCls = vsDepr >= 0 ? "text-success" : "text-loss";
+                    const vsDeprSign = vsDepr >= 0 ? "+" : "-";
                     return (
                       <TableRow key={v.name} className="border-border/30 hover:bg-secondary/30">
                         <TableCell className="text-xs font-medium text-foreground">{v.displayName}</TableCell>
@@ -615,14 +621,18 @@ const MkAutosCarsDashboard = () => {
                         <TableCell className={`text-xs tabular-nums text-right font-medium ${v.netProfit >= 0 ? "text-success" : "text-loss"}`}>{formatAED(v.netProfit)}</TableCell>
                         <TableCell className={`text-xs tabular-nums text-right font-semibold ${realProfitCls}`}>{formatAED(v.realProfit)}</TableCell>
                         <TableCell className="text-xs tabular-nums text-right text-foreground">{v.roiOnInvestment.toFixed(1)}%</TableCell>
-                        <TableCell className={`text-xs tabular-nums text-right font-semibold ${realRoiCls}`}>{v.realROI.toFixed(1)}%</TableCell>
+                        <TableCell className="text-xs tabular-nums text-right p-2">
+                          <span className={`inline-block px-2 py-0.5 rounded font-semibold ${realRoiBand}`}>{v.realROI.toFixed(1)}%</span>
+                        </TableCell>
                         <TableCell className="text-xs tabular-nums text-right text-foreground">{formatAED(v.avgMonthlyProfit)}</TableCell>
                         <TableCell className="text-xs tabular-nums text-right text-muted-foreground">{formatAED(monDepr)}</TableCell>
                         <TableCell className={`text-xs tabular-nums text-right ${idle ? "text-loss" : "text-foreground"}`}>
                           {idle ? "AED 0 ⚠️" : formatAED(v.marIncome)}
                         </TableCell>
                         <TableCell className={`text-xs tabular-nums text-right font-semibold ${vsDeprCls}`}>
-                          {vsDepr >= 0 ? "▲" : "▼"} {formatAED(Math.abs(vsDepr))}
+                          {idle
+                            ? `-${formatAED(monDepr)} ${vsDeprIcon}`
+                            : `${vsDeprSign}${formatAED(Math.abs(vsDepr))} ${vsDeprIcon}`}
                         </TableCell>
                         <TableCell className="text-center">
                           <Badge variant={v.decision === "KEEP" ? "default" : "destructive"} className={`text-[10px] ${v.decision === "KEEP" ? "bg-success/20 text-success border-success/40" : ""}`}>
@@ -639,19 +649,34 @@ const MkAutosCarsDashboard = () => {
                     <TableCell className="text-xs tabular-nums text-right text-success">{formatAED(totals.income)}</TableCell>
                     <TableCell className="text-xs tabular-nums text-right text-muted-foreground">{formatAED(totals.maint)}</TableCell>
                     <TableCell className="text-xs tabular-nums text-right text-success">{formatAED(totals.net)}</TableCell>
-                    <TableCell className={`text-xs tabular-nums text-right ${totals.real >= 0 ? "text-success" : "text-loss"}`}>{formatAED(totals.real)}</TableCell>
+                    <TableCell className={`tabular-nums text-right text-base font-bold ${totals.real >= 0 ? "text-success" : "text-loss"}`}>{formatAED(totals.real)}</TableCell>
                     <TableCell className="text-xs tabular-nums text-right text-foreground">{mkAutosSummary.overallROI}%</TableCell>
                     <TableCell className={`text-xs tabular-nums text-right ${mkAutosSummary.realROI >= 0 ? "text-success" : "text-loss"}`}>{mkAutosSummary.realROI}%</TableCell>
                     <TableCell className="text-xs tabular-nums text-right text-foreground">{formatAED(totals.monthly)}</TableCell>
                     <TableCell className="text-xs tabular-nums text-right text-muted-foreground">{formatAED(TOTAL_MONTHLY_DEPR)}</TableCell>
                     <TableCell className="text-xs tabular-nums text-right text-foreground">{formatAED(totals.curMonth)}</TableCell>
-                    <TableCell className={`text-xs tabular-nums text-right ${(totals.curMonth - TOTAL_MONTHLY_DEPR) >= 0 ? "text-success" : "text-loss"}`}>
-                      {(totals.curMonth - TOTAL_MONTHLY_DEPR) >= 0 ? "▲" : "▼"} {formatAED(Math.abs(totals.curMonth - TOTAL_MONTHLY_DEPR))}
+                    <TableCell className={`text-xs tabular-nums text-right font-semibold ${(totals.curMonth - TOTAL_MONTHLY_DEPR) >= 0 ? "text-success" : "text-loss"}`}>
+                      {(totals.curMonth - TOTAL_MONTHLY_DEPR) >= 0 ? "+" : "-"}{formatAED(Math.abs(totals.curMonth - TOTAL_MONTHLY_DEPR))} {(totals.curMonth - TOTAL_MONTHLY_DEPR) >= 0 ? "✅" : "🔴"}
                     </TableCell>
                     <TableCell className="text-center text-xs text-muted-foreground">—</TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
+            </div>
+            <div className="px-4 pt-3 pb-1">
+              <p className={`text-sm font-bold ${totals.real >= 0 ? "text-success" : "text-loss"}`}>
+                {totals.real >= 0
+                  ? `Fleet creating ${formatAED(totals.real)} in real value since inception`
+                  : `Fleet destroying ${formatAED(Math.abs(totals.real))} in real value since inception`}
+              </p>
+            </div>
+            <div className="px-4 pb-4">
+              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                <span className="font-semibold">Real Profit</span> = Net Profit minus Total Depreciation to date ·{" "}
+                <span className="font-semibold">Cash ROI</span> = Net Profit ÷ Initial Investment ·{" "}
+                <span className="font-semibold">Real ROI</span> = Real Profit ÷ Initial Investment ·{" "}
+                <span className="font-semibold">{selectedMonth} vs Depr</span> = {selectedMonth} income minus monthly depreciation charge.
+              </p>
             </div>
           </CardContent>
         </Card>
