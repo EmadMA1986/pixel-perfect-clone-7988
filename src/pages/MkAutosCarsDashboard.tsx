@@ -570,7 +570,7 @@ const MkAutosCarsDashboard = () => {
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-serif text-foreground">Fleet Performance — Vehicle by Vehicle</CardTitle>
             <p className="text-[10px] text-muted-foreground tracking-wider uppercase">
-              Inception-to-date totals · Last column shows {selectedMonth} income
+              Inception to {selectedMonth} | Last column shows selected month income only
             </p>
           </CardHeader>
           <CardContent className="p-0">
@@ -588,7 +588,9 @@ const MkAutosCarsDashboard = () => {
                     <TableHead className="text-[10px] uppercase tracking-wider text-right">Cash ROI</TableHead>
                     <TableHead className="text-[10px] uppercase tracking-wider text-right">Real ROI</TableHead>
                     <TableHead className="text-[10px] uppercase tracking-wider text-right">Monthly Avg</TableHead>
+                    <TableHead className="text-[10px] uppercase tracking-wider text-right">Monthly Depr</TableHead>
                     <TableHead className="text-[10px] uppercase tracking-wider text-right">{selectedMonth}</TableHead>
+                    <TableHead className="text-[10px] uppercase tracking-wider text-right">{selectedMonth} vs Depr</TableHead>
                     <TableHead className="text-[10px] uppercase tracking-wider text-center">Decision</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -597,6 +599,9 @@ const MkAutosCarsDashboard = () => {
                     const realRoiCls = v.realROI > 5 ? "text-success" : v.realROI >= 0 ? "text-amber-500" : "text-loss";
                     const realProfitCls = v.realProfit >= 0 ? "text-success" : "text-loss";
                     const idle = v.marIncome === 0;
+                    const monDepr = monthlyDepreciation[v.key] ?? 0;
+                    const vsDepr = v.marIncome - monDepr;
+                    const vsDeprCls = vsDepr >= 0 ? "text-success" : "text-loss";
                     return (
                       <TableRow key={v.name} className="border-border/30 hover:bg-secondary/30">
                         <TableCell className="text-xs font-medium text-foreground">{v.displayName}</TableCell>
@@ -609,8 +614,12 @@ const MkAutosCarsDashboard = () => {
                         <TableCell className="text-xs tabular-nums text-right text-foreground">{v.roiOnInvestment.toFixed(1)}%</TableCell>
                         <TableCell className={`text-xs tabular-nums text-right font-semibold ${realRoiCls}`}>{v.realROI.toFixed(1)}%</TableCell>
                         <TableCell className="text-xs tabular-nums text-right text-foreground">{formatAED(v.avgMonthlyProfit)}</TableCell>
+                        <TableCell className="text-xs tabular-nums text-right text-muted-foreground">{formatAED(monDepr)}</TableCell>
                         <TableCell className={`text-xs tabular-nums text-right ${idle ? "text-loss" : "text-foreground"}`}>
                           {idle ? "AED 0 ⚠️" : formatAED(v.marIncome)}
+                        </TableCell>
+                        <TableCell className={`text-xs tabular-nums text-right font-semibold ${vsDeprCls}`}>
+                          {vsDepr >= 0 ? "▲" : "▼"} {formatAED(Math.abs(vsDepr))}
                         </TableCell>
                         <TableCell className="text-center">
                           <Badge variant={v.decision === "KEEP" ? "default" : "destructive"} className={`text-[10px] ${v.decision === "KEEP" ? "bg-success/20 text-success border-success/40" : ""}`}>
