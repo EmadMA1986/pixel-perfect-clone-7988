@@ -73,25 +73,7 @@ const MkxDashboard = () => {
   const isFiltered = selectedMonth !== "all";
   const hasMonthlyData = filteredMonthly.length > 0;
 
-  const revenueChartData = useMemo(
-    () => filteredMonthly.map((m) => ({ name: m.month, revenue: Math.round(m.revenue), grossProfit: Math.round(m.grossProfit), expenses: Math.round(m.totalExpenses) })),
-    [filteredMonthly]
-  );
 
-  const profitChartData = useMemo(
-    () => filteredMonthly.map((m) => ({ name: m.month, netProfit: Math.round(m.netProfit) })),
-    [filteredMonthly]
-  );
-
-  const volumeChartData = useMemo(
-    () => filteredMonthly.map((m) => ({ name: m.month, volume: Math.round(m.tradingVolume) })),
-    [filteredMonthly]
-  );
-
-  const liquidityChartData = useMemo(
-    () => filteredKPI.map((k) => ({ name: k.month, buffer: Math.round(k.liquidityBuffer), coverage: k.assetCoverageRatio })),
-    [filteredKPI]
-  );
 
   const formatPLValue = (v: number) => {
     if (v === 0) return "—";
