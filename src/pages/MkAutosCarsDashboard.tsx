@@ -728,6 +728,19 @@ const MkAutosCarsDashboard = () => {
                 However fleet market value exceeds NBV by {formatAED(mkAutosSummary.totalSaleValue - mkAutosSummary.totalNBV)} — suggesting vehicles hold value better than accounting depreciation implies.
               </p>
             </div>
+            <div className="rounded-lg border-2 border-amber-500/40 bg-amber-500/10 p-4">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl leading-none">💡</span>
+                <div className="space-y-1">
+                  <p className="text-xs font-bold uppercase tracking-wider text-amber-500">Action Insight</p>
+                  <p className="text-sm text-foreground leading-relaxed">
+                    <span className="font-semibold">If GLE53 + C200 sold today:</span>{" "}
+                    Cash inflow {formatAED(sellVehicles.reduce((s, v) => s + v.saleValue, 0))} | Monthly depreciation saved{" "}
+                    {formatAED(sellVehicles.reduce((s, v) => s + (monthlyDepreciation[v.key] ?? 0), 0))} | Redeploy into higher-performing assets.
+                  </p>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
