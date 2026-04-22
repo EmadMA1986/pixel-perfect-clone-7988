@@ -394,11 +394,7 @@ const OtcDashboard = () => {
 
         {/* Profit method note */}
         {(() => {
-          const realized: Record<string, number> = {
-            "Mar 2026": 198690,
-            "Feb 2026": 162891,
-          };
-          const r = realized[selectedMonth];
+          const r = activeSpec?.realizedSpread;
           return (
             <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 flex items-start gap-2">
               <Activity className="h-4 w-4 text-primary mt-0.5 shrink-0" />
