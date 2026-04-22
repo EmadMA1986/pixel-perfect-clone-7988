@@ -278,46 +278,73 @@ const OtcDashboard = () => {
         )}
 
         {/* === OTC-Specific KPI Cards (6) === */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <SummaryCard
-            title={`Trading Volume (${periodLabel})`}
-            value={formatAEDCompact(totalVolume)}
-            subtitle={`USDT↔AED · est. @ ${(ASSUMED_SPREAD * 100).toFixed(2)}% spread`}
-            icon={Repeat}
-          />
-          <SummaryCard
-            title="Trading Income"
-            value={formatAEDCompact(totalTradingIncome)}
-            subtitle="Spread / commission earned"
-            icon={DollarSign}
-            trend="up"
-          />
-          <SummaryCard
-            title="Net Profit"
-            value={formatAEDCompact(totalNetProfit)}
-            subtitle={isFiltered ? (totalNetProfit >= 0 ? "Profitable month" : "Loss month") : `${profitableMonths}/${filteredPL.length} profitable months`}
-            icon={TrendingUp}
-            trend={totalNetProfit >= 0 ? "up" : "down"}
-          />
-          <SummaryCard
-            title="Average Spread %"
-            value={`${avgSpreadPct.toFixed(3)}%`}
-            subtitle="Income ÷ Volume"
-            icon={Percent}
-          />
-          <SummaryCard
-            title="Cost-to-Revenue"
-            value={`${costToRevenue.toFixed(1)}%`}
-            subtitle={costToRevenue < 25 ? "Target: <25% ✅ Excellent" : costToRevenue < 40 ? "Target: <25% ⚠ Acceptable" : "Target: <25% ❌ High"}
-            icon={Gauge}
-            trend={costToRevenue < 30 ? "up" : "down"}
-          />
-          <SummaryCard
-            title="Cash Position"
-            value={formatAEDCompact(otcSummary.cashPosition)}
-            subtitle="AED available for trading"
-            icon={Banknote}
-          />
+        {(() => {
+          const isMarch2026 = selectedMonth === "Mar 2026";
+          const marchActiveDays = 23;
+          const marchRevPerM = 3066;
+          const marchSpread = 0.307;
+          const marchTxCount = 196;
+
+          const displaySpread = isMarch2026 ? marchSpread : avgSpreadPct;
+          const spreadSubtitle = isMarch2026
+            ? `Weighted avg across ${marchTxCount} transactions`
+            : "Income ÷ Volume";
+
+          return (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              <SummaryCard
+                title={`Trading Volume (${periodLabel})`}
+                value={isMarch2026 ? `USDT 36.6M` : formatAEDCompact(totalVolume)}
+                subtitle={isMarch2026
+                  ? `18.7M bought + 17.9M sold · ${marchActiveDays}/31 active days`
+                  : `USDT↔AED · est. @ ${(ASSUMED_SPREAD * 100).toFixed(2)}% spread`}
+                icon={Repeat}
+              />
+              <SummaryCard
+                title="Trading Income"
+                value={formatAEDCompact(totalTradingIncome)}
+                subtitle={isMarch2026
+                  ? `AED ${marchRevPerM.toLocaleString()} per 1M USDT traded`
+                  : "Spread / commission earned"}
+                icon={DollarSign}
+                trend="up"
+              />
+              <SummaryCard
+                title="Net Profit"
+                value={formatAEDCompact(totalNetProfit)}
+                subtitle={isFiltered ? (totalNetProfit >= 0 ? "Profitable month" : "Loss month") : `${profitableMonths}/${filteredPL.length} profitable months`}
+                icon={TrendingUp}
+                trend={totalNetProfit >= 0 ? "up" : "down"}
+              />
+              <SummaryCard
+                title="Average Spread %"
+                value={`${displaySpread.toFixed(3)}%`}
+                subtitle={spreadSubtitle}
+                icon={Percent}
+              />
+              <SummaryCard
+                title="Cost-to-Revenue"
+                value={`${costToRevenue.toFixed(1)}%`}
+                subtitle={costToRevenue < 25 ? "Target: <25% ✅ Excellent" : costToRevenue < 40 ? "Target: <25% ⚠ Acceptable" : "Target: <25% ❌ High"}
+                icon={Gauge}
+                trend={costToRevenue < 30 ? "up" : "down"}
+              />
+              <SummaryCard
+                title="Cash Position"
+                value={formatAEDCompact(otcSummary.cashPosition)}
+                subtitle="AED available for trading"
+                icon={Banknote}
+              />
+            </div>
+          );
+        })()}
+
+        {/* Profit method note */}
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 flex items-start gap-2">
+          <Activity className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            <span className="text-foreground font-medium">Profit method:</span> Calculated on USDT wallet balance movement (closing minus opening). Realized spread income for March 2026: <span className="text-primary font-semibold">AED 198,690</span>.
+          </p>
         </div>
 
         {/* Gold divider */}
@@ -825,7 +852,85 @@ const OtcDashboard = () => {
         {/* Gold divider */}
         <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
-        {/* === Risk Dashboard === */}
+        {/* === Counterparty Concentration Risk (March 2026) === */}
+        {selectedMonth === "Mar 2026" && (() => {
+          const counterparties = [
+            { name: "NICK", pct: 22.8 },
+            { name: "KKAA", pct: 16.8 },
+            { name: "UZPAY", pct: 13.8 },
+            { name: "ROLEX", pct: 11.2 },
+            { name: "ROBERT", pct: 7.1 },
+          ];
+          const top3 = counterparties.slice(0, 3).reduce((s, c) => s + c.pct, 0);
+          const totalActive = 28;
+          const isCritical = top3 > 50;
+          const maxPct = Math.max(...counterparties.map((c) => c.pct));
+          return (
+            <section className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-primary" />
+                <h2 className="text-sm font-serif font-semibold uppercase tracking-wider text-foreground">
+                  Counterparty Concentration Risk — March 2026
+                </h2>
+              </div>
+              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                <CardContent className="p-5 space-y-4">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">Top 5 counterparties by trading volume</span>
+                    <Badge variant="secondary" className="text-[10px]">
+                      {totalActive} active counterparties
+                    </Badge>
+                  </div>
+
+                  <div className="space-y-3">
+                    {counterparties.map((c, i) => {
+                      const widthPct = (c.pct / maxPct) * 100;
+                      const isTop3 = i < 3;
+                      return (
+                        <div key={c.name} className="space-y-1">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-medium text-foreground tabular-nums">
+                              <span className="text-muted-foreground mr-2">#{i + 1}</span>
+                              {c.name}
+                            </span>
+                            <span className={`font-bold font-serif tabular-nums ${isTop3 ? "text-primary" : "text-foreground"}`}>
+                              {c.pct.toFixed(1)}%
+                            </span>
+                          </div>
+                          <div className="h-2.5 w-full rounded bg-secondary/40 overflow-hidden">
+                            <div
+                              className={`h-full rounded transition-all ${isTop3 ? "bg-primary" : "bg-muted-foreground/40"}`}
+                              style={{ width: `${widthPct}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="pt-3 border-t border-border/30 flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground uppercase tracking-wider">Top 3 Concentration</span>
+                    <span className="text-lg font-bold font-serif text-loss tabular-nums">{top3.toFixed(1)}% of all volume</span>
+                  </div>
+
+                  {isCritical && (
+                    <div className="rounded-lg border border-loss/40 bg-loss/10 p-3 flex items-start gap-2">
+                      <AlertTriangle className="h-4 w-4 text-loss mt-0.5 shrink-0" />
+                      <p className="text-xs font-medium text-loss">
+                        Critical — top 3 counterparties control over 50% of volume. Diversify or set per-counterparty exposure limits.
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </section>
+          );
+        })()}
+
+        {selectedMonth === "Mar 2026" && (
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+        )}
+
         <section className="space-y-4">
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-primary" />

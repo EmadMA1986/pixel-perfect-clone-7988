@@ -16,7 +16,7 @@ const MonthFilter = ({ months, value, onChange }: MonthFilterProps) => {
           <SelectValue placeholder="Select period" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All Time</SelectItem>
+          <SelectItem value="all">Inception to Date</SelectItem>
           {months.map((month) => (
             <SelectItem key={month} value={month}>
               {month}
