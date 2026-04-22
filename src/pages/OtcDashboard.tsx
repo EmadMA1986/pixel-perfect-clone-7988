@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
   TrendingUp, TrendingDown, DollarSign, Wallet, Users, AlertTriangle, Building, ArrowLeft,
