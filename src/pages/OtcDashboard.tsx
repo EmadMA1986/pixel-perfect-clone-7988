@@ -577,6 +577,16 @@ const OtcDashboard = () => {
               });
             }
 
+            // Cumulative net profit from inception through the selected month.
+            // When "all"/Inception to Date is selected, selectedIdx already points to last available month.
+            const cumulativeNetProfit = monthlyPL
+              .slice(0, selectedIdx + 1)
+              .reduce((sum, m) => sum + m.netProfit, 0);
+            const partnerProfitShare = cumulativeNetProfit / 2;
+            const periodLabelForWaterfall = selectedMonth === "all"
+              ? (monthlyPL[monthlyPL.length - 1]?.month ?? "Inception to Date")
+              : selectedMonth;
+
             const waterfallRows = [
               {
                 key: "injected",
@@ -607,22 +617,20 @@ const OtcDashboard = () => {
               },
               {
                 key: "profit-share",
-                label: "Plus: Cumulative Net Profit Share",
-                sub: "Accumulated profit retained in business",
-                maria: partnerCapital.maria.profitShare,
-                ahmad: partnerCapital.ahmad.profitShare,
-                total: partnerCapital.maria.profitShare + partnerCapital.ahmad.profitShare,
+                label: `Plus: Cumulative Net Profit (through ${periodLabelForWaterfall})`,
+                sub: "Sum of monthly net profits from inception, split 50/50",
+                maria: partnerProfitShare,
+                ahmad: partnerProfitShare,
+                total: cumulativeNetProfit,
                 tone: "positive" as const,
               },
               {
                 key: "working",
-                label: "Working Capital Position",
-                sub: "Current working capital = Net capital + Retained profit",
-                maria: partnerCapital.maria.net + partnerCapital.maria.profitShare,
-                ahmad: partnerCapital.ahmad.net + partnerCapital.ahmad.profitShare,
-                total:
-                  partnerCapital.maria.net + partnerCapital.maria.profitShare +
-                  partnerCapital.ahmad.net + partnerCapital.ahmad.profitShare,
+                label: `Working Capital as at ${periodLabelForWaterfall}`,
+                sub: "Net capital remaining + cumulative net profit through selected period",
+                maria: partnerCapital.maria.net + partnerProfitShare,
+                ahmad: partnerCapital.ahmad.net + partnerProfitShare,
+                total: partnerCapital.maria.net + partnerCapital.ahmad.net + cumulativeNetProfit,
                 tone: "total" as const,
               },
             ];
