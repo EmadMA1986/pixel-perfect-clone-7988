@@ -589,8 +589,11 @@ const MkxDashboard = () => {
                   <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                     <Shield className="h-5 w-5 text-primary" />
                   </div>
-                  <div>
-                    <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Revenue Productivity & Cost Efficiency</p>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Revenue Productivity & Cost Efficiency</p>
+                      <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">Cumulative since inception</Badge>
+                    </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
