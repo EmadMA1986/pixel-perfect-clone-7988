@@ -1326,17 +1326,32 @@ const OtcDashboard = () => {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {/* Counterparty concentration */}
-            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+            <Card className={`border-border/50 backdrop-blur-sm ${topCp && topCp.pct >= 20 ? "bg-loss/5 border-loss/30" : "bg-card/80"}`}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-1">
                   <p className="text-xs text-muted-foreground uppercase tracking-wider">Top Counterparty</p>
-                  <Badge variant="secondary" className="text-[10px]">Volume share</Badge>
+                  <Badge variant={topCp && topCp.pct >= 20 ? "destructive" : "secondary"} className="text-[10px]">
+                    {topCp && topCp.pct >= 20 ? "🔴 HIGH RISK" : "Volume share"}
+                  </Badge>
                 </div>
-                <p className="text-2xl font-bold font-serif text-foreground">~100%</p>
-                <p className="text-[10px] text-muted-foreground mt-1 leading-tight">
-                  All trading volume routes through direct walk-in clients — no single named client exposure tracked yet.
-                </p>
-                <p className="text-[10px] text-primary mt-1.5">⚠ Recommend tracking per-client volume to surface concentration.</p>
+                {topCp ? (
+                  <>
+                    <p className={`text-2xl font-bold font-serif ${topCp.pct >= 20 ? "text-loss" : "text-foreground"}`}>
+                      {topCp.name} <span className="text-base font-normal text-muted-foreground">· {topCp.pct.toFixed(1)}%</span>
+                    </p>
+                    <p className="text-[10px] text-muted-foreground mt-1 leading-tight">
+                      Largest single counterparty share of {selectedMonth === "all" ? "March 2026" : selectedMonth} trading volume.
+                    </p>
+                    {topCp.pct >= 20 && (
+                      <p className="text-[10px] text-loss mt-1.5">⚠ Concentration above 20% — single-counterparty dependency risk.</p>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <p className="text-2xl font-bold font-serif text-muted-foreground">—</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">Data not available for this period</p>
+                  </>
+                )}
               </CardContent>
             </Card>
 
