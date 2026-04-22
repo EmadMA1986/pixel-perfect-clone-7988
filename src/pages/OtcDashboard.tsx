@@ -79,8 +79,28 @@ const OtcDashboard = () => {
   );
   const negativeMonths = last12.filter((m) => m.netProfit < 0).length;
   const MIN_LIQUIDITY = 500_000; // AED 500K minimum
-  const liquidityHealthy = otcSummary.cashPosition >= MIN_LIQUIDITY;
-  const liquidityRatio = (otcSummary.cashPosition / MIN_LIQUIDITY) * 100;
+
+  // Per-month actual AED cash on hand (excludes USDT inventory). Only populated
+  // for months where the closing AED-cash split is verified.
+  const aedCashByMonth: Record<string, number> = {
+    "Mar 2026": 151698,
+  };
+  const aedCashOnHand: number | null =
+    selectedMonth === "all"
+      ? aedCashByMonth["Mar 2026"]
+      : aedCashByMonth[selectedMonth] ?? null;
+  const liquidityHealthy = aedCashOnHand !== null && aedCashOnHand >= MIN_LIQUIDITY;
+  const liquidityRatio = aedCashOnHand !== null ? aedCashOnHand / MIN_LIQUIDITY : null;
+
+  // Top counterparty per month (sourced from same data as Counterparty Concentration section).
+  const topCounterpartyByMonth: Record<string, { name: string; pct: number }> = {
+    "Mar 2026": { name: "NICK", pct: 22.8 },
+    "Feb 2026": { name: "NICK", pct: 26.7 },
+  };
+  const topCp =
+    selectedMonth === "all"
+      ? topCounterpartyByMonth["Mar 2026"]
+      : topCounterpartyByMonth[selectedMonth] ?? null;
 
   // === Trend data: last 6 months ending at the selected month (or last 6 overall when "all") ===
   const trendMonths = useMemo(() => {
