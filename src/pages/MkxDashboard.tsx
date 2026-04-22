@@ -198,6 +198,94 @@ const MkxDashboard = () => {
           }}
         />
 
+        {/* === Section 4 — Monthly Executive Summary === */}
+        {(() => {
+          // Pick current = selected month or latest; previous = the month before
+          const targetMonth = selectedMonth === "all" ? monthlyData[monthlyData.length - 1].month : selectedMonth;
+          const curIdx = monthlyData.findIndex((m) => m.month === targetMonth);
+          if (curIdx <= 0) return null;
+          const cur = monthlyData[curIdx];
+          const prv = monthlyData[curIdx - 1];
+          const curK = kpiData[curIdx];
+          const prvK = kpiData[curIdx - 1];
+
+          const curCosts = cur.totalExpenses + cur.gasFees;
+          const prvCosts = prv.totalExpenses + prv.gasFees;
+          const breakEvenRev = curCosts; // revenue needed to net zero this month
+          const varaRisky = (() => {
+            const results = varaStandards.map((s) => getVARAStatus(s.kpiKey));
+            return results.filter((r) => r.status === "risky").length;
+          })();
+
+          const rows: ExecMetricRow[] = [
+            { label: "Total Revenue", current: cur.revenue, previous: prv.revenue, kind: "currency", goodDirection: "up" },
+            { label: "Total Costs", current: curCosts, previous: prvCosts, kind: "currency", goodDirection: "down" },
+            { label: "Gross Profit", current: cur.grossProfit, previous: prv.grossProfit, kind: "currency", goodDirection: "up" },
+            { label: "Net Profit/Loss", current: cur.netProfit, previous: prv.netProfit, kind: "currency", goodDirection: "up" },
+            { label: "Gross Margin %", current: curK?.grossMarginPct ?? null, previous: prvK?.grossMarginPct ?? null, kind: "percent", goodDirection: "up", deltaMode: "absolute" },
+            { label: "Net Margin %", current: curK?.netMarginPct ?? null, previous: prvK?.netMarginPct ?? null, kind: "percent", goodDirection: "up", deltaMode: "absolute" },
+            { label: "Trading Volume", current: cur.tradingVolume, previous: prv.tradingVolume, kind: "currency", goodDirection: "up" },
+            { label: "Break-even Revenue", current: breakEvenRev, previous: prvCosts, kind: "currency", goodDirection: "down" },
+            { label: "Liquidity Buffer", current: curK?.liquidityBuffer ?? null, previous: prvK?.liquidityBuffer ?? null, kind: "currency", goodDirection: "up" },
+            { label: "Asset Coverage", current: curK?.assetCoverageRatio ?? null, previous: prvK?.assetCoverageRatio ?? null, kind: "ratio", goodDirection: "up", deltaMode: "absolute" },
+          ];
+
+          const npImproved = cur.netProfit > prv.netProfit;
+          const gmImproved = (curK?.grossMarginPct ?? 0) > (prvK?.grossMarginPct ?? 0);
+          const liqImproved = (curK?.liquidityBuffer ?? 0) > (prvK?.liquidityBuffer ?? 0);
+          const acImproved = (curK?.assetCoverageRatio ?? 0) > (prvK?.assetCoverageRatio ?? 0);
+          const tvImproved = cur.tradingVolume > prv.tradingVolume;
+
+          const improved: string[] = [];
+          if (npImproved) improved.push(`Net loss reduced ${(((prv.netProfit - cur.netProfit) / Math.abs(prv.netProfit)) * 100).toFixed(1)}%`);
+          if (gmImproved) improved.push(`Gross margin recovered to ${(curK?.grossMarginPct ?? 0).toFixed(1)}%`);
+          if (liqImproved && (curK?.liquidityBuffer ?? 0) > 0) improved.push("Liquidity buffer turned positive");
+          if (acImproved) improved.push(`Asset coverage improved to ${(curK?.assetCoverageRatio ?? 0).toFixed(2)}x`);
+          if (tvImproved) improved.push(`Trading volume +${(((cur.tradingVolume - prv.tradingVolume) / prv.tradingVolume) * 100).toFixed(0)}%`);
+
+          const deteriorated: string[] = [
+            "Business loss-making 7th consecutive month",
+            `${varaRisky} VARA risk flags`,
+            "Consulting = 79% of revenue (concentration risk)",
+            `Break-even requires ${formatAEDFull(breakEvenRev)} revenue vs ${formatAEDFull(cur.revenue)} actual`,
+          ];
+          const watch: string[] = [
+            `Asset coverage at ${(curK?.assetCoverageRatio ?? 0).toFixed(2)}x — close to insolvency threshold`,
+            `VA net flow ${formatAEDFull(curK?.netVAFlow ?? 0)}`,
+            "Payroll payable AED 196K — staff owed money",
+          ];
+
+          const accumulatedLoss = 7261014;
+          const shareCapital = 5788933.98 + 5573974.65;
+          const recentMonths = monthlyData.slice(-6);
+          const avgBurn = Math.abs(recentMonths.reduce((s, m) => s + m.netProfit, 0) / recentMonths.length);
+          const runwayMonths = Math.floor((shareCapital - accumulatedLoss) / avgBurn);
+
+          const narrative = (
+            <>
+              {cur.month} shows {npImproved ? "significant improvement" : "deterioration"} vs {prv.month} — net result moved from{" "}
+              <strong className="text-foreground">{formatAEDFull(prv.netProfit)}</strong> to{" "}
+              <strong className="text-foreground">{formatAEDFull(cur.netProfit)}</strong>
+              {npImproved && ` (${(((prv.netProfit - cur.netProfit) / Math.abs(prv.netProfit)) * 100).toFixed(1)}% improvement)`}.
+              Gross margin moved from {(prvK?.grossMarginPct ?? 0).toFixed(1)}% to {(curK?.grossMarginPct ?? 0).toFixed(1)}%.
+              Trading volume {cur.tradingVolume > prv.tradingVolume ? "grew" : "fell"} to {formatAEDFull(cur.tradingVolume)} from {formatAEDFull(prv.tradingVolume)}.
+              The business remains in a critical loss-making position with {varaRisky} VARA risk flags and a liquidity buffer of {formatAEDFull(curK?.liquidityBuffer ?? 0)}.
+              Accumulated losses now {formatAEDFull(accumulatedLoss)} against {formatAEDFull(shareCapital)} share capital — approx {runwayMonths} months runway at current burn rate.
+            </>
+          );
+
+          return (
+            <MonthlyExecutiveSummary
+              currentLabel={cur.month}
+              previousLabel={prv.month}
+              rows={rows}
+              narrative={narrative}
+              improved={improved.length ? improved : ["No improvements recorded."]}
+              deteriorated={deteriorated}
+              watch={watch}
+            />
+          );
+        })()}
         {/* Partners' Capital Position - only in All Time */}
         {!isFiltered && (<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Ahmad */}
