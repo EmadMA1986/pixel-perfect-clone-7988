@@ -3,10 +3,8 @@ import { Link } from "react-router-dom";
 import {
   TrendingUp,
   TrendingDown,
-  DollarSign,
   Wallet,
   ArrowLeft,
-  BarChart3,
   Shield,
   Activity,
   FileText,
@@ -14,7 +12,6 @@ import {
   AlertTriangle,
   CheckCircle2,
 } from "lucide-react";
-import SummaryCard from "@/components/SummaryCard";
 import MonthFilter from "@/components/MonthFilter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,19 +25,6 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  CartesianGrid,
-  Area,
-  AreaChart,
-} from "recharts";
 import {
   monthlyData,
   kpiData,
