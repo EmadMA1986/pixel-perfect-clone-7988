@@ -335,39 +335,13 @@ const OtcDashboard = () => {
 
         {/* === OTC-Specific KPI Cards (6) === */}
         {(() => {
-          // Per-month verified trading metrics. Add new months here.
-          const monthSpecifics: Record<string, {
-            volumeLabel: string;
-            volumeSubtitle: string;
-            txCount: number;
-            spreadPct: number;
-            revPerM: number;
-            realizedSpread: number;
-          }> = {
-            "Mar 2026": {
-              volumeLabel: "USDT 36.6M",
-              volumeSubtitle: "18.7M bought + 17.9M sold · 23/31 active days",
-              txCount: 196,
-              spreadPct: 0.307,
-              revPerM: 3066,
-              realizedSpread: 198690,
-            },
-            "Feb 2026": {
-              volumeLabel: "USDT 50.2M",
-              volumeSubtitle: "22.9M bought + 27.3M sold · 24/28 active days",
-              txCount: 254,
-              spreadPct: 0.260,
-              revPerM: 2599,
-              realizedSpread: 162891,
-            },
-          };
-          const spec = monthSpecifics[selectedMonth];
+          const spec = activeSpec;
           const hasSpec = !!spec;
-
           const displaySpread = hasSpec ? spec.spreadPct : avgSpreadPct;
           const spreadSubtitle = hasSpec
             ? `Weighted avg across ${spec.txCount} transactions`
             : "Income ÷ Volume";
+
 
           return (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
