@@ -278,46 +278,73 @@ const OtcDashboard = () => {
         )}
 
         {/* === OTC-Specific KPI Cards (6) === */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <SummaryCard
-            title={`Trading Volume (${periodLabel})`}
-            value={formatAEDCompact(totalVolume)}
-            subtitle={`USDT↔AED · est. @ ${(ASSUMED_SPREAD * 100).toFixed(2)}% spread`}
-            icon={Repeat}
-          />
-          <SummaryCard
-            title="Trading Income"
-            value={formatAEDCompact(totalTradingIncome)}
-            subtitle="Spread / commission earned"
-            icon={DollarSign}
-            trend="up"
-          />
-          <SummaryCard
-            title="Net Profit"
-            value={formatAEDCompact(totalNetProfit)}
-            subtitle={isFiltered ? (totalNetProfit >= 0 ? "Profitable month" : "Loss month") : `${profitableMonths}/${filteredPL.length} profitable months`}
-            icon={TrendingUp}
-            trend={totalNetProfit >= 0 ? "up" : "down"}
-          />
-          <SummaryCard
-            title="Average Spread %"
-            value={`${avgSpreadPct.toFixed(3)}%`}
-            subtitle="Income ÷ Volume"
-            icon={Percent}
-          />
-          <SummaryCard
-            title="Cost-to-Revenue"
-            value={`${costToRevenue.toFixed(1)}%`}
-            subtitle={costToRevenue < 25 ? "Target: <25% ✅ Excellent" : costToRevenue < 40 ? "Target: <25% ⚠ Acceptable" : "Target: <25% ❌ High"}
-            icon={Gauge}
-            trend={costToRevenue < 30 ? "up" : "down"}
-          />
-          <SummaryCard
-            title="Cash Position"
-            value={formatAEDCompact(otcSummary.cashPosition)}
-            subtitle="AED available for trading"
-            icon={Banknote}
-          />
+        {(() => {
+          const isMarch2026 = selectedMonth === "Mar 2026";
+          const marchActiveDays = 23;
+          const marchRevPerM = 3066;
+          const marchSpread = 0.307;
+          const marchTxCount = 196;
+
+          const displaySpread = isMarch2026 ? marchSpread : avgSpreadPct;
+          const spreadSubtitle = isMarch2026
+            ? `Weighted avg across ${marchTxCount} transactions`
+            : "Income ÷ Volume";
+
+          return (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              <SummaryCard
+                title={`Trading Volume (${periodLabel})`}
+                value={isMarch2026 ? `USDT 36.6M` : formatAEDCompact(totalVolume)}
+                subtitle={isMarch2026
+                  ? `18.7M bought + 17.9M sold · ${marchActiveDays}/31 active days`
+                  : `USDT↔AED · est. @ ${(ASSUMED_SPREAD * 100).toFixed(2)}% spread`}
+                icon={Repeat}
+              />
+              <SummaryCard
+                title="Trading Income"
+                value={formatAEDCompact(totalTradingIncome)}
+                subtitle={isMarch2026
+                  ? `AED ${marchRevPerM.toLocaleString()} per 1M USDT traded`
+                  : "Spread / commission earned"}
+                icon={DollarSign}
+                trend="up"
+              />
+              <SummaryCard
+                title="Net Profit"
+                value={formatAEDCompact(totalNetProfit)}
+                subtitle={isFiltered ? (totalNetProfit >= 0 ? "Profitable month" : "Loss month") : `${profitableMonths}/${filteredPL.length} profitable months`}
+                icon={TrendingUp}
+                trend={totalNetProfit >= 0 ? "up" : "down"}
+              />
+              <SummaryCard
+                title="Average Spread %"
+                value={`${displaySpread.toFixed(3)}%`}
+                subtitle={spreadSubtitle}
+                icon={Percent}
+              />
+              <SummaryCard
+                title="Cost-to-Revenue"
+                value={`${costToRevenue.toFixed(1)}%`}
+                subtitle={costToRevenue < 25 ? "Target: <25% ✅ Excellent" : costToRevenue < 40 ? "Target: <25% ⚠ Acceptable" : "Target: <25% ❌ High"}
+                icon={Gauge}
+                trend={costToRevenue < 30 ? "up" : "down"}
+              />
+              <SummaryCard
+                title="Cash Position"
+                value={formatAEDCompact(otcSummary.cashPosition)}
+                subtitle="AED available for trading"
+                icon={Banknote}
+              />
+            </div>
+          );
+        })()}
+
+        {/* Profit method note */}
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 flex items-start gap-2">
+          <Activity className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            <span className="text-foreground font-medium">Profit method:</span> Calculated on USDT wallet balance movement (closing minus opening). Realized spread income for March 2026: <span className="text-primary font-semibold">AED 198,690</span>.
+          </p>
         </div>
 
         {/* Gold divider */}
