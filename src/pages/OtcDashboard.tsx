@@ -97,6 +97,7 @@ const OtcDashboard = () => {
   const topCounterpartyByMonth: Record<string, { name: string; pct: number }> = {
     "Mar 2026": { name: "NICK", pct: 22.8 },
     "Feb 2026": { name: "NICK", pct: 26.7 },
+    "Jan 2026": { name: "NICK", pct: 36.5 },
   };
   const topCp =
     selectedMonth === "all"
@@ -238,6 +239,14 @@ const OtcDashboard = () => {
       spreadPct: 0.260,
       revPerM: 2599,
       realizedSpread: 162891,
+    },
+    "Jan 2026": {
+      volumeLabel: "USDT 72.9M",
+      volumeSubtitle: "37.9M bought + 35.0M sold · 26/31 active days",
+      txCount: 306,
+      spreadPct: 0.120,
+      revPerM: 1200,
+      realizedSpread: 136454,
     },
   };
   const activeSpec: MonthSpec | null = monthSpecifics[selectedMonth] ?? null;
@@ -554,6 +563,19 @@ const OtcDashboard = () => {
               worstDay: { label: "—", aed: 0 },
               avgDailyVolumeUSDT: 2_093_516,
               totalCounterparties: 54,
+            },
+            "Jan 2026": {
+              monthName: "January 2026",
+              monthAbbrev: "Jan",
+              totalDays: 31,
+              firstDayOffset: 4, // Jan 1, 2026 = Thursday
+              zeroDays: [1, 4, 11, 18, 25],
+              consecutiveZero: [],
+              zeroNote: "New Year + Sundays — consistent weekly pattern",
+              bestDay: { label: "—", aed: 0 },
+              worstDay: { label: "—", aed: 0 },
+              avgDailyVolumeUSDT: 2_802_036,
+              totalCounterparties: 52,
             },
           };
           const cfg = calendars[selectedMonth];
@@ -1205,6 +1227,22 @@ const OtcDashboard = () => {
               spreadPct: 0.260,
               zeroDays: 4,
               zeroDaysNote: "zero days all fell on Sundays — consistent weekly pattern",
+            },
+            "Jan 2026": {
+              monthName: "January 2026",
+              shortName: "January",
+              list: [
+                { name: "NICK", pct: 36.5 },
+                { name: "KKAA", pct: 13.6 },
+                { name: "UZPAY", pct: 10.5 },
+                { name: "GABE", pct: 6.8 },
+                { name: "ROBERT", pct: 5.9 },
+              ],
+              totalActive: 52,
+              volumeM: 72.9,
+              spreadPct: 0.120,
+              zeroDays: 5,
+              zeroDaysNote: "zero days all fell on Sundays plus New Year — consistent weekly pattern",
             },
           };
           const cfg = cpData[selectedMonth];
