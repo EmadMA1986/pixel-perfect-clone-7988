@@ -53,6 +53,7 @@ import {
   varaStandards,
 } from "@/data/mkxData";
 import ExecutiveSummary, { ExecMonthInput } from "@/components/ExecutiveSummary";
+import MonthlyExecutiveSummary, { ExecMetricRow } from "@/components/MonthlyExecutiveSummary";
 
 const MkxDashboard = () => {
   const [selectedMonth, setSelectedMonth] = useState("all");
@@ -197,6 +198,94 @@ const MkxDashboard = () => {
           }}
         />
 
+        {/* === Section 4 — Monthly Executive Summary === */}
+        {(() => {
+          // Pick current = selected month or latest; previous = the month before
+          const targetMonth = selectedMonth === "all" ? monthlyData[monthlyData.length - 1].month : selectedMonth;
+          const curIdx = monthlyData.findIndex((m) => m.month === targetMonth);
+          if (curIdx <= 0) return null;
+          const cur = monthlyData[curIdx];
+          const prv = monthlyData[curIdx - 1];
+          const curK = kpiData[curIdx];
+          const prvK = kpiData[curIdx - 1];
+
+          const curCosts = cur.totalExpenses + cur.gasFees;
+          const prvCosts = prv.totalExpenses + prv.gasFees;
+          const breakEvenRev = curCosts; // revenue needed to net zero this month
+          const varaRisky = (() => {
+            const results = varaStandards.map((s) => getVARAStatus(s.kpiKey));
+            return results.filter((r) => r.status === "risky").length;
+          })();
+
+          const rows: ExecMetricRow[] = [
+            { label: "Total Revenue", current: cur.revenue, previous: prv.revenue, kind: "currency", goodDirection: "up" },
+            { label: "Total Costs", current: curCosts, previous: prvCosts, kind: "currency", goodDirection: "down" },
+            { label: "Gross Profit", current: cur.grossProfit, previous: prv.grossProfit, kind: "currency", goodDirection: "up" },
+            { label: "Net Profit/Loss", current: cur.netProfit, previous: prv.netProfit, kind: "currency", goodDirection: "up" },
+            { label: "Gross Margin %", current: curK?.grossMarginPct ?? null, previous: prvK?.grossMarginPct ?? null, kind: "percent", goodDirection: "up", deltaMode: "absolute" },
+            { label: "Net Margin %", current: curK?.netMarginPct ?? null, previous: prvK?.netMarginPct ?? null, kind: "percent", goodDirection: "up", deltaMode: "absolute" },
+            { label: "Trading Volume", current: cur.tradingVolume, previous: prv.tradingVolume, kind: "currency", goodDirection: "up" },
+            { label: "Break-even Revenue", current: breakEvenRev, previous: prvCosts, kind: "currency", goodDirection: "down" },
+            { label: "Liquidity Buffer", current: curK?.liquidityBuffer ?? null, previous: prvK?.liquidityBuffer ?? null, kind: "currency", goodDirection: "up" },
+            { label: "Asset Coverage", current: curK?.assetCoverageRatio ?? null, previous: prvK?.assetCoverageRatio ?? null, kind: "ratio", goodDirection: "up", deltaMode: "absolute" },
+          ];
+
+          const npImproved = cur.netProfit > prv.netProfit;
+          const gmImproved = (curK?.grossMarginPct ?? 0) > (prvK?.grossMarginPct ?? 0);
+          const liqImproved = (curK?.liquidityBuffer ?? 0) > (prvK?.liquidityBuffer ?? 0);
+          const acImproved = (curK?.assetCoverageRatio ?? 0) > (prvK?.assetCoverageRatio ?? 0);
+          const tvImproved = cur.tradingVolume > prv.tradingVolume;
+
+          const improved: string[] = [];
+          if (npImproved) improved.push(`Net loss reduced ${(((prv.netProfit - cur.netProfit) / Math.abs(prv.netProfit)) * 100).toFixed(1)}%`);
+          if (gmImproved) improved.push(`Gross margin recovered to ${(curK?.grossMarginPct ?? 0).toFixed(1)}%`);
+          if (liqImproved && (curK?.liquidityBuffer ?? 0) > 0) improved.push("Liquidity buffer turned positive");
+          if (acImproved) improved.push(`Asset coverage improved to ${(curK?.assetCoverageRatio ?? 0).toFixed(2)}x`);
+          if (tvImproved) improved.push(`Trading volume +${(((cur.tradingVolume - prv.tradingVolume) / prv.tradingVolume) * 100).toFixed(0)}%`);
+
+          const deteriorated: string[] = [
+            "Business loss-making 7th consecutive month",
+            `${varaRisky} VARA risk flags`,
+            "Consulting = 79% of revenue (concentration risk)",
+            `Break-even requires ${formatAEDFull(breakEvenRev)} revenue vs ${formatAEDFull(cur.revenue)} actual`,
+          ];
+          const watch: string[] = [
+            `Asset coverage at ${(curK?.assetCoverageRatio ?? 0).toFixed(2)}x — close to insolvency threshold`,
+            `VA net flow ${formatAEDFull(curK?.netVAFlow ?? 0)}`,
+            "Payroll payable AED 196K — staff owed money",
+          ];
+
+          const accumulatedLoss = 7261014;
+          const shareCapital = 5788933.98 + 5573974.65;
+          const recentMonths = monthlyData.slice(-6);
+          const avgBurn = Math.abs(recentMonths.reduce((s, m) => s + m.netProfit, 0) / recentMonths.length);
+          const runwayMonths = Math.floor((shareCapital - accumulatedLoss) / avgBurn);
+
+          const narrative = (
+            <>
+              {cur.month} shows {npImproved ? "significant improvement" : "deterioration"} vs {prv.month} — net result moved from{" "}
+              <strong className="text-foreground">{formatAEDFull(prv.netProfit)}</strong> to{" "}
+              <strong className="text-foreground">{formatAEDFull(cur.netProfit)}</strong>
+              {npImproved && ` (${(((prv.netProfit - cur.netProfit) / Math.abs(prv.netProfit)) * 100).toFixed(1)}% improvement)`}.
+              Gross margin moved from {(prvK?.grossMarginPct ?? 0).toFixed(1)}% to {(curK?.grossMarginPct ?? 0).toFixed(1)}%.
+              Trading volume {cur.tradingVolume > prv.tradingVolume ? "grew" : "fell"} to {formatAEDFull(cur.tradingVolume)} from {formatAEDFull(prv.tradingVolume)}.
+              The business remains in a critical loss-making position with {varaRisky} VARA risk flags and a liquidity buffer of {formatAEDFull(curK?.liquidityBuffer ?? 0)}.
+              Accumulated losses now {formatAEDFull(accumulatedLoss)} against {formatAEDFull(shareCapital)} share capital — approx {runwayMonths} months runway at current burn rate.
+            </>
+          );
+
+          return (
+            <MonthlyExecutiveSummary
+              currentLabel={cur.month}
+              previousLabel={prv.month}
+              rows={rows}
+              narrative={narrative}
+              improved={improved.length ? improved : ["No improvements recorded."]}
+              deteriorated={deteriorated}
+              watch={watch}
+            />
+          );
+        })()}
         {/* Partners' Capital Position - only in All Time */}
         {!isFiltered && (<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Ahmad */}
@@ -636,6 +725,108 @@ const MkxDashboard = () => {
           </Card>
         </div>
 
+        {/* === Section 9 — VARA Compliance Dashboard (standalone) === */}
+        {(() => {
+          const results = varaStandards.map((s) => getVARAStatus(s.kpiKey));
+          const healthy = results.filter((r) => r.status === "healthy").length;
+          const warning = results.filter((r) => r.status === "warning").length;
+          const risky = results.filter((r) => r.status === "risky").length;
+          return (
+            <section className="space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl" role="img" aria-label="shield">🛡️</span>
+                  <div>
+                    <h2 className="text-lg font-serif font-semibold text-foreground">
+                      VARA Regulatory Compliance — {activeKPI.month}
+                    </h2>
+                    <p className="text-[11px] text-muted-foreground">
+                      Regulatory monitoring — mandatory for VARA license compliance
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">✅ {healthy} Healthy</Badge>
+                  <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">⚠️ {warning} Watch</Badge>
+                  <Badge className="bg-red-500/20 text-red-400 border-red-500/30">🔴 {risky} Risk</Badge>
+                </div>
+              </div>
+
+              {risky >= 5 && (
+                <Card className="border-loss/40 bg-loss/10">
+                  <CardContent className="p-4 flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-loss shrink-0 mt-0.5" />
+                    <p className="text-xs text-foreground leading-relaxed">
+                      <strong className="text-loss">VARA COMPLIANCE ALERT:</strong> {risky} risk flags active.
+                      Asset Coverage at {activeKPI.assetCoverageRatio.toFixed(2)}x is at the insolvency threshold.
+                      Board-level review required immediately.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-5 w-5 text-primary" />
+                    <div>
+                      <CardTitle className="text-lg font-serif text-foreground">VARA Required Ratios — Compliance Assessment</CardTitle>
+                      <p className="text-xs text-muted-foreground mt-1">Current values as of {activeKPI.month} vs UAE VARA Standards</p>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-border/50 hover:bg-transparent">
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider min-w-[200px]">Ratio</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-center min-w-[120px]">Current Value</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-center min-w-[80px]">Status</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider min-w-[200px]">Healthy (VARA Standard)</TableHead>
+                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider min-w-[200px]">Risky (Warning Flags)</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {varaStandards.map((std, idx) => {
+                          const { value, status } = getVARAStatus(std.kpiKey);
+                          return (
+                            <TableRow key={idx} className="border-border/30 hover:bg-secondary/30">
+                              <TableCell className="text-sm font-medium text-foreground">{std.ratio}</TableCell>
+                              <TableCell className="text-sm tabular-nums text-center font-semibold">
+                                <span className={status === "healthy" ? "text-success" : status === "warning" ? "text-amber-400" : "text-loss"}>
+                                  {value}
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-center">
+                                {status === "healthy" ? (
+                                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">
+                                    <CheckCircle2 className="h-3 w-3 mr-1" />OK
+                                  </Badge>
+                                ) : status === "warning" ? (
+                                  <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs">
+                                    <AlertTriangle className="h-3 w-3 mr-1" />Watch
+                                  </Badge>
+                                ) : (
+                                  <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-xs">
+                                    <AlertTriangle className="h-3 w-3 mr-1" />Risk
+                                  </Badge>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-xs text-success/80">{std.healthy}</TableCell>
+                              <TableCell className="text-xs text-loss/80">{std.risky}</TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
+          );
+        })()}
+
         {/* Tabs */}
         <Tabs defaultValue="monthly" className="space-y-4">
           <TabsList className="bg-secondary/50 flex-wrap h-auto gap-1">
@@ -643,7 +834,7 @@ const MkxDashboard = () => {
             <TabsTrigger value="fullpl">Full Year P&L</TabsTrigger>
             <TabsTrigger value="balance">Balance Sheet</TabsTrigger>
             <TabsTrigger value="kpi">KPI Analysis</TabsTrigger>
-            <TabsTrigger value="vara">VARA Ratios</TabsTrigger>
+            
             <TabsTrigger value="flows">Client Flows</TabsTrigger>
           </TabsList>
 
@@ -887,109 +1078,7 @@ const MkxDashboard = () => {
             </Card>
           </TabsContent>
 
-          {/* VARA Ratios */}
-          <TabsContent value="vara">
-            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-primary" />
-                  <div>
-                    <CardTitle className="text-lg font-serif text-foreground">VARA Required Ratios — Compliance Assessment</CardTitle>
-                    <p className="text-xs text-muted-foreground mt-1">Current values as of {activeKPI.month} vs UAE VARA Standards</p>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-border/50 hover:bg-transparent">
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider min-w-[200px]">Ratio</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-center min-w-[120px]">Current Value</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-center min-w-[80px]">Status</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider min-w-[200px]">Healthy (VARA Standard)</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider min-w-[200px]">Risky (Warning Flags)</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {varaStandards.map((std, idx) => {
-                        const { value, status } = getVARAStatus(std.kpiKey);
-                        return (
-                          <TableRow key={idx} className="border-border/30 hover:bg-secondary/30">
-                            <TableCell className="text-sm font-medium text-foreground">{std.ratio}</TableCell>
-                            <TableCell className="text-sm tabular-nums text-center font-semibold">
-                              <span className={status === "healthy" ? "text-success" : status === "warning" ? "text-amber-400" : "text-loss"}>
-                                {value}
-                              </span>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {status === "healthy" ? (
-                                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">
-                                  <CheckCircle2 className="h-3 w-3 mr-1" />OK
-                                </Badge>
-                              ) : status === "warning" ? (
-                                <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs">
-                                  <AlertTriangle className="h-3 w-3 mr-1" />Watch
-                                </Badge>
-                              ) : (
-                                <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-xs">
-                                  <AlertTriangle className="h-3 w-3 mr-1" />Risk
-                                </Badge>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-xs text-success/80">{std.healthy}</TableCell>
-                            <TableCell className="text-xs text-loss/80">{std.risky}</TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* VARA Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-              {(() => {
-                const results = varaStandards.map(s => getVARAStatus(s.kpiKey));
-                const healthy = results.filter(r => r.status === "healthy").length;
-                const warning = results.filter(r => r.status === "warning").length;
-                const risky = results.filter(r => r.status === "risky").length;
-                return (
-                  <>
-                    <Card className="border-emerald-500/30 bg-emerald-500/5">
-                      <CardContent className="p-4 flex items-center gap-3">
-                        <CheckCircle2 className="h-8 w-8 text-emerald-400" />
-                        <div>
-                          <p className="text-2xl font-bold font-serif text-emerald-400">{healthy}</p>
-                          <p className="text-xs text-muted-foreground">Healthy Ratios</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card className="border-amber-500/30 bg-amber-500/5">
-                      <CardContent className="p-4 flex items-center gap-3">
-                        <AlertTriangle className="h-8 w-8 text-amber-400" />
-                        <div>
-                          <p className="text-2xl font-bold font-serif text-amber-400">{warning}</p>
-                          <p className="text-xs text-muted-foreground">Watch Items</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card className="border-red-500/30 bg-red-500/5">
-                      <CardContent className="p-4 flex items-center gap-3">
-                        <AlertTriangle className="h-8 w-8 text-red-400" />
-                        <div>
-                          <p className="text-2xl font-bold font-serif text-red-400">{risky}</p>
-                          <p className="text-xs text-muted-foreground">Risk Flags</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </>
-                );
-              })()}
-            </div>
-          </TabsContent>
-
+          {/* VARA moved out of tabs — see Section 9 above */}
           {/* Client Flows */}
           <TabsContent value="flows">
             <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
