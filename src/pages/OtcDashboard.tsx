@@ -187,6 +187,39 @@ const OtcDashboard = () => {
   const DASH = "—";
   const NA_TOOLTIP = "Data not available for this period";
 
+  // Per-month verified trading metrics — single source of truth, used by KPI
+  // cards, spread/volume subtitles and the realized-spread note.
+  type MonthSpec = {
+    volumeLabel: string;
+    volumeSubtitle: string;
+    txCount: number;
+    spreadPct: number;
+    revPerM: number;
+    realizedSpread: number;
+  };
+  const monthSpecifics: Record<string, MonthSpec> = {
+    "Mar 2026": {
+      volumeLabel: "USDT 36.6M",
+      volumeSubtitle: "18.7M bought + 17.9M sold · 23/31 active days",
+      txCount: 196,
+      spreadPct: 0.307,
+      revPerM: 3066,
+      realizedSpread: 198690,
+    },
+    "Feb 2026": {
+      volumeLabel: "USDT 50.2M",
+      volumeSubtitle: "22.9M bought + 27.3M sold · 24/28 active days",
+      txCount: 254,
+      spreadPct: 0.260,
+      revPerM: 2599,
+      realizedSpread: 162891,
+    },
+  };
+  const activeSpec: MonthSpec | null = monthSpecifics[selectedMonth] ?? null;
+  // Effective spread for any subtitle/headline that references "@ X%".
+  // Falls back to the modeled assumption when no per-month spec exists.
+  const effectiveSpreadPct = activeSpec ? activeSpec.spreadPct : ASSUMED_SPREAD * 100;
+
   const formatAEDCompact = (v: number) => {
     const abs = Math.abs(v);
     const prefix = v < 0 ? "-AED " : "AED ";
