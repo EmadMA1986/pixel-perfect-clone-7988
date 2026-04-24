@@ -44,6 +44,7 @@ import {
   ComposedChart,
   ReferenceLine,
   Cell as BarCell,
+  LabelList,
 } from "recharts";
 import {
   monthlyPL,
@@ -558,6 +559,26 @@ const GarageDashboard = () => {
                   {trendData.map((d, i) => (
                     <BarCell key={i} fill={d.isSelected ? COLORS.primary : "hsl(var(--primary) / 0.35)"} />
                   ))}
+                  <LabelList
+                    dataKey="revenue"
+                    position="top"
+                    content={(props: { x?: number; y?: number; width?: number; value?: number; index?: number }) => {
+                      const { x = 0, y = 0, width = 0, value = 0, index = 0 } = props;
+                      if (!trendData[index]?.isSelected) return null;
+                      return (
+                        <text
+                          x={x + width / 2}
+                          y={y - 6}
+                          textAnchor="middle"
+                          fontSize={11}
+                          fontWeight={700}
+                          fill={COLORS.primary}
+                        >
+                          {formatAED(value)}
+                        </text>
+                      );
+                    }}
+                  />
                 </Bar>
                 <Line type="monotone" dataKey="grossProfit" name="Gross Profit" stroke={COLORS.success} strokeWidth={2} dot={{ r: 3 }} />
                 <Line type="monotone" dataKey="netProfit" name="Net Profit/Loss" stroke={COLORS.loss} strokeWidth={2} dot={{ r: 3 }} />
@@ -727,6 +748,9 @@ const GarageDashboard = () => {
             <p className="text-[11px] text-muted-foreground mt-2">
               Fixed costs (Payroll + Rent) = <span className="font-semibold text-foreground">{formatAEDFull(fixedCostMonthly)}</span> per month minimum regardless of revenue
             </p>
+            <p className="text-[11px] text-loss mt-1">
+              Payroll {formatAEDFull(current.payroll)} = <span className="font-semibold">{((current.payroll / current.totalRevenue) * 100).toFixed(1)}%</span> of real revenue {current.month}
+            </p>
           </CardContent>
         </Card>
 
@@ -837,26 +861,29 @@ const GarageDashboard = () => {
                 </div>
               </div>
 
-              {/* Notes — compact inline list */}
-              <div className="space-y-1.5">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold pb-1 border-b border-border/30">Notes</p>
-                <p className="text-[11px] leading-snug text-warning flex gap-1.5">
-                  <span>⚠️</span>
-                  <span>Goodwill {formatAEDFull(balanceSheet.fixedAssets.goodwill)} ({((balanceSheet.fixedAssets.goodwill / balanceSheet.totalAssets) * 100).toFixed(0)}% of assets) — Ignite Garage acquisition. Assess for impairment.</span>
-                </p>
-                <p className="text-[11px] leading-snug text-loss flex gap-1.5">
+              {/* Notes — 3 simple alert badges */}
+              <div className="space-y-2">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold pb-1 border-b border-border/30">Alerts</p>
+                <div className="rounded-md border border-loss/40 bg-loss/10 px-2.5 py-1.5 text-[11px] text-loss flex items-center gap-1.5">
                   <span>🔴</span>
-                  <span>Cash overdraft {formatAEDFull(balanceSheet.currentAssets.cashInHand)} — urgent injection or AR collection required.</span>
-                </p>
-                <p className="text-[11px] leading-snug text-muted-foreground flex gap-1.5">
-                  <span>ℹ️</span>
-                  <span>MK Autos owes MK Garage {formatAEDFull(balanceSheet.loans.sisterCompanyMkAutos)} — reconcile in portfolio consolidation.</span>
-                </p>
-                <p className="text-[11px] leading-snug text-muted-foreground flex gap-1.5">
-                  <span>ℹ️</span>
-                  <span>Accumulated loss {formatAEDFull(balanceSheet.profitAndLoss)} exceeds share capital {formatAEDFull(balanceSheet.capital.total)} — partner loans of {formatAEDFull(balanceSheet.loans.manalMussaCurrent + balanceSheet.loans.mrAhmedCurrent)} fund operations.</span>
-                </p>
+                  <span className="font-medium">Cash overdraft {formatAEDFull(balanceSheet.currentAssets.cashInHand)}</span>
+                </div>
+                <div className="rounded-md border border-warning/40 bg-warning/10 px-2.5 py-1.5 text-[11px] text-warning flex items-center gap-1.5">
+                  <span>⚠️</span>
+                  <span className="font-medium">AR {formatAEDFull(balanceSheet.currentAssets.accountsReceivable)} uncollected</span>
+                </div>
+                <div className="rounded-md border border-warning/40 bg-warning/10 px-2.5 py-1.5 text-[11px] text-warning flex items-center gap-1.5">
+                  <span>⚠️</span>
+                  <span className="font-medium">Goodwill {formatAEDFull(balanceSheet.fixedAssets.goodwill)} — assess impairment</span>
+                </div>
               </div>
+            </div>
+            {/* Intercompany note — prominent, below grid */}
+            <div className="mt-4 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-foreground flex items-start gap-2">
+              <span>🔗</span>
+              <span>
+                <span className="font-semibold">Intercompany:</span> MK Autos owes MK Garage {formatAEDFull(balanceSheet.loans.sisterCompanyMkAutos)} — reconcile with MK Autos payables in portfolio consolidation.
+              </span>
             </div>
           </CardContent>
         </Card>
