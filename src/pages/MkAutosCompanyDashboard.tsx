@@ -138,6 +138,9 @@ const MkAutosCompanyDashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-5">
+        <div className="rounded-md border border-border/40 bg-muted/20 px-3 py-2 text-[11px] text-muted-foreground">
+          <span className="font-semibold text-foreground">Note:</span> Revenue and indirect expenses exclude visa sponsorship pass-through (Dummy Investor / Dummy Payroll): Oct-25 AED 83K | Nov-25 AED 8K | Dec-25 to Feb-26 AED 78K/month. Net profit unaffected.
+        </div>
         {exec && (
           <>
             {/* === 1. VERDICT BANNER === */}
