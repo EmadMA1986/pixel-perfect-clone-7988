@@ -49,6 +49,7 @@ import {
   monthlyPL,
   balanceSheet,
   partners,
+  indirectExpenseDetail,
   formatAED,
   formatAEDFull,
 } from "@/data/garageData";
