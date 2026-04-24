@@ -45,6 +45,8 @@ export interface CompanySnapshot {
   current: CompanyMonthMetrics;
   previous?: CompanyMonthMetrics | null;
   trend: { month: string; profit: number }[]; // last N months
+  itdProfit?: number; // cumulative profit (ITD) — used for P&L (ITD) column
+  marProfit?: number; // current month's profit — used for Mar Profit column
 }
 
 interface Props {
@@ -98,11 +100,15 @@ const PortfolioInsights = ({
     const prevInv = withPrev.length > 0
       ? withPrev.reduce((s, c) => s + (c.previous?.investment ?? 0), 0)
       : null;
+    const itdProfit = companies.reduce((s, c) => s + (c.itdProfit ?? c.current.profit), 0);
+    const marProfit = companies.reduce((s, c) => s + (c.marProfit ?? c.current.profit), 0);
     return {
       investment: inv,
       profit,
+      itdProfit,
+      marProfit,
       netPosition: netPos,
-      roi: inv ? (profit / inv) * 100 : 0,
+      roi: inv ? (itdProfit / inv) * 100 : 0,
       prevProfit,
       prevROI: prevProfit !== null && prevInv ? (prevProfit / prevInv) * 100 : null,
     };
@@ -287,8 +293,9 @@ const PortfolioInsights = ({
                 <TableHead className="text-xs w-12">Rank</TableHead>
                 <TableHead className="text-xs">Company</TableHead>
                 <TableHead className="text-xs text-right">Investment</TableHead>
-                <TableHead className="text-xs text-right">Profit/Loss</TableHead>
+                <TableHead className="text-xs text-right">P&L (ITD)</TableHead>
                 <TableHead className="text-xs text-right">ROI %</TableHead>
+                <TableHead className="text-xs text-right">Mar Profit</TableHead>
                 <TableHead className="text-xs text-right">vs Last Month</TableHead>
                 <TableHead className="text-xs text-right">% of Portfolio</TableHead>
                 <TableHead className="text-xs">AI Insight</TableHead>
@@ -319,11 +326,14 @@ const PortfolioInsights = ({
                     <TableCell className="text-right text-sm tabular-nums text-foreground">
                       {format(toDisplay(c.current.investment))}
                     </TableCell>
-                    <TableCell className={`text-right text-sm tabular-nums ${c.current.profit >= 0 ? "text-success" : "text-loss"}`}>
-                      {format(toDisplay(c.current.profit))}
+                    <TableCell className={`text-right text-sm tabular-nums font-semibold ${(c.itdProfit ?? c.current.profit) >= 0 ? "text-success" : "text-loss"}`}>
+                      {(c.itdProfit ?? c.current.profit) >= 0 ? "+" : ""}{format(toDisplay(c.itdProfit ?? c.current.profit))}
                     </TableCell>
                     <TableCell className={`text-right text-sm font-bold tabular-nums ${c.current.roi >= 0 ? "text-success" : "text-loss"}`}>
                       {c.current.roi >= 0 ? "+" : ""}{c.current.roi.toFixed(1)}%
+                    </TableCell>
+                    <TableCell className={`text-right text-sm tabular-nums ${(c.marProfit ?? c.current.profit) >= 0 ? "text-success" : "text-loss"}`}>
+                      {(c.marProfit ?? c.current.profit) >= 0 ? "+" : ""}{format(toDisplay(c.marProfit ?? c.current.profit))}
                     </TableCell>
                     <TableCell className="text-right">
                       <Delta cur={c.current.profit} prev={c.previous?.profit} />
@@ -374,11 +384,14 @@ const PortfolioInsights = ({
                 <TableCell className="text-right text-sm font-bold tabular-nums text-foreground">
                   {format(toDisplay(totals.investment))}
                 </TableCell>
-                <TableCell className={`text-right text-sm font-bold tabular-nums ${totals.profit >= 0 ? "text-success" : "text-loss"}`}>
-                  {format(toDisplay(totals.profit))}
+                <TableCell className={`text-right text-sm font-bold tabular-nums ${totals.itdProfit >= 0 ? "text-success" : "text-loss"}`}>
+                  {totals.itdProfit >= 0 ? "+" : ""}{format(toDisplay(totals.itdProfit))}
                 </TableCell>
                 <TableCell className={`text-right text-sm font-bold tabular-nums ${totals.roi >= 0 ? "text-success" : "text-loss"}`}>
                   {totals.roi >= 0 ? "+" : ""}{totals.roi.toFixed(1)}%
+                </TableCell>
+                <TableCell className={`text-right text-sm font-bold tabular-nums ${totals.marProfit >= 0 ? "text-success" : "text-loss"}`}>
+                  {totals.marProfit >= 0 ? "+" : ""}{format(toDisplay(totals.marProfit))}
                 </TableCell>
                 <TableCell className="text-right">
                   <Delta cur={totals.profit} prev={totals.prevProfit} />

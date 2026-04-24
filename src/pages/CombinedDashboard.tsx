@@ -386,6 +386,8 @@ const CombinedDashboard = () => {
         current: { investment: c.investment, profit: c.profit, netPosition: c.netPosition, roi: cum.roi },
         previous: prev ? { investment: prev.investment, profit: prev.profit, netPosition: prev.netPosition, roi: prev.roi } : null,
         trend,
+        itdProfit: cum.profit,
+        marProfit: c.profit,
       };
     });
   }, [companies, pd, selectedMonth, allTimeData]);
