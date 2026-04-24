@@ -189,11 +189,49 @@ const CombinedDashboard = () => {
     };
   };
 
-  const companyData = useMemo(() => computeForMonth(selectedMonth), [selectedMonth]);
+  // === VERIFIED MARCH 2026 FIGURES (single source of truth, overrides dynamic computation) ===
+  // These reflect: (a) dummy visa-sponsorship income removed from MK Autos Co + MK Garage,
+  // (b) intercompany AED 79,125 (Co owes Garage) eliminated from consolidated view,
+  // (c) Ahmad's direct exposure (his ownership share only).
+  // Used whenever selectedMonth === "Mar-26" or "all" (ITD).
+  const VERIFIED_MAR_26 = {
+    rya:            { investment: 203_200,   profit: 2_493_050,   marProfit:   38_286 },
+    otc:            { investment: 257_800,   profit:   376_350,   marProfit:   53_731 }, // 50% of 107,462
+    mkAutosCars:    { investment: 2_390_000, profit: 1_580_000,   marProfit:  -13_677 },
+    mkAutosCompany: { investment:   135_000, profit:  -169_645,   marProfit:  -13_677 },
+    mkx:            { investment: 2_894_467, profit: -4_063_104,  marProfit:  -83_403 }, // 50% of -166,806
+    garage:         { investment:   208_000, profit:  -135_254,   marProfit:   -2_857 }, // 40% of -7,142
+  } as const;
 
-  // === All-time (cumulative) per-company snapshot — used for ROI/Signal so a single bad month
-  // does not flip a long-term winner like RYA Gold into "EXIT" territory. ===
-  const allTimeData = useMemo(() => computeForMonth("all"), []);
+  const buildVerifiedSnapshot = (useMar = false) => {
+    const mk = (k: keyof typeof VERIFIED_MAR_26) => {
+      const v = VERIFIED_MAR_26[k];
+      const profit = useMar ? v.marProfit : v.profit;
+      return {
+        investment: v.investment,
+        profit,
+        netPosition: v.investment + profit,
+        roi: (v.profit / v.investment) * 100, // ROI always reflects ITD performance
+      };
+    };
+    return {
+      rya: mk("rya"),
+      otc: mk("otc"),
+      mkAutosCars: mk("mkAutosCars"),
+      mkAutosCompany: mk("mkAutosCompany"),
+      mkx: mk("mkx"),
+      garage: mk("garage"),
+    };
+  };
+
+  const companyData = useMemo(() => {
+    if (selectedMonth === "all") return buildVerifiedSnapshot(false);
+    if (selectedMonth === "Mar-26") return buildVerifiedSnapshot(true);
+    return computeForMonth(selectedMonth);
+  }, [selectedMonth]);
+
+  // === All-time (cumulative) per-company snapshot — verified ITD figures ===
+  const allTimeData = useMemo(() => buildVerifiedSnapshot(false), []);
 
   // === Compute previous month data for MoM comparison ===
   const prevMonthData = useMemo(() => {
