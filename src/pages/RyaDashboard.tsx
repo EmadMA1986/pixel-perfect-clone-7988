@@ -635,8 +635,8 @@ const RyaDashboard = () => {
                 <p className="text-xs font-bold uppercase tracking-wider text-primary mb-2">Part A — Cash Equity</p>
                 <Table>
                   <TableBody>
-                    <TableRow><TableCell className="text-xs">Less Opening Balance (capital injection)</TableCell><TableCell className="text-xs text-right font-mono text-destructive">-{fmt(ahmadPosition.openingBalance)}</TableCell></TableRow>
                     <TableRow><TableCell className="text-xs">Net Profit ({period === "ITD" ? "ITD" : `to ${selectedMonth}`})</TableCell><TableCell className="text-xs text-right font-mono text-success">+{fmt(cumNetProfitForPosition)}</TableCell></TableRow>
+                    <TableRow><TableCell className="text-xs">Less Opening Balance (capital injection)</TableCell><TableCell className="text-xs text-right font-mono text-destructive">-{fmt(ahmadPosition.openingBalance)}</TableCell></TableRow>
                     <TableRow><TableCell className="text-xs">Less Ahmad Withdrawals</TableCell><TableCell className="text-xs text-right font-mono text-destructive">-{fmt(ahmadPosition.withdrawals)}</TableCell></TableRow>
                     <TableRow className="bg-primary/10"><TableCell className="text-xs font-bold">Cash Flow Closing</TableCell><TableCell className="text-xs text-right font-mono font-bold text-primary">{fmt(cashEquityClosing)}</TableCell></TableRow>
                   </TableBody>
