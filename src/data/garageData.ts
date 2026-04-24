@@ -44,6 +44,7 @@ export const monthlyPL: MonthlyPL[] = [
 ];
 
 export const balanceSheet = {
+  asOf: "31-Mar-26",
   capital: {
     manalMussa: 120000,
     mrAhmed: 120000,
@@ -52,38 +53,39 @@ export const balanceSheet = {
     total: 300000,
   },
   loans: {
-    employeeLoan: 95.96,
+    employeeLoan: -2904.04,
     manalMussaCurrent: 480000,
     mrAhmedCurrent: 400000,
-    sisterCompanyMkAutos: 85563.48,
-    total: 965659.44,
+    sisterCompanyMkAutos: 79124.57,
+    total: 956220.53,
   },
   currentLiabilities: {
-    dutiesAndTaxes: -3964.98,
-    accountsPayable: 63036.80,
-    employeeSalary: 80063.83,
+    dutiesAndTaxes: -495.74,
+    accountsPayable: 72723.91,
+    employeeSalary: 55648.83,
     rentLiability: 100000,
-    total: 239135.65,
+    total: 227877.00,
   },
-  profitAndLoss: -322892.15,
+  profitAndLoss: -338133.94,
   fixedAssets: {
-    garageTools: 253535.13,
+    garageTools: 254635.13,
     goodwill: 600000,
     laptop: 2675,
     mobile: 1790,
-    ppe: 52278.57,
+    ppe: 62278.57,
     software: 6977.50,
-    total: 917256.20,
+    total: 928356.20,
   },
   currentAssets: {
-    accountsReceivable: 229321.50,
-    cashInHand: -51252.55,
-    bankAccounts: 1159.79,
-    prepaidRent: 85418,
-    total: 264646.74,
+    accountsReceivable: 206830.85,
+    cashInHand: -69520.98,
+    bankAccounts: 5356.52,
+    prepaidRent: 74741.00,
+    rfmCardReceipt: 200.00,
+    total: 217607.39,
   },
-  totalLiabilities: 1181902.94,
-  totalAssets: 1181902.94,
+  totalLiabilities: 1145963.59,
+  totalAssets: 1145963.59,
 };
 
 // Ahmad owns 40% = AED 520,000 share capital out of AED 1,300,000 total
