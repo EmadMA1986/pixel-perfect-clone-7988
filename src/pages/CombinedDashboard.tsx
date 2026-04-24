@@ -299,7 +299,7 @@ const CombinedDashboard = () => {
       name: "MK Garage", icon: Wrench, route: "/garage", share: "40%", key: "garage" as const,
       investment: d.garage.investment, profit: d.garage.profit,
       netPosition: d.garage.netPosition, roi: d.garage.roi,
-      color: "hsl(var(--chart-4))", updatedTo: "Feb 2026",
+      color: "hsl(var(--chart-4))", updatedTo: "Mar 2026",
     },
   ];
 
