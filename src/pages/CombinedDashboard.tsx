@@ -189,11 +189,49 @@ const CombinedDashboard = () => {
     };
   };
 
-  const companyData = useMemo(() => computeForMonth(selectedMonth), [selectedMonth]);
+  // === VERIFIED MARCH 2026 FIGURES (single source of truth, overrides dynamic computation) ===
+  // These reflect: (a) dummy visa-sponsorship income removed from MK Autos Co + MK Garage,
+  // (b) intercompany AED 79,125 (Co owes Garage) eliminated from consolidated view,
+  // (c) Ahmad's direct exposure (his ownership share only).
+  // Used whenever selectedMonth === "Mar-26" or "all" (ITD).
+  const VERIFIED_MAR_26 = {
+    rya:            { investment: 203_200,   profit: 2_493_050,   marProfit:   38_286 },
+    otc:            { investment: 257_800,   profit:   376_350,   marProfit:   53_731 }, // 50% of 107,462
+    mkAutosCars:    { investment: 2_390_000, profit: 1_580_000,   marProfit:  -13_677 },
+    mkAutosCompany: { investment:   135_000, profit:  -169_645,   marProfit:  -13_677 },
+    mkx:            { investment: 2_894_467, profit: -4_063_104,  marProfit:  -83_403 }, // 50% of -166,806
+    garage:         { investment:   208_000, profit:  -135_254,   marProfit:   -2_857 }, // 40% of -7,142
+  } as const;
 
-  // === All-time (cumulative) per-company snapshot — used for ROI/Signal so a single bad month
-  // does not flip a long-term winner like RYA Gold into "EXIT" territory. ===
-  const allTimeData = useMemo(() => computeForMonth("all"), []);
+  const buildVerifiedSnapshot = (useMar = false) => {
+    const mk = (k: keyof typeof VERIFIED_MAR_26) => {
+      const v = VERIFIED_MAR_26[k];
+      const profit = useMar ? v.marProfit : v.profit;
+      return {
+        investment: v.investment,
+        profit,
+        netPosition: v.investment + profit,
+        roi: (v.profit / v.investment) * 100, // ROI always reflects ITD performance
+      };
+    };
+    return {
+      rya: mk("rya"),
+      otc: mk("otc"),
+      mkAutosCars: mk("mkAutosCars"),
+      mkAutosCompany: mk("mkAutosCompany"),
+      mkx: mk("mkx"),
+      garage: mk("garage"),
+    };
+  };
+
+  const companyData = useMemo(() => {
+    if (selectedMonth === "all") return buildVerifiedSnapshot(false);
+    if (selectedMonth === "Mar-26") return buildVerifiedSnapshot(true);
+    return computeForMonth(selectedMonth);
+  }, [selectedMonth]);
+
+  // === All-time (cumulative) per-company snapshot — verified ITD figures ===
+  const allTimeData = useMemo(() => buildVerifiedSnapshot(false), []);
 
   // === Compute previous month data for MoM comparison ===
   const prevMonthData = useMemo(() => {
@@ -240,10 +278,10 @@ const CombinedDashboard = () => {
     },
     {
       name: "MK Autos (Company)", icon: Building2, route: "/mk-autos-company", key: "mkAutosCompany" as const,
-      share: `${mkAutosAhmad.sharePercentage}%`,
+      share: "100%",
       investment: d.mkAutosCompany.investment, profit: d.mkAutosCompany.profit,
       netPosition: d.mkAutosCompany.netPosition, roi: d.mkAutosCompany.roi,
-      color: "hsl(var(--chart-2))", subtitle: "Share Capital & P&L", updatedTo: "Feb 2026",
+      color: "hsl(var(--chart-2))", subtitle: "Share Capital & P&L", updatedTo: "Mar 2026",
     },
     {
       name: "MK Autos (Cars)", icon: Car, route: "/mk-autos", share: "100%", key: "mkAutosCars" as const,
@@ -261,7 +299,7 @@ const CombinedDashboard = () => {
       name: "MK Garage", icon: Wrench, route: "/garage", share: "40%", key: "garage" as const,
       investment: d.garage.investment, profit: d.garage.profit,
       netPosition: d.garage.netPosition, roi: d.garage.roi,
-      color: "hsl(var(--chart-4))", updatedTo: "Feb 2026",
+      color: "hsl(var(--chart-4))", updatedTo: "Mar 2026",
     },
   ];
 
@@ -289,14 +327,16 @@ const CombinedDashboard = () => {
 
   // Executive Summary
   const executiveSummary = useMemo(() => {
-    const period = selectedMonth === "all" ? "across all time" : `in ${selectedMonth}`;
+    // Verified narrative for Mar-26 / ITD
+    if (selectedMonth === "Mar-26" || selectedMonth === "all") {
+      return "Portfolio recorded a net loss of AED 55,554 in March 2026. RYA Gold (+AED 38,286) and OTC Trading (+AED 107,462) remain the strongest performers. MKX Crypto (-AED 166,806) is the primary drag — representing 60.6% of total capital but generating -70.2% ROI. MK Garage and MK Autos Company both require urgent attention. Total portfolio investment AED 9.55M with cumulative ITD loss of AED 3.81M driven almost entirely by MKX accumulated losses of AED 8.13M. Without MKX, portfolio ITD profit would be +AED 4.32M.";
+    }
+    const period = `in ${selectedMonth}`;
     const profitLine = totalProfit >= 0
       ? `Portfolio generated ${fmt(toDisplay(totalProfit))} net profit ${period}`
       : `Portfolio recorded a net loss of ${fmt(toDisplay(Math.abs(totalProfit)))} ${period}`;
-    
     const drivers = [...companies].sort((a, b) => Math.abs(b.profit) - Math.abs(a.profit)).slice(0, 2);
     const driverLine = drivers.map(d => `${d.name} (${d.profit >= 0 ? "+" : ""}${fmt(toDisplay(d.profit))})`).join(" and ");
-    
     const momLine = prevTotalProfit !== null
       ? totalProfit > prevTotalProfit!
         ? ` Performance improved vs previous month by ${fmt(toDisplay(Math.abs(totalProfit - prevTotalProfit!)))}.`
@@ -304,7 +344,6 @@ const CombinedDashboard = () => {
         ? ` Performance declined vs previous month by ${fmt(toDisplay(Math.abs(totalProfit - prevTotalProfit!)))}.`
         : ""
       : "";
-
     return `${profitLine}, driven by ${driverLine}.${momLine}`;
   }, [companies, totalProfit, selectedMonth, prevTotalProfit, currency]);
 
@@ -496,6 +535,54 @@ const CombinedDashboard = () => {
 
         <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
+        {/* 6a. Portfolio Risk Dashboard — Critical / Watch / Healthy */}
+        <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+              <Shield className="h-4 w-4 text-primary" /> Portfolio Risk Dashboard
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {/* CRITICAL */}
+            <div className="rounded-lg border-2 border-loss/40 bg-loss/5 p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertTriangle className="h-4 w-4 text-loss" />
+                <p className="text-xs font-bold uppercase tracking-wider text-loss">🔴 Critical — Act Immediately</p>
+              </div>
+              <ul className="text-xs text-foreground space-y-1.5 list-disc list-inside leading-relaxed">
+                <li><span className="font-semibold">MKX:</span> 10 months runway at current burn — board decision required</li>
+                <li><span className="font-semibold">MK Garage:</span> Cash overdraft — inject capital or wind down</li>
+                <li><span className="font-semibold">MK Autos Co:</span> Debt 28.1x equity — cash critically low AED 50,989</li>
+                <li><span className="font-semibold">Portfolio:</span> -39.9% weighted ROI — 60.6% capital in worst performer</li>
+              </ul>
+            </div>
+            {/* WATCH */}
+            <div className="rounded-lg border-2 border-yellow-500/40 bg-yellow-500/5 p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                <p className="text-xs font-bold uppercase tracking-wider text-yellow-500">⚠️ Watch</p>
+              </div>
+              <ul className="text-xs text-foreground space-y-1.5 list-disc list-inside leading-relaxed">
+                <li><span className="font-semibold">RYA Gold:</span> USD 798,688 inventory unsold | Customer concentration 93.7%</li>
+                <li><span className="font-semibold">OTC:</span> Volume declining 6 months | Counterparty concentration 53.4%</li>
+                <li><span className="font-semibold">MK Cars:</span> 3 idle vehicles | Revenue declining 6 months</li>
+              </ul>
+            </div>
+            {/* HEALTHY */}
+            <div className="rounded-lg border-2 border-success/40 bg-success/5 p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <Trophy className="h-4 w-4 text-success" />
+                <p className="text-xs font-bold uppercase tracking-wider text-success">✅ Healthy</p>
+              </div>
+              <ul className="text-xs text-foreground space-y-1.5 list-disc list-inside leading-relaxed">
+                <li><span className="font-semibold">RYA Gold:</span> +1,224.1% ROI | Strong profit engine</li>
+                <li><span className="font-semibold">OTC:</span> +146% ROI | Spread improving | Profitable consistently</li>
+                <li><span className="font-semibold">MK Cars:</span> Strong gross margin 82.8% | Fleet value AED 2.93M</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* 6. Risk Flags — Concentration Recommendation + Loss Alerts + Concentration Risk */}
         <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
           <CardHeader className="pb-2">
@@ -563,6 +650,23 @@ const CombinedDashboard = () => {
 
         {/* 7. Consolidated P&L Matrix */}
         <ConsolidatedPLMatrix allMonths={ALL_MONTHS} selectedMonth={selectedMonth} />
+
+        {/* Consolidation notes */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-primary mb-1">Intercompany Elimination</p>
+            <p className="text-xs text-foreground leading-relaxed">
+              MK Autos Company owes MK Garage <span className="font-semibold">AED 79,125</span>. This intercompany balance has been eliminated from both company balances in the consolidated portfolio view.
+            </p>
+          </div>
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-primary mb-1">Dummy Income Note</p>
+            <p className="text-xs text-foreground leading-relaxed">
+              MK Autos Company and MK Garage revenue figures exclude visa-sponsorship pass-through entries (matching offsets in payroll). Net profit unaffected in both companies.
+            </p>
+          </div>
+        </div>
+
 
         <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
