@@ -678,15 +678,34 @@ const GarageDashboard = () => {
             <CardTitle className="text-sm font-medium">Expense Breakdown — {current.month}</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={Math.max(180, expenseItems.length * 50)}>
-              <BarChart data={expenseItems} layout="vertical" margin={{ left: 100 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border} />
+            <ResponsiveContainer width="100%" height={Math.max(220, expenseItems.length * 26)}>
+              <BarChart data={expenseItems} layout="vertical" margin={{ left: 8, right: 60, top: 4, bottom: 4 }} barCategoryGap={4}>
+                <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border} horizontal={false} />
                 <XAxis type="number" tick={{ fontSize: 10, fill: COLORS.muted }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: COLORS.muted }} width={150} />
-                <Tooltip formatter={(v: number) => formatAEDFull(v)} />
-                <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  tick={{ fontSize: 11, fill: COLORS.muted }}
+                  width={130}
+                  tickFormatter={(name: string) => {
+                    const item = expenseItems.find((e) => e.name === name);
+                    return item?.oneOff ? `${name} ⚠` : name;
+                  }}
+                />
+                <Tooltip
+                  formatter={(v: number, _n, p: { payload?: { pct?: number } }) => [
+                    `${formatAEDFull(v)} (${(p?.payload?.pct ?? 0).toFixed(1)}%)`,
+                    "Amount",
+                  ]}
+                />
+                <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={18} label={{
+                  position: "right",
+                  fill: "hsl(var(--muted-foreground))",
+                  fontSize: 10,
+                  formatter: (v: number) => `${((v / (Object.values(indirectExpenseDetail[current.month] ?? {}).reduce((s, x) => s + (x || 0), 0) || 1)) * 100).toFixed(1)}%`,
+                }}>
                   {expenseItems.map((e, i) => (
-                    <BarCell key={i} fill={e.flag ? COLORS.loss : e.fixed ? COLORS.primary : COLORS.parts} />
+                    <BarCell key={i} fill={e.flag ? COLORS.loss : e.oneOff ? COLORS.warning : e.fixed ? COLORS.primary : COLORS.parts} />
                   ))}
                 </Bar>
               </BarChart>
