@@ -299,3 +299,77 @@ export const balanceSheetSnapshots: BalanceSheetSnapshot[] = [
   },
 ];
 
+// === Verified March 2026 detailed balance sheet (authoritative source) ===
+export const marchBalanceSheet = {
+  asOf: "31-Mar-26",
+  totals: {
+    assets: 4102921,
+    liabilities: 4102921,
+  },
+  assets: [
+    { name: "Fixed Assets (vehicles + equipment)", amount: 2999941 },
+    { name: "AR Trade", amount: 275368 },
+    { name: "AR Legal Cases", amount: 160955 },
+    { name: "Cash in Hand", amount: 8192 },
+    { name: "Bank Accounts", amount: 42797 },
+    { name: "Prepaid Insurance", amount: 109825 },
+    { name: "Prepaid Interest", amount: 311996 },
+    { name: "Prepaid Rent", amount: 76303 },
+    { name: "Sister Company MK Garage", amount: 79125 },
+    { name: "Other Current Assets", amount: 38419 },
+  ] as BalanceSheetItem[],
+  liabilities: [
+    { name: "Partner Capital (Ahmad 135K | Jamal 30K | Moez 135K)", amount: 300000 },
+    { name: "ADIB Loan", amount: 947948 },
+    { name: "ADIB New Loan", amount: 819310 },
+    { name: "Emirates Islamic Loan", amount: 1096368 },
+    { name: "Investor Ahmad balance owed", amount: 445160 },
+    { name: "Investor Golden", amount: 132192 },
+    { name: "Investor Hiruy", amount: 30462 },
+    { name: "Investor Jamal", amount: 20354 },
+    { name: "Investor Mirza", amount: 27505 },
+    { name: "Investor Moez Hemani", amount: 10926 },
+    { name: "Investor Ricardo", amount: 6450 },
+    { name: "Investor Munir", amount: -75 },
+    { name: "Arshad Mirza", amount: 10068 },
+    { name: "Ahmed Hamid Loan", amount: 45000 },
+    { name: "Moiz Loan", amount: 19947 },
+    { name: "Opening Balance Adjustment", amount: 48293 },
+    { name: "Accounts Payable", amount: 183033 },
+    { name: "Employee Salary Payable", amount: 24159 },
+    { name: "Traffic Fines Payable", amount: 156743 },
+    { name: "Rent Liability", amount: 68750 },
+    { name: "Duties & Taxes", amount: -138107 },
+    { name: "Stripe Payment Link", amount: 18080 },
+    { name: "Accumulated P&L Loss", amount: -169645 },
+  ] as BalanceSheetItem[],
+};
+
+// === Investor balances owed (March 2026) ===
+export const investorBalances = [
+  { name: "Ahmad", amount: 445160 },
+  { name: "Golden", amount: 132192 },
+  { name: "Hiruy", amount: 30462 },
+  { name: "Mirza", amount: 27505 },
+  { name: "Jamal", amount: 20354 },
+  { name: "Moez Hemani", amount: 10926 },
+  { name: "Arshad Mirza", amount: 10068 },
+  { name: "Ricardo", amount: 6450 },
+  { name: "Munir", amount: -75 },
+];
+
+// === Bank loan trajectories ===
+export const bankLoans = [
+  { name: "ADIB Loan", current: 947948, prior: 1017310, priorMonth: "Dec-25", trend: "down" as const },
+  { name: "ADIB New Loan", current: 819310, prior: 842719, priorMonth: "Jan-26", trend: "down" as const },
+  { name: "Emirates Islamic", current: 1096368, prior: 814195, priorMonth: "Dec-25", trend: "up" as const },
+];
+
+export const totalBankDebt = 947948 + 819310 + 1096368; // 2,863,626
+export const totalInvestorBalances = investorBalances.reduce((s, i) => s + i.amount, 0); // 683,042
+export const grandTotalLoans = totalBankDebt + totalInvestorBalances; // 3,659,910 (matches reported)
+
+// === Cash composition ===
+export const marchCash = { hand: 8192, bank: 42797, total: 50989 };
+
+
