@@ -142,7 +142,7 @@ const RyaDashboard = () => {
   // and goldInventory totals scaled proportionally for ITD; for month boundary fall back
   // to known March endpoint when ITD or Mar-26.
   const closingInventoryG = useMemo(() => {
-    if (period === "ITD" || selectedMonth === "Mar-26") return goldInventory.balanceGrams;
+    if (period === "ITD" || selectedMonth === "Apr-26") return goldInventory.balanceGrams;
     // estimate: opening 0 + cumulative purchased - cumulative sold across months up to & inc selected
     const cumSoldG = monthlyProfit
       .filter((m) => monthIdx(m.month) <= monthIdx(selectedMonth))
