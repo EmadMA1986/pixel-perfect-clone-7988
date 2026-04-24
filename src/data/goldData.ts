@@ -275,7 +275,7 @@ export const goldCapital = {
   get totalCurrentPosition() {
     return this.totalBrokers + this.goldInventoryUSD + this.totalAR_USD;
   },
-  netProfit: 624547.90,
+  netProfit: 655867.40,
   get initialCapital() { return this.totalCurrentPosition - this.netProfit; },
 };
 
