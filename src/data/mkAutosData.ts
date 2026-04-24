@@ -370,6 +370,6 @@ export const totalInvestorBalances = investorBalances.reduce((s, i) => s + i.amo
 export const grandTotalLoans = totalBankDebt + totalInvestorBalances; // 3,659,910 (matches reported)
 
 // === Cash composition ===
-export const marchCash = { hand: 8192, bank: 42797, total: 51989 - 1000 }; // 50,989
+export const marchCash = { hand: 8192, bank: 42797, total: 50989 };
 
 
