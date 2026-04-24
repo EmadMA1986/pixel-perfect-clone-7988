@@ -559,6 +559,16 @@ const GarageDashboard = () => {
                   {trendData.map((d, i) => (
                     <BarCell key={i} fill={d.isSelected ? COLORS.primary : "hsl(var(--primary) / 0.35)"} />
                   ))}
+                  <LabelList
+                    dataKey="revenue"
+                    position="top"
+                    fontSize={11}
+                    fontWeight={700}
+                    fill={COLORS.primary}
+                    formatter={(v: number, _n, p: { payload?: { isSelected?: boolean } }) =>
+                      p?.payload?.isSelected ? formatAED(v) : ""
+                    }
+                  />
                 </Bar>
                 <Line type="monotone" dataKey="grossProfit" name="Gross Profit" stroke={COLORS.success} strokeWidth={2} dot={{ r: 3 }} />
                 <Line type="monotone" dataKey="netProfit" name="Net Profit/Loss" stroke={COLORS.loss} strokeWidth={2} dot={{ r: 3 }} />
