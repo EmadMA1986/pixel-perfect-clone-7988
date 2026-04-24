@@ -298,7 +298,27 @@ const MkAutosCompanyDashboard = () => {
                   {trendData.map((d, i) => (
                     <Cell key={i} fill={d.isSelected ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))"} opacity={d.isSelected ? 1 : 0.5} />
                   ))}
-                  <LabelList dataKey="revenue" position="top" formatter={(v: number) => fmtCompact(v)} style={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                  <LabelList
+                    dataKey="revenue"
+                    position="top"
+                    content={(props: any) => {
+                      const { x, y, width, value, index } = props;
+                      const d = trendData[index];
+                      const isSel = d?.isSelected;
+                      return (
+                        <text
+                          x={Number(x) + Number(width) / 2}
+                          y={Number(y) - 6}
+                          textAnchor="middle"
+                          fontSize={isSel ? 12 : 10}
+                          fontWeight={isSel ? 700 : 400}
+                          fill={isSel ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))"}
+                        >
+                          {fmtCompact(Number(value))}
+                        </text>
+                      );
+                    }}
+                  />
                 </Bar>
                 <Line type="monotone" dataKey="revenue" stroke="hsl(var(--loss))" strokeWidth={2} dot={false} />
               </ComposedChart>
@@ -357,15 +377,25 @@ const MkAutosCompanyDashboard = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {bankLoans.map((l) => (
-                <div key={l.name} className={`rounded-lg border p-4 ${l.trend === "down" ? "border-success/30 bg-success/5" : "border-loss/30 bg-loss/5"}`}>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{l.name}</p>
-                  <p className="text-lg font-bold tabular-nums text-foreground mt-1">{formatAED(l.current)}</p>
-                  <p className="text-[11px] text-muted-foreground mt-1">
-                    {l.priorMonth}: {formatAED(l.prior)} → {l.trend === "down" ? <span className="text-success">repaying ✅</span> : <span className="text-loss">increased 🔴</span>}
-                  </p>
-                </div>
-              ))}
+              {bankLoans.map((l) => {
+                const delta = l.current - l.prior;
+                const isUp = l.trend === "up";
+                return (
+                  <div key={l.name} className={`rounded-lg border p-4 ${isUp ? "border-loss/40 bg-loss/5" : "border-success/30 bg-success/5"}`}>
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{l.name}</p>
+                      <span className={`text-xs font-bold ${isUp ? "text-loss" : "text-success"}`}>{isUp ? "▲" : "▼"}</span>
+                    </div>
+                    <p className="text-lg font-bold tabular-nums text-foreground mt-1">{formatAED(l.current)}</p>
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      {l.priorMonth}: {formatAED(l.prior)} →{" "}
+                      {isUp
+                        ? <span className="text-loss font-semibold">▲ increased {formatAED(Math.abs(delta))} 🔴</span>
+                        : <span className="text-success font-semibold">▼ repaying {formatAED(Math.abs(delta))} ✅</span>}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t border-border/30">
               <div><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Total Bank Debt</p><p className="text-lg font-bold tabular-nums text-foreground">{formatAED(totalBankDebt)}</p></div>
@@ -387,13 +417,16 @@ const MkAutosCompanyDashboard = () => {
                 <TableRow><TableHead>Investor</TableHead><TableHead className="text-right">Balance Owed</TableHead><TableHead className="text-right">% of Total</TableHead></TableRow>
               </TableHeader>
               <TableBody>
-                {investorBalances.map((i) => (
-                  <TableRow key={i.name}>
-                    <TableCell className={`text-xs font-medium ${i.name === "Ahmad" ? "text-primary" : "text-foreground"}`}>{i.name}{i.name === "Ahmad" && " ⭐"}</TableCell>
-                    <TableCell className={`text-xs text-right tabular-nums ${i.amount < 0 ? "text-loss" : "text-foreground"}`}>{formatAED(i.amount)}</TableCell>
-                    <TableCell className="text-xs text-right tabular-nums text-muted-foreground">{((i.amount / investorTotal) * 100).toFixed(1)}%</TableCell>
-                  </TableRow>
-                ))}
+                {investorBalances.map((i) => {
+                  const isAhmad = i.name === "Ahmad";
+                  return (
+                    <TableRow key={i.name} className={isAhmad ? "bg-primary/10 hover:bg-primary/15 border-l-2 border-l-primary" : ""}>
+                      <TableCell className={`text-xs ${isAhmad ? "font-bold text-primary" : "font-medium text-foreground"}`}>{i.name}{isAhmad && " ⭐ (largest)"}</TableCell>
+                      <TableCell className={`text-xs text-right tabular-nums ${isAhmad ? "font-bold text-primary" : i.amount < 0 ? "text-loss" : "text-foreground"}`}>{formatAED(i.amount)}</TableCell>
+                      <TableCell className={`text-xs text-right tabular-nums ${isAhmad ? "font-bold text-primary" : "text-muted-foreground"}`}>{((i.amount / investorTotal) * 100).toFixed(1)}%</TableCell>
+                    </TableRow>
+                  );
+                })}
                 <TableRow className="bg-muted/30 font-bold">
                   <TableCell className="text-xs">Total</TableCell>
                   <TableCell className="text-xs text-right tabular-nums">{formatAED(investorTotal)}</TableCell>
@@ -427,7 +460,7 @@ const MkAutosCompanyDashboard = () => {
           <Card className="border-border/50 bg-card/80">
             <CardHeader className="pb-2"><CardTitle className="text-sm font-serif text-foreground">Liabilities — {marchBalanceSheet.asOf}</CardTitle></CardHeader>
             <CardContent>
-              <ul className="text-xs space-y-1.5 max-h-[420px] overflow-auto pr-1">
+              <ul className="text-xs space-y-1.5 h-[400px] overflow-y-auto pr-2">
                 {marchBalanceSheet.liabilities.map((l) => (
                   <li key={l.name} className="flex justify-between gap-2">
                     <span className="text-muted-foreground truncate">{l.name}</span>
@@ -449,6 +482,13 @@ const MkAutosCompanyDashboard = () => {
               <div className="flex justify-between"><span className="text-muted-foreground">Total Equity</span><span className="tabular-nums font-semibold text-foreground">{formatAED(totalEquity)}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Accumulated Loss</span><span className="tabular-nums font-semibold text-loss">{formatAED(-169645)}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Capital Account</span><span className="tabular-nums font-semibold text-foreground">{formatAED(300000)}</span></div>
+              <div className="pt-2 mt-2 border-t border-border/40">
+                <div className="flex justify-between items-start gap-2">
+                  <span className="text-muted-foreground">Total AR to Revenue</span>
+                  <span className="tabular-nums font-semibold text-amber-500">1.77x ⚠️</span>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1 leading-snug">AED 436K AR vs AED 246K monthly revenue — collecting takes nearly 2 months</p>
+              </div>
             </CardContent>
           </Card>
         </div>
