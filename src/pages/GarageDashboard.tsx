@@ -562,12 +562,22 @@ const GarageDashboard = () => {
                   <LabelList
                     dataKey="revenue"
                     position="top"
-                    fontSize={11}
-                    fontWeight={700}
-                    fill={COLORS.primary}
-                    formatter={(v: number, _n, p: { payload?: { isSelected?: boolean } }) =>
-                      p?.payload?.isSelected ? formatAED(v) : ""
-                    }
+                    content={(props: { x?: number; y?: number; width?: number; value?: number; index?: number }) => {
+                      const { x = 0, y = 0, width = 0, value = 0, index = 0 } = props;
+                      if (!trendData[index]?.isSelected) return null;
+                      return (
+                        <text
+                          x={x + width / 2}
+                          y={y - 6}
+                          textAnchor="middle"
+                          fontSize={11}
+                          fontWeight={700}
+                          fill={COLORS.primary}
+                        >
+                          {formatAED(value)}
+                        </text>
+                      );
+                    }}
                   />
                 </Bar>
                 <Line type="monotone" dataKey="grossProfit" name="Gross Profit" stroke={COLORS.success} strokeWidth={2} dot={{ r: 3 }} />
