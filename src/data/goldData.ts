@@ -140,13 +140,13 @@ export const salesDiscounts: ExpenseItem[] = [
 ];
 
 export const profitLoss = {
-  sales: 7995858.68,
+  sales: 7021664.68,
   salesDiscount: 19911.22,
-  netSales: 7975947.46,
-  costOfSales: 6934760.58,
+  netSales: 7001753.46,
+  costOfSales: 5991886.08,
   meltingLoss: 22593.98,
   hedgeExpenses: 232875.60,
-  grossProfit: 785717.30,
+  grossProfit: 754397.80,
   transport: 68443.25,
   labor: 5677.07,
   hotel: 1343.49,
@@ -156,10 +156,10 @@ export const profitLoss = {
   jlnShopSetup: 8414.00,
   otherExp: 23975.26,
   totalAdminExpenses: 128891.21,
-  operatingProfit: 656826.10,
+  operatingProfit: 625506.60,
   fxGain: 771.42,
   fxLoss: 1730.12,
-  netProfit: 655867.40,
+  netProfit: 624547.90,
   // Margins
   get grossMargin() { return this.grossProfit / this.netSales; },
   get netMargin() { return this.netProfit / this.netSales; },
@@ -176,13 +176,13 @@ export const monthlyProfit = [
   { month: "Apr-26", sales: 974194.00, profit: 31319.50, qtySold: 6450.71 },
 ];
 
-// Customer profit aggregates (inception to date, USD) — through Apr-26
+// Customer profit aggregates (inception to date, USD)
 export const customerProfitAgg = [
-  { name: "Moti", profit: 586561.95, share: 55.85 },
-  { name: "UNIP HK", profit: 398618.04, share: 37.95 },
-  { name: "GOLDEN", profit: 46241.18, share: 4.40 },
-  { name: "Kenzo HK", profit: 10839.64, share: 1.03 },
-  { name: "AL MASA", profit: 7997.77, share: 0.76 },
+  { name: "Moti", profit: 586561.95, share: 56.96 },
+  { name: "UNIP HK", profit: 378138.17, share: 36.72 },
+  { name: "GOLDEN", profit: 46241.18, share: 4.49 },
+  { name: "Kenzo HK", profit: 10839.64, share: 1.05 },
+  { name: "AL MASA", profit: 7997.77, share: 0.78 },
 ];
 
 // Supplier purchase aggregates (g)
@@ -227,31 +227,32 @@ export const supplierBalances: LedgerBalance[] = [
   { name: "CAMS", role: "supplier", balanceUSD: 0, balanceAED: 0, balanceUSDEquiv: 0, totalUSD: 0 },
 ];
 
-// Inventory position — Apr-26 (Mar closing 5,907g + Apr purchases ~7,350g − Apr sold 6,450.71g)
+// March 2026 closing position from P&L sheet
 export const goldInventory = {
-  balanceGrams: 6806.72,
+  balanceGrams: 5907.43,
   totalMeltingLossGrams: 2092.13,
-  totalPurchasedGrams: 60184.81,
-  totalSoldGrams: 51285.96,
+  totalPurchasedGrams: 52834.81,
+  totalSoldGrams: 44835.25,
   costPerGram: 798688 / 5907.43,
-  costOfRemainingUSD: 920254,
-  bookValueAED: 920254 * AED_TO_USD_RATE,
+  costOfRemainingUSD: 798688,
+  bookValueAED: 798688 * AED_TO_USD_RATE,
 };
 
-// Ahmad investment position (100% owner) — through Apr-26
+// Ahmad investment position (100% owner) — from P&L Equity section
 export const ahmadPosition = {
   // Part A — Cash equity flow
   openingBalance: 55327,
-  netProfit: 655867.40,
+  netProfit: 624547.90,
   withdrawals: 20000,
-  cashEquityClosing: 691194.40, // 55327 + 655867.40 - 20000
+  cashEquityClosing: 549220.90, // 55327 + 624547.90 - 20000
 
-  // Part B — Net profit deployment
-  goldInventoryUSD: 920254,
+  // Part B — Net profit deployment (where the profit sits)
+  goldInventoryUSD: 798688,
   arAlMasa: 3478,
   brokerZhouReceivable: 13313,
   brokerPYPayable: -266259,
 
+  // Receivables net
   get netReceivables() {
     return this.arAlMasa + this.brokerZhouReceivable + this.brokerPYPayable;
   },
@@ -265,7 +266,7 @@ export const goldCapital = {
   brokerPY: -266259,
   brokerZHOU: 13313,
   brokerZHOUAED: 0,
-  goldInventoryUSD: 920254,
+  goldInventoryUSD: 798688,
   arMotiAED: 0,
   arAlMasaAED: 3478 * AED_TO_USD_RATE,
   arUnipHK: 0,
@@ -275,7 +276,7 @@ export const goldCapital = {
   get totalCurrentPosition() {
     return this.totalBrokers + this.goldInventoryUSD + this.totalAR_USD;
   },
-  netProfit: 655867.40,
+  netProfit: 624547.90,
   get initialCapital() { return this.totalCurrentPosition - this.netProfit; },
 };
 
