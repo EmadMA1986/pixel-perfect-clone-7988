@@ -45,6 +45,8 @@ export interface CompanySnapshot {
   current: CompanyMonthMetrics;
   previous?: CompanyMonthMetrics | null;
   trend: { month: string; profit: number }[]; // last N months
+  itdProfit?: number; // cumulative profit (ITD) — used for P&L (ITD) column
+  marProfit?: number; // current month's profit — used for Mar Profit column
 }
 
 interface Props {
