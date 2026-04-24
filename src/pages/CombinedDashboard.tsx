@@ -278,10 +278,10 @@ const CombinedDashboard = () => {
     },
     {
       name: "MK Autos (Company)", icon: Building2, route: "/mk-autos-company", key: "mkAutosCompany" as const,
-      share: `${mkAutosAhmad.sharePercentage}%`,
+      share: "100%",
       investment: d.mkAutosCompany.investment, profit: d.mkAutosCompany.profit,
       netPosition: d.mkAutosCompany.netPosition, roi: d.mkAutosCompany.roi,
-      color: "hsl(var(--chart-2))", subtitle: "Share Capital & P&L", updatedTo: "Feb 2026",
+      color: "hsl(var(--chart-2))", subtitle: "Share Capital & P&L", updatedTo: "Mar 2026",
     },
     {
       name: "MK Autos (Cars)", icon: Car, route: "/mk-autos", share: "100%", key: "mkAutosCars" as const,
