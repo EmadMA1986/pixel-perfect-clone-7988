@@ -861,26 +861,29 @@ const GarageDashboard = () => {
                 </div>
               </div>
 
-              {/* Notes — compact inline list */}
-              <div className="space-y-1.5">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold pb-1 border-b border-border/30">Notes</p>
-                <p className="text-[11px] leading-snug text-warning flex gap-1.5">
-                  <span>⚠️</span>
-                  <span>Goodwill {formatAEDFull(balanceSheet.fixedAssets.goodwill)} ({((balanceSheet.fixedAssets.goodwill / balanceSheet.totalAssets) * 100).toFixed(0)}% of assets) — Ignite Garage acquisition. Assess for impairment.</span>
-                </p>
-                <p className="text-[11px] leading-snug text-loss flex gap-1.5">
+              {/* Notes — 3 simple alert badges */}
+              <div className="space-y-2">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold pb-1 border-b border-border/30">Alerts</p>
+                <div className="rounded-md border border-loss/40 bg-loss/10 px-2.5 py-1.5 text-[11px] text-loss flex items-center gap-1.5">
                   <span>🔴</span>
-                  <span>Cash overdraft {formatAEDFull(balanceSheet.currentAssets.cashInHand)} — urgent injection or AR collection required.</span>
-                </p>
-                <p className="text-[11px] leading-snug text-muted-foreground flex gap-1.5">
-                  <span>ℹ️</span>
-                  <span>MK Autos owes MK Garage {formatAEDFull(balanceSheet.loans.sisterCompanyMkAutos)} — reconcile in portfolio consolidation.</span>
-                </p>
-                <p className="text-[11px] leading-snug text-muted-foreground flex gap-1.5">
-                  <span>ℹ️</span>
-                  <span>Accumulated loss {formatAEDFull(balanceSheet.profitAndLoss)} exceeds share capital {formatAEDFull(balanceSheet.capital.total)} — partner loans of {formatAEDFull(balanceSheet.loans.manalMussaCurrent + balanceSheet.loans.mrAhmedCurrent)} fund operations.</span>
-                </p>
+                  <span className="font-medium">Cash overdraft {formatAEDFull(balanceSheet.currentAssets.cashInHand)}</span>
+                </div>
+                <div className="rounded-md border border-warning/40 bg-warning/10 px-2.5 py-1.5 text-[11px] text-warning flex items-center gap-1.5">
+                  <span>⚠️</span>
+                  <span className="font-medium">AR {formatAEDFull(balanceSheet.currentAssets.accountsReceivable)} uncollected</span>
+                </div>
+                <div className="rounded-md border border-warning/40 bg-warning/10 px-2.5 py-1.5 text-[11px] text-warning flex items-center gap-1.5">
+                  <span>⚠️</span>
+                  <span className="font-medium">Goodwill {formatAEDFull(balanceSheet.fixedAssets.goodwill)} — assess impairment</span>
+                </div>
               </div>
+            </div>
+            {/* Intercompany note — prominent, below grid */}
+            <div className="mt-4 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-foreground flex items-start gap-2">
+              <span>🔗</span>
+              <span>
+                <span className="font-semibold">Intercompany:</span> MK Autos owes MK Garage {formatAEDFull(balanceSheet.loans.sisterCompanyMkAutos)} — reconcile with MK Autos payables in portfolio consolidation.
+              </span>
             </div>
           </CardContent>
         </Card>
