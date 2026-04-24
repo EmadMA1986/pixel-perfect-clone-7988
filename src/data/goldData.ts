@@ -176,13 +176,13 @@ export const monthlyProfit = [
   { month: "Apr-26", sales: 974194.00, profit: 31319.50, qtySold: 6450.71 },
 ];
 
-// Customer profit aggregates (inception to date, USD) — through Apr-26
+// Customer profit aggregates (inception to date, USD)
 export const customerProfitAgg = [
-  { name: "Moti", profit: 586561.95, share: 55.85 },
-  { name: "UNIP HK", profit: 398618.04, share: 37.95 },
-  { name: "GOLDEN", profit: 46241.18, share: 4.40 },
-  { name: "Kenzo HK", profit: 10839.64, share: 1.03 },
-  { name: "AL MASA", profit: 7997.77, share: 0.76 },
+  { name: "Moti", profit: 586561.95, share: 56.96 },
+  { name: "UNIP HK", profit: 378138.17, share: 36.72 },
+  { name: "GOLDEN", profit: 46241.18, share: 4.49 },
+  { name: "Kenzo HK", profit: 10839.64, share: 1.05 },
+  { name: "AL MASA", profit: 7997.77, share: 0.78 },
 ];
 
 // Supplier purchase aggregates (g)
