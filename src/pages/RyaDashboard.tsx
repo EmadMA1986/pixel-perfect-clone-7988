@@ -59,7 +59,7 @@ const RyaDashboard = () => {
   const pct = (v: number) => `${v.toFixed(1)}%`;
 
   // Selected period boundary
-  const selectedMonth = period === "ITD" ? "Mar-26" : period;
+  const selectedMonth = period === "ITD" ? "Apr-26" : period;
   const selectedIdx = MONTHS.indexOf(selectedMonth as typeof MONTHS[number]);
   const selectedMP = monthlyProfit.find((m) => m.month === selectedMonth)!;
   const previousMP = selectedIdx > 0 ? monthlyProfit.find((m) => m.month === MONTHS[selectedIdx - 1])! : null;
