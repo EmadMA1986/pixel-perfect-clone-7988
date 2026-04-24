@@ -195,7 +195,7 @@ const CombinedDashboard = () => {
   // (c) Ahmad's direct exposure (his ownership share only).
   // Used whenever selectedMonth === "Mar-26" or "all" (ITD).
   const VERIFIED_MAR_26 = {
-    rya:            { investment: 203_200,   profit: 2_493_050,   marProfit:   38_286 },
+    rya:            { investment: 203_200,   profit: 2_293_945,   marProfit:   38_286 },
     otc:            { investment: 257_800,   profit:   376_350,   marProfit:   53_731 }, // 50% of 107,462
     mkAutosCars:    { investment: 2_390_000, profit: 1_580_000,   marProfit:  -13_677 },
     mkAutosCompany: { investment:   135_000, profit:  -169_645,   marProfit:  -13_677 },
