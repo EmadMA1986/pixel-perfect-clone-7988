@@ -292,8 +292,8 @@ const RyaDashboard = () => {
                 {previousMP && <> vs {previousMP.month} {fmt(previousMP.profit)} ({pct(profitDeltaPct)})</>}
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
-                {selectedMonth} sales of {formatNumber(selectedMP.qtySold, 0)}g
-                {selectedMonth === "Mar-26" && " — only 1 sale, UNIP HK absent. Convert 5,907g inventory urgently."}
+                {selectedMonth} sales of {formatNumber(selectedMP.qtySold, 0)}g across {monthSales.length} transaction{monthSales.length === 1 ? "" : "s"}
+                {closingInventoryG > 1000 && ` — ${formatNumber(closingInventoryG, 0)}g inventory still on hand.`}
               </p>
             </div>
           </CardContent>
