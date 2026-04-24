@@ -276,16 +276,22 @@ const GarageDashboard = () => {
     return null;
   }, []);
 
-  // ---- Section 9: Expense breakdown for selected month ----
+  // ---- Section 9: Expense breakdown for selected month (granular line items) ----
   const expenseItems = useMemo(() => {
-    const otherIndirect = current.indirectExpenses - current.payroll - current.rent;
-    const items = [
-      { name: "Payroll", value: current.payroll, fixed: true, flag: current.payroll / current.totalRevenue > 0.4 },
-      { name: "Rent", value: current.rent, fixed: true },
-      { name: "Other Indirect", value: Math.max(0, otherIndirect), fixed: false },
-    ];
-    if (current.month === "Feb 26") items.push({ name: "Trade License (one-off)", value: 23366.25, fixed: false });
-    return items.filter((i) => i.value > 0).sort((a, b) => b.value - a.value);
+    const detail = indirectExpenseDetail[current.month] ?? {};
+    const totalDetail = Object.values(detail).reduce((s, v) => s + (v || 0), 0) || current.indirectExpenses;
+    const items = Object.entries(detail)
+      .filter(([, v]) => v && v > 0)
+      .map(([name, value]) => ({
+        name,
+        value,
+        pct: (value / totalDetail) * 100,
+        fixed: name === "Payroll" || name === "Rent",
+        flag: name === "Payroll" && value / current.totalRevenue > 0.4,
+        oneOff: name === "Trade License" || name === "Visa Fine",
+      }))
+      .sort((a, b) => b.value - a.value);
+    return items;
   }, [current]);
 
   const fixedCostMonthly = current.payroll + current.rent;
