@@ -100,11 +100,15 @@ const PortfolioInsights = ({
     const prevInv = withPrev.length > 0
       ? withPrev.reduce((s, c) => s + (c.previous?.investment ?? 0), 0)
       : null;
+    const itdProfit = companies.reduce((s, c) => s + (c.itdProfit ?? c.current.profit), 0);
+    const marProfit = companies.reduce((s, c) => s + (c.marProfit ?? c.current.profit), 0);
     return {
       investment: inv,
       profit,
+      itdProfit,
+      marProfit,
       netPosition: netPos,
-      roi: inv ? (profit / inv) * 100 : 0,
+      roi: inv ? (itdProfit / inv) * 100 : 0,
       prevProfit,
       prevROI: prevProfit !== null && prevInv ? (prevProfit / prevInv) * 100 : null,
     };
