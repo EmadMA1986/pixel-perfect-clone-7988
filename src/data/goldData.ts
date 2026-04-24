@@ -227,32 +227,31 @@ export const supplierBalances: LedgerBalance[] = [
   { name: "CAMS", role: "supplier", balanceUSD: 0, balanceAED: 0, balanceUSDEquiv: 0, totalUSD: 0 },
 ];
 
-// March 2026 closing position from P&L sheet
+// Inventory position — Apr-26 (Mar closing 5,907g + Apr purchases ~7,350g − Apr sold 6,450.71g)
 export const goldInventory = {
-  balanceGrams: 5907.43,
+  balanceGrams: 6806.72,
   totalMeltingLossGrams: 2092.13,
-  totalPurchasedGrams: 52834.81,
-  totalSoldGrams: 44835.25,
+  totalPurchasedGrams: 60184.81,
+  totalSoldGrams: 51285.96,
   costPerGram: 798688 / 5907.43,
-  costOfRemainingUSD: 798688,
-  bookValueAED: 798688 * AED_TO_USD_RATE,
+  costOfRemainingUSD: 920254,
+  bookValueAED: 920254 * AED_TO_USD_RATE,
 };
 
-// Ahmad investment position (100% owner) — from P&L Equity section
+// Ahmad investment position (100% owner) — through Apr-26
 export const ahmadPosition = {
   // Part A — Cash equity flow
   openingBalance: 55327,
-  netProfit: 624547.90,
+  netProfit: 655867.40,
   withdrawals: 20000,
-  cashEquityClosing: 549220.90, // 55327 + 624547.90 - 20000
+  cashEquityClosing: 691194.40, // 55327 + 655867.40 - 20000
 
-  // Part B — Net profit deployment (where the profit sits)
-  goldInventoryUSD: 798688,
+  // Part B — Net profit deployment
+  goldInventoryUSD: 920254,
   arAlMasa: 3478,
   brokerZhouReceivable: 13313,
   brokerPYPayable: -266259,
 
-  // Receivables net
   get netReceivables() {
     return this.arAlMasa + this.brokerZhouReceivable + this.brokerPYPayable;
   },
