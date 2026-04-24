@@ -207,7 +207,7 @@ const RyaDashboard = () => {
   const positionAR = ahmadPosition.arAlMasa;
   const positionBrokerZhou = ahmadPosition.brokerZhouReceivable;
   const positionBrokerPY = ahmadPosition.brokerPYPayable;
-  const cashEquityClosing = ahmadPosition.openingBalance + cumNetProfitForPosition - ahmadPosition.withdrawals;
+  const cashEquityClosing = cumNetProfitForPosition - ahmadPosition.openingBalance - ahmadPosition.withdrawals;
   const grossPosition = cashEquityClosing + positionGoldUSD + positionAR + positionBrokerZhou;
   const netPositionAfterPY = grossPosition + positionBrokerPY;
 
