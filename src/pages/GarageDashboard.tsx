@@ -750,12 +750,17 @@ const GarageDashboard = () => {
               <TableBody>
                 {partnerRows.map((p) => (
                   <TableRow key={p.name}>
-                    <TableCell className="text-xs font-medium">{p.name}</TableCell>
+                    <TableCell className="text-xs font-medium">
+                      <span className="inline-flex items-center gap-2">
+                        <span className={`inline-block h-2 w-2 rounded-full ${p.ownershipPct === 40 ? "bg-primary" : "bg-muted-foreground"}`} />
+                        {p.name}
+                      </span>
+                    </TableCell>
                     <TableCell className="text-xs text-right">{p.ownershipPct}%</TableCell>
-                    <TableCell className="text-xs text-right">{formatAEDFull(p.shareCapital)}</TableCell>
-                    <TableCell className="text-xs text-right">{p.loanToCompany > 0 ? formatAEDFull(p.loanToCompany) : "—"}</TableCell>
-                    <TableCell className="text-xs text-right font-semibold">{formatAEDFull(p.totalExposure)}</TableCell>
-                    <TableCell className="text-xs text-right text-loss">{formatAEDFull(p.shareOfLoss)}</TableCell>
+                    <TableCell className="text-xs text-right tabular-nums">{formatAEDFull(p.shareCapital)}</TableCell>
+                    <TableCell className="text-xs text-right tabular-nums">{p.loanToCompany > 0 ? formatAEDFull(p.loanToCompany) : "—"}</TableCell>
+                    <TableCell className="text-xs text-right font-semibold tabular-nums">{formatAEDFull(p.totalExposure)}</TableCell>
+                    <TableCell className="text-xs text-right text-loss tabular-nums font-semibold">{formatAEDFull(p.shareOfLoss)}</TableCell>
                   </TableRow>
                 ))}
                 <TableRow className="border-t-2 border-border bg-muted/20">
