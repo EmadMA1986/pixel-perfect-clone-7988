@@ -140,13 +140,13 @@ export const salesDiscounts: ExpenseItem[] = [
 ];
 
 export const profitLoss = {
-  sales: 7995858.68,
+  sales: 7021664.68,
   salesDiscount: 19911.22,
-  netSales: 7975947.46,
-  costOfSales: 6934760.58,
+  netSales: 7001753.46,
+  costOfSales: 5991886.08,
   meltingLoss: 22593.98,
   hedgeExpenses: 232875.60,
-  grossProfit: 785717.30,
+  grossProfit: 754397.80,
   transport: 68443.25,
   labor: 5677.07,
   hotel: 1343.49,
@@ -156,10 +156,10 @@ export const profitLoss = {
   jlnShopSetup: 8414.00,
   otherExp: 23975.26,
   totalAdminExpenses: 128891.21,
-  operatingProfit: 656826.10,
+  operatingProfit: 625506.60,
   fxGain: 771.42,
   fxLoss: 1730.12,
-  netProfit: 655867.40,
+  netProfit: 624547.90,
   // Margins
   get grossMargin() { return this.grossProfit / this.netSales; },
   get netMargin() { return this.netProfit / this.netSales; },
