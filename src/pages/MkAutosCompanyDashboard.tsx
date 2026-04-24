@@ -439,59 +439,108 @@ const MkAutosCompanyDashboard = () => {
         </Card>
 
         {/* === SECTION 10 — BALANCE SHEET SUMMARY === */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-          <Card className="border-border/50 bg-card/80">
-            <CardHeader className="pb-2"><CardTitle className="text-sm font-serif text-foreground">Assets — {marchBalanceSheet.asOf}</CardTitle></CardHeader>
-            <CardContent>
-              <ul className="text-xs space-y-1.5">
-                {marchBalanceSheet.assets.map((a) => (
-                  <li key={a.name} className="flex justify-between gap-2">
-                    <span className="text-muted-foreground truncate">{a.name}</span>
-                    <span className="tabular-nums text-foreground shrink-0">{formatAED(a.amount)}</span>
-                  </li>
-                ))}
-                <li className="flex justify-between gap-2 pt-2 mt-2 border-t border-border/40 font-bold">
-                  <span className="text-foreground">Total Assets</span>
-                  <span className="tabular-nums text-primary">{formatAED(marchBalanceSheet.totals.assets)}</span>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-          <Card className="border-border/50 bg-card/80">
-            <CardHeader className="pb-2"><CardTitle className="text-sm font-serif text-foreground">Liabilities — {marchBalanceSheet.asOf}</CardTitle></CardHeader>
-            <CardContent>
-              <ul className="text-xs space-y-1.5 h-[400px] overflow-y-auto pr-2">
-                {marchBalanceSheet.liabilities.map((l) => (
-                  <li key={l.name} className="flex justify-between gap-2">
-                    <span className="text-muted-foreground truncate">{l.name}</span>
-                    <span className={`tabular-nums shrink-0 ${l.amount < 0 ? "text-loss" : "text-foreground"}`}>{formatAED(l.amount)}</span>
-                  </li>
-                ))}
-                <li className="flex justify-between gap-2 pt-2 mt-2 border-t border-border/40 font-bold">
-                  <span className="text-foreground">Total Liabilities</span>
-                  <span className="tabular-nums text-primary">{formatAED(marchBalanceSheet.totals.liabilities)}</span>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-          <Card className="border-border/50 bg-card/80">
-            <CardHeader className="pb-2"><CardTitle className="text-sm font-serif text-foreground">Key Ratios</CardTitle></CardHeader>
-            <CardContent className="space-y-3 text-xs">
-              <div className="flex justify-between"><span className="text-muted-foreground">Current Ratio</span><span className="tabular-nums font-semibold text-success">3.53x ✅</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Debt-to-Equity</span><span className="tabular-nums font-semibold text-loss">{(grandTotalLoans / Math.max(totalEquity, 1)).toFixed(1)}x 🔴</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Total Equity</span><span className="tabular-nums font-semibold text-foreground">{formatAED(totalEquity)}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Accumulated Loss</span><span className="tabular-nums font-semibold text-loss">{formatAED(-169645)}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Capital Account</span><span className="tabular-nums font-semibold text-foreground">{formatAED(300000)}</span></div>
-              <div className="pt-2 mt-2 border-t border-border/40">
-                <div className="flex justify-between items-start gap-2">
-                  <span className="text-muted-foreground">Total AR to Revenue</span>
-                  <span className="tabular-nums font-semibold text-amber-500">1.77x ⚠️</span>
-                </div>
-                <p className="text-[10px] text-muted-foreground mt-1 leading-snug">AED 436K AR vs AED 246K monthly revenue — collecting takes nearly 2 months</p>
+        {(() => {
+          const bankLoanNames = new Set([
+            "ADIB Loan", "ADIB New Loan", "Emirates Islamic Loan",
+            "Ahmed Hamid Loan", "Moiz Loan",
+          ]);
+          const investorNames = new Set(marchBalanceSheet.liabilities
+            .filter((l) => l.name.startsWith("Investor ") || l.name === "Arshad Mirza")
+            .map((l) => l.name));
+          const loansAndInvestors = marchBalanceSheet.liabilities.filter(
+            (l) => bankLoanNames.has(l.name) || investorNames.has(l.name)
+          );
+          const otherLiabs = marchBalanceSheet.liabilities.filter(
+            (l) => !bankLoanNames.has(l.name) && !investorNames.has(l.name)
+          );
+          const sumLoans = loansAndInvestors.reduce((s, l) => s + l.amount, 0);
+          const sumOther = otherLiabs.reduce((s, l) => s + l.amount, 0);
+
+          return (
+            <>
+              {/* Assets — full width */}
+              <Card className="border-border/50 bg-card/80">
+                <CardHeader className="pb-2"><CardTitle className="text-sm font-serif text-foreground">Assets — {marchBalanceSheet.asOf}</CardTitle></CardHeader>
+                <CardContent>
+                  <ul className="text-xs grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1.5">
+                    {marchBalanceSheet.assets.map((a) => (
+                      <li key={a.name} className="flex justify-between gap-2">
+                        <span className="text-muted-foreground truncate">{a.name}</span>
+                        <span className="tabular-nums text-foreground shrink-0">{formatAED(a.amount)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="flex justify-between gap-2 pt-2 mt-3 border-t border-border/40 font-bold text-xs">
+                    <span className="text-foreground">Total Assets</span>
+                    <span className="tabular-nums text-primary">{formatAED(marchBalanceSheet.totals.assets)}</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Liabilities split + Key Ratios */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                <Card className="border-border/50 bg-card/80">
+                  <CardHeader className="pb-2"><CardTitle className="text-sm font-serif text-foreground">Bank Loans & Investor Balances</CardTitle></CardHeader>
+                  <CardContent>
+                    <ul className="text-xs space-y-1.5">
+                      {loansAndInvestors.map((l) => (
+                        <li key={l.name} className="flex justify-between gap-2">
+                          <span className="text-muted-foreground truncate">{l.name}</span>
+                          <span className={`tabular-nums shrink-0 ${l.amount < 0 ? "text-loss" : "text-foreground"}`}>{formatAED(l.amount)}</span>
+                        </li>
+                      ))}
+                      <li className="flex justify-between gap-2 pt-2 mt-2 border-t border-border/40 font-bold">
+                        <span className="text-foreground">Subtotal</span>
+                        <span className="tabular-nums text-foreground">{formatAED(sumLoans)}</span>
+                      </li>
+                    </ul>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-border/50 bg-card/80">
+                  <CardHeader className="pb-2"><CardTitle className="text-sm font-serif text-foreground">Other Liabilities & Equity</CardTitle></CardHeader>
+                  <CardContent>
+                    <ul className="text-xs space-y-1.5">
+                      {otherLiabs.map((l) => (
+                        <li key={l.name} className="flex justify-between gap-2">
+                          <span className="text-muted-foreground truncate">{l.name}</span>
+                          <span className={`tabular-nums shrink-0 ${l.amount < 0 ? "text-loss" : "text-foreground"}`}>{formatAED(l.amount)}</span>
+                        </li>
+                      ))}
+                      <li className="flex justify-between gap-2 pt-2 mt-2 border-t border-border/40 font-bold">
+                        <span className="text-foreground">Subtotal</span>
+                        <span className="tabular-nums text-foreground">{formatAED(sumOther)}</span>
+                      </li>
+                      <li className="flex justify-between gap-2 pt-2 mt-1 border-t-2 border-border/60 font-bold text-sm">
+                        <span className="text-foreground">Total Liabilities</span>
+                        <span className="tabular-nums text-primary">{formatAED(marchBalanceSheet.totals.liabilities)}</span>
+                      </li>
+                    </ul>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-border/50 bg-card/80">
+                  <CardHeader className="pb-2"><CardTitle className="text-sm font-serif text-foreground">Key Ratios</CardTitle></CardHeader>
+                  <CardContent className="space-y-3 text-xs">
+                    <div className="flex justify-between"><span className="text-muted-foreground">Current Ratio</span><span className="tabular-nums font-semibold text-success">3.53x ✅</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Debt-to-Equity</span><span className="tabular-nums font-semibold text-loss">{(grandTotalLoans / Math.max(totalEquity, 1)).toFixed(1)}x 🔴</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Total Equity</span><span className="tabular-nums font-semibold text-foreground">{formatAED(totalEquity)}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Accumulated Loss</span><span className="tabular-nums font-semibold text-loss">{formatAED(-169645)}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Capital Account</span><span className="tabular-nums font-semibold text-foreground">{formatAED(300000)}</span></div>
+                    <div className="pt-2 mt-2 border-t border-border/40">
+                      <div className="flex justify-between items-start gap-2">
+                        <span className="text-muted-foreground">Total AR to Revenue</span>
+                        <span className="tabular-nums font-semibold text-amber-500">1.77x ⚠️</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-1 leading-snug">AED 436K AR vs AED 246K monthly revenue — collecting takes nearly 2 months</p>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </>
+          );
+        })()}
+
 
         {/* Intercompany note */}
         <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-3 text-xs text-foreground">
