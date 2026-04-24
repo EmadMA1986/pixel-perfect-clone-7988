@@ -44,6 +44,7 @@ import {
   ComposedChart,
   ReferenceLine,
   Cell as BarCell,
+  LabelList,
 } from "recharts";
 import {
   monthlyPL,
