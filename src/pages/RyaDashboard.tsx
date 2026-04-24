@@ -1,164 +1,88 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Gem, TrendingUp, DollarSign, Wallet, Scale, Filter, CalendarIcon, Building, Car, Activity, User, FileDown, Wrench, Briefcase } from "lucide-react";
+import {
+  Gem, TrendingUp, TrendingDown, DollarSign, Wallet, AlertTriangle,
+  Building, Car, Activity, Wrench, Briefcase, FileDown, ChevronDown, ChevronUp,
+  AlertCircle, CheckCircle2, Eye, Target, Zap, Coins, User,
+} from "lucide-react";
 import { generateRyaPdf } from "@/utils/generateRyaPdf";
-import { format, isValid } from "date-fns";
-import SummaryCard from "@/components/SummaryCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis } from "recharts";
-import { cn } from "@/lib/utils";
 import {
-  goldPurchases,
-  sales,
-  expenses,
-  salesDiscounts,
-  profitLoss,
-  brokerBalances,
-  goldInventory,
-  customerBalances,
-  supplierBalances,
-  goldCapital,
-  AED_TO_USD_RATE,
-  formatCurrency,
-  formatNumber,
+  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
+  LabelList, ReferenceLine, Cell, LineChart, Line, ComposedChart,
+} from "recharts";
+import {
+  sales, profitLoss, monthlyProfit, customerProfitAgg,
+  supplierPurchaseAgg, goldInventory, ahmadPosition,
+  AED_TO_USD_RATE, formatCurrency, formatNumber,
 } from "@/data/goldData";
-import ExecutiveSummary, { ExecMonthInput } from "@/components/ExecutiveSummary";
 
-const parseDate = (dateStr: string): Date | null => {
-  // Format: M/D/YY
-  const parts = dateStr.split("/");
-  if (parts.length !== 3) return null;
-  const [m, d, y] = parts.map(Number);
-  const fullYear = y < 50 ? 2000 + y : 1900 + y;
-  const date = new Date(fullYear, m - 1, d);
-  return isValid(date) ? date : null;
-};
+const fmt = (v: number) => formatCurrency(v, "USD");
+const pct = (v: number) => `${v.toFixed(1)}%`;
 
 const RyaDashboard = () => {
-  const [dateFrom, setDateFrom] = useState<Date | undefined>();
-  const [dateTo, setDateTo] = useState<Date | undefined>();
-  const [partyFilter, setPartyFilter] = useState<string>("all");
+  const [execOpen, setExecOpen] = useState(true);
   const [customerFilter, setCustomerFilter] = useState<string>("all");
 
-  // Get unique parties and customers
-  const parties = useMemo(() => [...new Set(goldPurchases.map((p) => p.party))].sort(), []);
+  // Selected month = latest with real activity (Mar-26)
+  const selectedIdx = monthlyProfit.findIndex((m) => m.month === "Mar-26");
+  const selected = monthlyProfit[selectedIdx];
+  const previous = monthlyProfit[selectedIdx - 1];
+
+  const profitDeltaPct = ((selected.profit - previous.profit) / previous.profit) * 100;
+  const salesDeltaPct = ((selected.sales - previous.sales) / previous.sales) * 100;
+  const qtyDeltaPct = ((selected.qtySold - previous.qtySold) / previous.qtySold) * 100;
+
+  const verdict =
+    profitDeltaPct < -20 ? "DECLINING" :
+    profitDeltaPct < 0 ? "WATCH" :
+    profitDeltaPct > 20 ? "STRONG" : "STABLE";
+
+  const verdictColor = verdict === "DECLINING" ? "destructive" :
+    verdict === "WATCH" ? "amber" : "success";
+
+  // Customer profit pct for analysis
+  const totalCustProfit = customerProfitAgg.reduce((s, c) => s + c.profit, 0);
+
+  // Filter sales by customer for tx log
   const customers = useMemo(() => [...new Set(sales.map((s) => s.customer))].sort(), []);
-
-  const isInDateRange = (dateStr: string) => {
-    if (!dateFrom && !dateTo) return true;
-    const d = parseDate(dateStr);
-    if (!d) return true;
-    if (dateFrom && d < dateFrom) return false;
-    if (dateTo && d > dateTo) return false;
-    return true;
-  };
-
-  // Filtered data
-  const filteredPurchases = useMemo(
-    () =>
-      goldPurchases.filter(
-        (p) => isInDateRange(p.date) && (partyFilter === "all" || p.party === partyFilter)
-      ),
-    [dateFrom, dateTo, partyFilter]
-  );
-
   const filteredSales = useMemo(
-    () =>
-      sales.filter(
-        (s) => isInDateRange(s.date) && (customerFilter === "all" || s.customer === customerFilter)
-      ),
-    [dateFrom, dateTo, customerFilter]
+    () => (customerFilter === "all" ? sales : sales.filter((s) => s.customer === customerFilter)).slice().reverse(),
+    [customerFilter]
   );
+  const totalRevenueLog = filteredSales.reduce((s, t) => s + t.amountUSD, 0);
+  const totalProfitLog = filteredSales.reduce((s, t) => s + t.profitUSD, 0);
+  const totalQtyLog = filteredSales.reduce((s, t) => s + t.qtyGrams, 0);
 
-  const filteredExpenses = useMemo(
-    () => expenses.filter((e) => isInDateRange(e.date)),
-    [dateFrom, dateTo]
-  );
+  // Avg sell rate Feb vs Mar
+  const febSales = sales.filter((s) => s.date.endsWith("/26") && s.date.startsWith("2/"));
+  const marSales = sales.filter((s) => s.date.startsWith("3/"));
+  const avgRate = (arr: typeof sales) =>
+    arr.reduce((s, t) => s + t.amountUSD, 0) / arr.reduce((s, t) => s + t.qtyGrams, 0);
+  const febAvgRate = avgRate(febSales);
+  const marAvgRate = avgRate(marSales);
 
-  const filteredDiscounts = useMemo(
-    () => salesDiscounts.filter((d) => isInDateRange(d.date)),
-    [dateFrom, dateTo]
-  );
+  // Bar coloring for trend
+  const trendColor = (m: string) =>
+    m === selected.month ? "hsl(43 74% 52%)" : "hsl(43 30% 35%)";
 
-  // Computed metrics from filtered data
-  const totalRevenue = filteredSales.reduce((s, p) => s + p.amountUSD, 0);
-  const totalCost = filteredSales.reduce((s, p) => s + p.costUSD, 0);
-  const totalProfit = filteredSales.reduce((s, p) => s + p.profitUSD, 0);
-  const totalPurchaseQty = filteredPurchases.reduce((s, p) => s + p.qtyPure, 0);
-  const totalPurchaseAmount = filteredPurchases.reduce((s, p) => s + p.amountUSD, 0);
-  const totalExpenses = filteredExpenses.reduce((s, e) => s + e.amount, 0);
-  const totalDiscounts = filteredDiscounts.reduce((s, d) => s + d.amount, 0);
-  const totalSalesQty = filteredSales.reduce((s, p) => s + p.qtyGrams, 0);
-
-  // Client breakdown
-  const clientData = useMemo(() => {
-    const grouped = filteredSales.reduce<Record<string, { qty: number; revenue: number; cost: number; profit: number; count: number }>>((acc, s) => {
-      if (!acc[s.customer]) acc[s.customer] = { qty: 0, revenue: 0, cost: 0, profit: 0, count: 0 };
-      acc[s.customer].qty += s.qtyGrams;
-      acc[s.customer].revenue += s.amountUSD;
-      acc[s.customer].cost += s.costUSD;
-      acc[s.customer].profit += s.profitUSD;
-      acc[s.customer].count += 1;
-      return acc;
-    }, {});
-    return Object.entries(grouped)
-      .map(([name, v]) => ({ name, ...v }))
-      .sort((a, b) => b.revenue - a.revenue);
-  }, [filteredSales]);
-
-  // Expense breakdown
-  const expenseData = useMemo(() => {
-    const grouped = filteredExpenses.reduce<Record<string, number>>((acc, e) => {
-      acc[e.category] = (acc[e.category] || 0) + e.amount;
-      return acc;
-    }, {});
-    return Object.entries(grouped)
-      .map(([name, value]) => ({ name, value: Math.round(value * 100) / 100 }))
-      .sort((a, b) => b.value - a.value);
-  }, [filteredExpenses]);
-
-  // Supplier breakdown
-  const supplierData = useMemo(() => {
-    const grouped = filteredPurchases.reduce<Record<string, { qty: number; amount: number; count: number }>>((acc, p) => {
-      if (!acc[p.party]) acc[p.party] = { qty: 0, amount: 0, count: 0 };
-      acc[p.party].qty += p.qtyPure;
-      acc[p.party].amount += p.amountUSD;
-      acc[p.party].count += 1;
-      return acc;
-    }, {});
-    return Object.entries(grouped)
-      .map(([name, v]) => ({ name, ...v }))
-      .sort((a, b) => b.amount - a.amount);
-  }, [filteredPurchases]);
-
-  const pieColors = [
-    "hsl(43, 74%, 52%)",
-    "hsl(43, 60%, 40%)",
-    "hsl(200, 50%, 45%)",
-    "hsl(160, 50%, 40%)",
-    "hsl(280, 40%, 50%)",
-    "hsl(20, 60%, 50%)",
-    "hsl(43, 40%, 30%)",
-    "hsl(0, 50%, 50%)",
+  // Expense breakdown (from profitLoss admin + hedge)
+  const expenseBreakdown = [
+    { name: "Hedge Expenses", value: profitLoss.hedgeExpenses, flag: true },
+    { name: "Transport", value: profitLoss.transport },
+    { name: "Other Expenses", value: profitLoss.otherExp },
+    { name: "Bonus", value: profitLoss.bonus },
+    { name: "Bengali Conversion", value: profitLoss.bengaliConversion },
+    { name: "JLN Shop Setup", value: profitLoss.jlnShopSetup },
+    { name: "Labor", value: profitLoss.labor },
+    { name: "Hotel", value: profitLoss.hotel },
+    { name: "Tax+Bonus", value: profitLoss.taxBonus },
   ];
-
-  const clearFilters = () => {
-    setDateFrom(undefined);
-    setDateTo(undefined);
-    setPartyFilter("all");
-    setCustomerFilter("all");
-  };
-
-
-   const hasFilters = dateFrom || dateTo || partyFilter !== "all" || customerFilter !== "all";
-   const isClientView = customerFilter !== "all";
+  const totalOpex = expenseBreakdown.reduce((s, e) => s + e.value, 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -171,859 +95,487 @@ const RyaDashboard = () => {
             </div>
             <div>
               <h1 className="text-xl font-serif font-bold text-foreground tracking-tight">RYA Gold</h1>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Advanced Dashboard</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Trading Dashboard · Ahmad 100% Owner</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Link to="/otc">
-              <Button variant="outline" size="sm" className="text-xs gap-1.5">
-                <Building className="h-3.5 w-3.5" />
-                OTC
-              </Button>
-            </Link>
-            <Link to="/mk-autos">
-              <Button variant="outline" size="sm" className="text-xs gap-1.5">
-                <Car className="h-3.5 w-3.5" />
-                MK Autos
-              </Button>
-            </Link>
-            <Link to="/mkx">
-              <Button variant="outline" size="sm" className="text-xs gap-1.5">
-                <Activity className="h-3.5 w-3.5" />
-                MKX
-              </Button>
-            </Link>
-            <Link to="/garage">
-              <Button variant="outline" size="sm" className="text-xs gap-1.5">
-                <Wrench className="h-3.5 w-3.5" />
-                MK Garage
-              </Button>
-            </Link>
-            <Link to="/portfolio">
-              <Button variant="outline" size="sm" className="text-xs gap-1.5">
-                <Briefcase className="h-3.5 w-3.5" />
-                Portfolio
-              </Button>
-            </Link>
-            <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={generateRyaPdf}>
-              <FileDown className="h-3.5 w-3.5" />
-              Export PDF
-            </Button>
-            <p className="text-xs text-muted-foreground hidden sm:block">Last updated: Mar 18, 2026</p>
+          <div className="flex items-center gap-2">
+            <Link to="/otc"><Button variant="outline" size="sm" className="text-xs gap-1.5"><Building className="h-3.5 w-3.5" />OTC</Button></Link>
+            <Link to="/mk-autos"><Button variant="outline" size="sm" className="text-xs gap-1.5"><Car className="h-3.5 w-3.5" />MK Autos</Button></Link>
+            <Link to="/mkx"><Button variant="outline" size="sm" className="text-xs gap-1.5"><Activity className="h-3.5 w-3.5" />MKX</Button></Link>
+            <Link to="/garage"><Button variant="outline" size="sm" className="text-xs gap-1.5"><Wrench className="h-3.5 w-3.5" />Garage</Button></Link>
+            <Link to="/portfolio"><Button variant="outline" size="sm" className="text-xs gap-1.5"><Briefcase className="h-3.5 w-3.5" />Portfolio</Button></Link>
+            <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={generateRyaPdf}><FileDown className="h-3.5 w-3.5" />PDF</Button>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-6">
-        {/* === Executive Summary (cumulative — single period) === */}
-        {!isClientView && (
-          <ExecutiveSummary
-            businessName="RYA Gold Trading"
-            format={(v) => formatCurrency(v, "USD")}
-            history={[{
-              month: "Cumulative",
-              revenue: profitLoss.sales,
-              costs: profitLoss.costOfSales + profitLoss.meltingLoss + profitLoss.hedgeExpenses + profitLoss.totalAdminExpenses + profitLoss.salesDiscount,
-              grossProfit: profitLoss.grossProfit,
-              netProfit: profitLoss.netProfit,
-            }]}
-            reasons={{
-              costsContext: "COGS + melting loss + hedge + admin + discounts",
-            }}
-          />
-        )}
 
-        {/* Capital Position */}
-        {!isClientView && (
-          <Card className="border-border/50 bg-gradient-to-r from-primary/10 to-gold-dark/5 backdrop-blur-sm">
-            <CardContent className="p-5">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <User className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">Capital Position</p>
-                  <p className="text-[10px] text-muted-foreground">Calculated from AR + Brokers + Gold − Net Profit</p>
-                </div>
+        {/* SECTION 1 — Verdict Banner */}
+        <Card className={`border-2 ${verdict === "DECLINING" ? "border-destructive bg-destructive/5" : "border-primary bg-primary/5"}`}>
+          <CardContent className="p-5 flex items-center gap-4">
+            <div className={`h-12 w-12 rounded-lg flex items-center justify-center ${verdict === "DECLINING" ? "bg-destructive/15" : "bg-primary/15"}`}>
+              {verdict === "DECLINING" ? <TrendingDown className="h-6 w-6 text-destructive" /> : <TrendingUp className="h-6 w-6 text-primary" />}
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-1">
+                <Badge variant={verdict === "DECLINING" ? "destructive" : "default"} className="text-sm px-3 py-1 font-bold">{verdict}</Badge>
+                <span className="text-xs text-muted-foreground uppercase tracking-wider">March 2026 vs February 2026</span>
               </div>
-
-              {/* Line 1: Current Assets Breakdown */}
-              <div className="flex flex-wrap items-center gap-6 mb-3 pb-3 border-b border-border/30">
-                <div>
-                  <p className="text-xs text-muted-foreground">Brokers (PY + ZHOU)</p>
-                  <p className="text-lg font-bold font-serif text-foreground">{formatCurrency(goldCapital.totalBrokers)}</p>
-                </div>
-                <span className="text-muted-foreground text-lg">+</span>
-                <div>
-                  <p className="text-xs text-muted-foreground">Accounts Receivable</p>
-                  <p className="text-lg font-bold font-serif text-foreground">{formatCurrency(goldCapital.totalAR_USD)}</p>
-                </div>
-                <span className="text-muted-foreground text-lg">+</span>
-                <div>
-                  <p className="text-xs text-muted-foreground">Gold Inventory</p>
-                  <p className="text-lg font-bold font-serif text-foreground">{formatCurrency(goldCapital.goldInventoryUSD)}</p>
-                </div>
-                <span className="text-muted-foreground text-lg">=</span>
-                <div>
-                  <p className="text-xs text-muted-foreground font-semibold">Total Position</p>
-                  <p className="text-lg font-bold font-serif text-success">{formatCurrency(goldCapital.totalCurrentPosition)}</p>
-                </div>
-              </div>
-
-              {/* Line 2: Initial Investment = Net Profit - Total Position */}
-              <div className="flex flex-wrap items-center gap-6">
-                <div>
-                  <p className="text-xs text-muted-foreground">Net Profit</p>
-                  <p className="text-lg font-bold font-serif text-success">{formatCurrency(goldCapital.netProfit)}</p>
-                </div>
-                <span className="text-muted-foreground text-lg">−</span>
-                <div>
-                  <p className="text-xs text-muted-foreground">Total Position</p>
-                  <p className="text-lg font-bold font-serif text-foreground">{formatCurrency(goldCapital.totalCurrentPosition)}</p>
-                </div>
-                <span className="text-muted-foreground text-lg">=</span>
-                <div>
-                  <p className="text-xs text-muted-foreground font-semibold">Initial Investment</p>
-                  <p className="text-xl font-bold font-serif text-primary">
-                    {formatCurrency(Math.abs(goldCapital.initialCapital))}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Filters Bar */}
-        <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-          <CardContent className="p-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <Filter className="h-4 w-4" />
-                Filters
-              </div>
-
-              {/* Quick Month Preset */}
-              <Select value="custom" onValueChange={(v) => {
-                if (v === "custom") return;
-                if (v === "all") { setDateFrom(undefined); setDateTo(undefined); return; }
-                const [monthStr, yearStr] = v.split("-");
-                const monthMap: Record<string, number> = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
-                const year = 2000 + parseInt(yearStr);
-                const month = monthMap[monthStr];
-                const from = new Date(year, month, 1);
-                const to = new Date(year, month + 1, 0);
-                setDateFrom(from);
-                setDateTo(to);
-              }}>
-                <SelectTrigger className="w-[130px] h-8 text-xs">
-                  <SelectValue placeholder="Quick Month" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="custom">Quick Month</SelectItem>
-                  <SelectItem value="all">All Time</SelectItem>
-                  {["Oct-24","Nov-24","Dec-24","Jan-25","Feb-25","Mar-25","Apr-25","May-25","Jun-25","Jul-25","Aug-25","Sep-25","Oct-25","Nov-25","Dec-25","Jan-26","Feb-26","Mar-26"].map((m) => (
-                    <SelectItem key={m} value={m}>{m}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className={cn("text-xs gap-1.5", !dateFrom && "text-muted-foreground")}>
-                    <CalendarIcon className="h-3.5 w-3.5" />
-                    {dateFrom ? format(dateFrom, "MMM d, yyyy") : "From date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} initialFocus className={cn("p-3 pointer-events-auto")} />
-                </PopoverContent>
-              </Popover>
-
-              {/* Date To */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className={cn("text-xs gap-1.5", !dateTo && "text-muted-foreground")}>
-                    <CalendarIcon className="h-3.5 w-3.5" />
-                    {dateTo ? format(dateTo, "MMM d, yyyy") : "To date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={dateTo} onSelect={setDateTo} initialFocus className={cn("p-3 pointer-events-auto")} />
-                </PopoverContent>
-              </Popover>
-
-              {/* Supplier Filter */}
-              <Select value={partyFilter} onValueChange={setPartyFilter}>
-                <SelectTrigger className="w-[140px] h-8 text-xs">
-                  <SelectValue placeholder="Supplier" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Suppliers</SelectItem>
-                  {parties.map((p) => (
-                    <SelectItem key={p} value={p}>{p}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Customer Filter */}
-              <Select value={customerFilter} onValueChange={setCustomerFilter}>
-                <SelectTrigger className="w-[140px] h-8 text-xs">
-                  <SelectValue placeholder="Customer" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Customers</SelectItem>
-                  {customers.map((c) => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {hasFilters && (
-                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={clearFilters}>
-                  Clear all
-                </Button>
-              )}
-
-              {hasFilters && (
-                <Badge variant="secondary" className="text-[10px]">
-                  {filteredSales.length} sales · {filteredPurchases.length} purchases
-                </Badge>
-              )}
+              <h2 className="text-lg font-serif font-bold text-foreground">
+                Net profit {fmt(selected.profit)} vs Feb {fmt(previous.profit)} ({pct(profitDeltaPct)})
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Near-zero sales in March — only {formatNumber(selected.qtySold, 0)}g sold. UNIP HK absent. Activate large customer sales urgently — {formatNumber(goldInventory.balanceGrams, 0)}g worth {fmt(goldInventory.costOfRemainingUSD)} sitting unsold.
+              </p>
             </div>
           </CardContent>
         </Card>
 
-        {/* Summary Cards */}
-        {isClientView ? (
-          <>
-            <div className="mb-2">
-              <Badge variant="outline" className="text-sm px-3 py-1 border-primary/50 text-primary">
-                Viewing: {customerFilter}
-              </Badge>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <SummaryCard title="Client Profit" value={formatCurrency(totalProfit)} subtitle={`Margin ${totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : 0}%`} icon={TrendingUp} trend="up" />
-              <SummaryCard title="Revenue" value={formatCurrency(totalRevenue)} subtitle={`${filteredSales.length} sales`} icon={DollarSign} />
-              <SummaryCard title="Gold Sold" value={`${formatNumber(totalSalesQty, 2)}g`} subtitle={`Avg $${totalSalesQty > 0 ? formatNumber(totalRevenue / totalSalesQty, 2) : 0}/g`} icon={Scale} />
-              <SummaryCard title="Cost of Sales" value={formatCurrency(totalCost)} subtitle={`Avg $${totalSalesQty > 0 ? formatNumber(totalCost / totalSalesQty, 2) : 0}/g`} icon={Wallet} />
-            </div>
-          </>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-            <SummaryCard title="Net Profit" value={formatCurrency(profitLoss.netProfit)} subtitle={`Margin ${((profitLoss.operatingProfit / profitLoss.sales) * 100).toFixed(1)}%`} icon={TrendingUp} trend="up" />
-            <SummaryCard title="Revenue" value={formatCurrency(totalRevenue)} subtitle={`${formatNumber(totalSalesQty, 2)}g sold · ${filteredSales.length} sales`} icon={DollarSign} />
-            <SummaryCard title="Purchases" value={formatCurrency(totalPurchaseAmount)} subtitle={`${formatNumber(totalPurchaseQty, 0)}g bought · ${filteredPurchases.length} buys`} icon={Gem} />
-            <SummaryCard title="Expenses" value={formatCurrency(totalExpenses)} subtitle={`${filteredExpenses.length} items`} icon={Wallet} />
-            <SummaryCard title="Discounts" value={formatCurrency(totalDiscounts)} icon={DollarSign} />
-            <SummaryCard title="Accts Receivable" value={formatCurrency(goldCapital.totalAR_USD)} subtitle={`AED ${formatNumber(goldCapital.arMotiAED + goldCapital.arAlMasaAED, 2)}`} icon={DollarSign} trend="up" />
-            <SummaryCard title="Accts Payable" value={formatCurrency(0)} subtitle="All settled" icon={Wallet} />
-            <SummaryCard title="Broker Balance" value={formatCurrency(goldCapital.totalBrokers)} subtitle={`PY $${formatNumber(goldCapital.brokerPY, 0)} · ZHOU $${formatNumber(goldCapital.brokerZHOU, 0)} + AED ${formatNumber(goldCapital.brokerZHOUAED, 0)}`} icon={Building} />
-            <SummaryCard title="Gold Inventory" value={goldInventory.balanceGrams > 0 ? `${formatNumber(goldInventory.balanceGrams, 3)}g` : "0g"} subtitle={goldInventory.balanceGrams > 0 ? `${formatCurrency(goldInventory.costOfRemainingUSD)}` : "Fully consumed"} icon={Gem} />
-          </div>
-        )}
-
-        {/* Operational Insights */}
-        {!isClientView && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* Client Concentration Risk */}
-            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Client Concentration</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {clientData.slice(0, 5).map((c) => {
-                  const pct = totalRevenue > 0 ? (c.revenue / totalRevenue) * 100 : 0;
-                  return (
-                    <div key={c.name} className="space-y-1">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">{c.name}</span>
-                        <span className={`font-medium ${pct > 40 ? "text-loss" : "text-foreground"}`}>{pct.toFixed(1)}%</span>
-                      </div>
-                      <div className="h-1.5 rounded-full bg-muted/50 overflow-hidden">
-                        <div className={`h-full rounded-full ${pct > 40 ? "bg-loss" : "bg-primary"}`} style={{ width: `${Math.min(pct, 100)}%` }} />
-                      </div>
-                    </div>
-                  );
-                })}
-                {clientData.length > 0 && clientData[0].revenue / totalRevenue > 0.4 && (
-                  <p className="text-[10px] text-loss mt-2">⚠ Top client &gt; 40% of revenue — concentration risk</p>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Broker Exposure */}
-            <Card className={`border-border/50 backdrop-blur-sm ${goldCapital.brokerZHOU > 300000 ? "bg-amber-500/5 border-amber-500/20" : "bg-card/80"}`}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Broker Balance Exposure</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs p-2 rounded bg-muted/30">
-                    <span className="text-muted-foreground">PY Broker</span>
-                    <span className="font-bold text-foreground">{formatCurrency(brokerBalances.brokerPY.usd)}</span>
+        {/* SECTION 2 — 4 Intelligence Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[
+            { icon: TrendingDown, title: "Performance", value: "DECLINING", sub: "vs Feb-26", tone: "destructive" },
+            { icon: AlertCircle, title: "Main Issue", value: "Only 1 sale in March", sub: "412g to Moti", tone: "destructive" },
+            { icon: Eye, title: "Main Driver", value: "UNIP HK absent", sub: "36.7% of all profit · zero activity", tone: "amber" },
+            { icon: Target, title: "Action", value: "Activate UNIP HK", sub: "Convert 5,907g inventory urgently", tone: "primary" },
+          ].map((c, i) => {
+            const Icon = c.icon;
+            const tone = c.tone === "destructive" ? "border-destructive/40 bg-destructive/5"
+              : c.tone === "amber" ? "border-amber-500/40 bg-amber-500/5"
+              : "border-primary/40 bg-primary/5";
+            const iconCol = c.tone === "destructive" ? "text-destructive"
+              : c.tone === "amber" ? "text-amber-500" : "text-primary";
+            return (
+              <Card key={i} className={`border ${tone}`}>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Icon className={`h-4 w-4 ${iconCol}`} />
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{c.title}</p>
                   </div>
-                  <div className="flex justify-between text-xs p-2 rounded bg-muted/30">
-                    <span className="text-muted-foreground">ZHOU (USD)</span>
-                    <span className="font-bold text-foreground">{formatCurrency(brokerBalances.brokerZHOU.usd)}</span>
-                  </div>
-                  <div className="flex justify-between text-xs p-2 rounded bg-muted/30">
-                    <span className="text-muted-foreground">ZHOU (AED)</span>
-                    <span className="font-bold text-foreground">{formatCurrency(brokerBalances.brokerZHOU.aed, "AED")}</span>
-                  </div>
-                </div>
-                <div className="pt-2 border-t border-border/30">
-                  <p className="text-xs text-muted-foreground">Total Broker Exposure</p>
-                  <p className="text-xl font-bold font-serif text-foreground">{formatCurrency(goldCapital.totalBrokers)}</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {((goldCapital.totalBrokers / goldCapital.totalCurrentPosition) * 100).toFixed(0)}% of total position at brokers
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Profit Efficiency */}
-            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Profit Efficiency</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="p-2 rounded bg-muted/30 text-xs">
-                    <p className="text-muted-foreground">Avg Profit/Sale</p>
-                    <p className="text-lg font-bold font-serif text-success">{formatCurrency(filteredSales.length > 0 ? totalProfit / filteredSales.length : 0)}</p>
-                  </div>
-                  <div className="p-2 rounded bg-muted/30 text-xs">
-                    <p className="text-muted-foreground">Avg Profit/Gram</p>
-                    <p className="text-lg font-bold font-serif text-success">{formatCurrency(totalSalesQty > 0 ? totalProfit / totalSalesQty : 0)}</p>
-                  </div>
-                  <div className="p-2 rounded bg-muted/30 text-xs">
-                    <p className="text-muted-foreground">Profit Margin</p>
-                    <p className="text-lg font-bold font-serif text-foreground">{totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(2) : 0}%</p>
-                  </div>
-                  <div className="p-2 rounded bg-muted/30 text-xs">
-                    <p className="text-muted-foreground">Total Melting Loss</p>
-                    <p className="text-lg font-bold font-serif text-loss">{formatNumber(goldInventory.totalMeltingLossGrams, 3)}g</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Charts Row */}
-        <div className={`grid grid-cols-1 ${isClientView ? "" : "lg:grid-cols-2"} gap-6`}>
-          {/* Profit by Sale */}
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-serif text-foreground">
-                {isClientView ? `${customerFilter} — Profit by Sale` : "Profit by Sale"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={filteredSales.map((s) => ({ name: s.date, profit: Math.round(s.profitUSD), customer: s.customer }))} margin={{ top: 5, right: 5, bottom: 20, left: 5 }}>
-                  <XAxis dataKey="name" tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} angle={-45} textAnchor="end" axisLine={{ stroke: "hsl(220 14% 18%)" }} tickLine={false} />
-                  <YAxis tick={{ fill: "hsl(220 10% 50%)", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
-                  <Tooltip contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }} formatter={(value: number) => [`$${value.toLocaleString()}`, "Profit"]} labelFormatter={(label) => `Date: ${label}`} />
-                  <Bar dataKey="profit" radius={[4, 4, 0, 0]}>
-                    {filteredSales.map((_, i) => (
-                      <Cell key={i} fill={`hsl(43 74% ${42 + (i % 4) * 5}%)`} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          {/* Expense Breakdown Pie - hidden in client view */}
-          {!isClientView && (
-            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-serif text-foreground">Expense Breakdown</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col lg:flex-row items-center gap-4">
-                  <ResponsiveContainer width="100%" height={220}>
-                    <PieChart>
-                      <Pie data={expenseData} cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={3} dataKey="value" stroke="none">
-                        {expenseData.map((_, i) => (
-                          <Cell key={i} fill={pieColors[i % pieColors.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip contentStyle={{ backgroundColor: "hsl(220 16% 11%)", border: "1px solid hsl(220 14% 18%)", borderRadius: "8px", color: "hsl(40 20% 90%)", fontSize: 12 }} formatter={(value: number) => [formatCurrency(value), ""]} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="space-y-2 w-full lg:w-auto">
-                    {expenseData.map((item, i) => (
-                      <div key={item.name} className="flex items-center gap-2 text-xs">
-                        <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: pieColors[i % pieColors.length] }} />
-                        <span className="text-muted-foreground whitespace-nowrap">{item.name}</span>
-                        {item.name === "Melting Loss" && (
-                          <span className="text-muted-foreground tabular-nums">({formatNumber(goldInventory.totalMeltingLossGrams, 3)}g)</span>
-                        )}
-                        <span className="ml-auto tabular-nums text-foreground font-medium">{formatCurrency(item.value)}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* Tabs: Clients / Suppliers / Brokers */}
-        <Tabs defaultValue="balances" className="space-y-4">
-          <TabsList className="bg-secondary/50">
-            <TabsTrigger value="balances">Balances</TabsTrigger>
-            <TabsTrigger value="clients">Clients</TabsTrigger>
-            <TabsTrigger value="suppliers">Suppliers</TabsTrigger>
-            <TabsTrigger value="brokers">Brokers</TabsTrigger>
-          </TabsList>
-
-          {/* Customer & Supplier Balances */}
-          <TabsContent value="balances">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg font-serif text-foreground">Customer Balances (USD)</CardTitle>
-                  <p className="text-xs text-muted-foreground">AED converted at rate {AED_TO_USD_RATE} • (Cr) = Credit (client owes us)</p>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="border-border/50 hover:bg-transparent">
-                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">Customer</TableHead>
-                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">AED Balance</TableHead>
-                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">USD Balance</TableHead>
-                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Total (USD)</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {customerBalances.map((c) => (
-                          <TableRow key={c.name} className="border-border/30 hover:bg-secondary/30">
-                            <TableCell className="text-sm font-medium text-foreground">{c.name}</TableCell>
-                            <TableCell className={`text-sm tabular-nums text-right ${c.balanceAED > 0 ? "text-muted-foreground" : c.balanceAED < 0 ? "text-destructive" : ""}`}>
-                              {c.balanceAED !== 0 ? `AED ${formatNumber(Math.abs(c.balanceAED))}${c.balanceAED < 0 ? " (Cr)" : ""}` : "—"}
-                            </TableCell>
-                            <TableCell className="text-sm tabular-nums text-right text-foreground">
-                              {c.balanceUSD > 0 ? formatCurrency(c.balanceUSD) : "—"}
-                            </TableCell>
-                            <TableCell className={`text-sm tabular-nums text-right font-medium ${c.totalUSD > 0 ? "text-success" : c.totalUSD < 0 ? "text-destructive" : "text-muted-foreground"}`}>
-                              {c.totalUSD !== 0 ? formatCurrency(c.totalUSD) : "$0.00"}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                        <TableRow className="border-border/50 bg-secondary/30 font-semibold">
-                          <TableCell className="text-sm text-foreground">Total Outstanding</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">
-                            AED {formatNumber(customerBalances.reduce((s, c) => s + c.balanceAED, 0))}
-                          </TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">
-                            {formatCurrency(customerBalances.reduce((s, c) => s + c.balanceUSD, 0))}
-                          </TableCell>
-                          <TableCell className={`text-sm tabular-nums text-right font-bold ${customerBalances.reduce((s, c) => s + c.totalUSD, 0) >= 0 ? "text-success" : "text-destructive"}`}>
-                            {formatCurrency(customerBalances.reduce((s, c) => s + c.totalUSD, 0))}
-                          </TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </div>
+                  <p className="text-base font-bold text-foreground">{c.value}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{c.sub}</p>
                 </CardContent>
               </Card>
-
-              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg font-serif text-foreground">Supplier Balances (USD)</CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="border-border/50 hover:bg-transparent">
-                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">Supplier</TableHead>
-                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">AED Balance</TableHead>
-                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">USD Balance</TableHead>
-                          <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Total (USD)</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {supplierBalances.map((s) => (
-                          <TableRow key={s.name} className="border-border/30 hover:bg-secondary/30">
-                            <TableCell className="text-sm font-medium text-foreground">{s.name}</TableCell>
-                            <TableCell className="text-sm tabular-nums text-right text-muted-foreground">—</TableCell>
-                            <TableCell className="text-sm tabular-nums text-right text-foreground">$0.00</TableCell>
-                            <TableCell className="text-sm tabular-nums text-right text-muted-foreground">$0.00</TableCell>
-                          </TableRow>
-                        ))}
-                        <TableRow className="border-border/50 bg-secondary/30 font-semibold">
-                          <TableCell className="text-sm text-foreground">Total</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">—</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">$0.00</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">$0.00</TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="clients">
-            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-serif text-foreground">Client Breakdown</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-border/50 hover:bg-transparent">
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">Client</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Deals</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Qty (g)</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Revenue</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Cost</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Profit</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Margin</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {clientData.map((row) => (
-                        <TableRow key={row.name} className="border-border/30 hover:bg-secondary/30">
-                          <TableCell className="text-sm font-medium text-foreground">{row.name}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{row.count}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatNumber(row.qty, 2)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatCurrency(row.revenue)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatCurrency(row.cost)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-success font-medium">{formatCurrency(row.profit)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{row.revenue > 0 ? ((row.profit / row.revenue) * 100).toFixed(1) : 0}%</TableCell>
-                        </TableRow>
-                      ))}
-                      {clientData.length > 0 && (
-                        <TableRow className="border-border/50 bg-secondary/30 font-semibold">
-                          <TableCell className="text-sm text-foreground">Total</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">{clientData.reduce((s, d) => s + d.count, 0)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatNumber(clientData.reduce((s, d) => s + d.qty, 0), 2)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatCurrency(totalRevenue)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatCurrency(totalCost)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-success">{formatCurrency(totalProfit)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : 0}%</TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="suppliers">
-            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-serif text-foreground">Supplier Breakdown</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-border/50 hover:bg-transparent">
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">Supplier</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Purchases</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Pure Qty (g)</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Amount (USD)</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Avg Rate</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {supplierData.map((row) => (
-                        <TableRow key={row.name} className="border-border/30 hover:bg-secondary/30">
-                          <TableCell className="text-sm font-medium text-foreground">{row.name}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{row.count}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatNumber(row.qty, 2)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatCurrency(row.amount)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">${row.qty > 0 ? formatNumber(row.amount / row.qty, 2) : 0}/g</TableCell>
-                        </TableRow>
-                      ))}
-                      {supplierData.length > 0 && (
-                        <TableRow className="border-border/50 bg-secondary/30 font-semibold">
-                          <TableCell className="text-sm text-foreground">Total</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">{supplierData.reduce((s, d) => s + d.count, 0)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatNumber(totalPurchaseQty, 2)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatCurrency(totalPurchaseAmount)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">${totalPurchaseQty > 0 ? formatNumber(totalPurchaseAmount / totalPurchaseQty, 2) : 0}/g</TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="brokers">
-            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-serif text-foreground">Broker Balances</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {[
-                  { name: "Broker PY", usd: brokerBalances.brokerPY.usd, aed: brokerBalances.brokerPY.aed },
-                  { name: "Broker ZHOU", usd: brokerBalances.brokerZHOU.usd, aed: brokerBalances.brokerZHOU.aed },
-                ].map((b) => (
-                  <div key={b.name} className="flex items-center justify-between py-3 px-4 rounded-lg bg-secondary/30">
-                    <span className="text-sm font-medium text-foreground">{b.name}</span>
-                    <div className="text-right">
-                      <p className="text-sm tabular-nums font-semibold text-foreground">{formatCurrency(b.usd)}</p>
-                      {b.aed > 0 && <p className="text-xs tabular-nums text-muted-foreground">{formatCurrency(b.aed, "AED")}</p>}
-                    </div>
-                  </div>
-                ))}
-                <div className="flex items-center justify-between py-3 px-4 rounded-lg bg-primary/10 border border-primary/20">
-                  <span className="text-sm font-serif font-semibold text-primary">Total (USD equiv)</span>
-                  <p className="text-sm tabular-nums font-bold text-primary">{formatCurrency(goldCapital.totalBrokers)}</p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-
-        {/* Sales Table & P&L */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* P&L */}
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-serif text-foreground">Profit & Loss</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-1.5">
-              {[
-                { label: "Sales Revenue", value: profitLoss.sales, indent: false },
-                { label: "Sales Discount", value: -profitLoss.salesDiscount, indent: true },
-                { label: "Cost of Sales", value: -profitLoss.costOfSales, indent: true },
-                { label: "Melting Loss", value: -profitLoss.meltingLoss, indent: true },
-                { label: "Hedge Expenses", value: -profitLoss.hedgeExpenses, indent: true },
-                { label: "Gross Profit", value: profitLoss.grossProfit, indent: false, highlight: true },
-                { label: "Transport", value: -profitLoss.transport, indent: true },
-                { label: "Labor", value: -profitLoss.labor, indent: true },
-                { label: "Hotel", value: -profitLoss.hotel, indent: true },
-                { label: "Bonus", value: -profitLoss.bonus, indent: true },
-                { label: "Tax + Bonus", value: -profitLoss.taxBonus, indent: true },
-                { label: "Other Expenses", value: -profitLoss.otherExp, indent: true },
-                { label: "Operating Profit", value: profitLoss.operatingProfit, indent: false, highlight: true },
-                { label: "Fx Gain", value: profitLoss.fxGain, indent: true },
-                { label: "Fx Loss", value: -profitLoss.fxLoss, indent: true },
-                { label: "Net Profit", value: profitLoss.netProfit, indent: false, highlight: true, gold: true },
-              ].map((item, i) => (
-                <div
-                  key={i}
-                  className={`flex items-center justify-between py-1.5 px-2 rounded-md text-sm ${item.highlight ? "bg-secondary/50 font-semibold" : ""} ${item.gold ? "bg-primary/10 border border-primary/20" : ""} ${item.indent ? "pl-6" : ""}`}
-                >
-                  <span className={`${item.highlight ? "text-foreground" : "text-muted-foreground"} ${item.gold ? "text-primary font-serif text-base" : ""}`}>{item.label}</span>
-                  <span className={`tabular-nums ${item.gold ? "text-primary font-serif text-base" : item.value >= 0 ? "text-foreground" : "text-loss"}`}>{formatCurrency(Math.abs(item.value))}</span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Sales Table */}
-          <div className="lg:col-span-2">
-            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-serif text-foreground">
-                  Sales Transactions
-                  <span className="text-xs font-sans text-muted-foreground ml-2">({filteredSales.length})</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-border/50 hover:bg-transparent sticky top-0 bg-card">
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">Date</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider">Customer</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Qty (g)</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Rate $/g</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Amount</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Cost</TableHead>
-                        <TableHead className="text-xs text-muted-foreground uppercase tracking-wider text-right">Profit</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredSales.map((sale) => (
-                        <TableRow key={sale.transId} className="border-border/30 hover:bg-secondary/30">
-                          <TableCell className="text-sm text-muted-foreground">{sale.date}</TableCell>
-                          <TableCell className="text-sm font-medium text-foreground">{sale.customer}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatNumber(sale.qtyGrams, 2)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatNumber(sale.rateUSD, 3)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-foreground">{formatCurrency(sale.amountUSD)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-muted-foreground">{formatCurrency(sale.costUSD)}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-right text-success font-medium">{formatCurrency(sale.profitUSD)}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+            );
+          })}
         </div>
 
-        {/* Gold Inventory */}
-        <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+        {/* SECTION 3 — Critical Alerts */}
+        <Card className="border-destructive/40 bg-destructive/5">
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg font-serif text-foreground">Gold Inventory Status</CardTitle>
+            <CardTitle className="text-sm font-serif flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-4 w-4" /> Critical Alerts
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-4 rounded-lg bg-secondary/30 text-center">
-                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Balance</p>
-                <p className="text-2xl font-serif font-bold text-foreground">{goldInventory.balanceGrams > 0 ? `${formatNumber(goldInventory.balanceGrams, 3)}g` : "0g"}</p>
-              </div>
-              <div className="p-4 rounded-lg bg-secondary/30 text-center">
-                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Total Melting Loss</p>
-                <p className="text-2xl font-serif font-bold text-destructive">{formatNumber(goldInventory.totalMeltingLossGrams, 3)}g</p>
-              </div>
-              <div className="p-4 rounded-lg bg-secondary/30 text-center">
-                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Status</p>
-                <p className="text-2xl font-serif font-bold text-success">{goldInventory.balanceGrams > 0 ? "Active" : "Fully Consumed"}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Financial Ratios */}
-        {!isClientView && (
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-serif text-foreground">Financial Ratios</CardTitle>
-              <p className="text-xs text-muted-foreground">Key performance indicators</p>
-            </CardHeader>
-            <CardContent>
-              {(() => {
-                const grossMargin = ((profitLoss.grossProfit / profitLoss.sales) * 100);
-                const netMargin = ((profitLoss.netProfit / profitLoss.sales) * 100);
-                const operatingMargin = ((profitLoss.operatingProfit / profitLoss.sales) * 100);
-                const expenseRatio = ((profitLoss.totalAdminExpenses / profitLoss.sales) * 100);
-                const costOfSalesRatio = ((profitLoss.costOfSales / profitLoss.sales) * 100);
-                const hedgeRatio = ((profitLoss.hedgeExpenses / profitLoss.sales) * 100);
-                const discountRatio = ((profitLoss.salesDiscount / profitLoss.sales) * 100);
-                const avgSaleValue = totalRevenue / (filteredSales.length || 1);
-                const avgPurchaseValue = totalPurchaseAmount / (filteredPurchases.length || 1);
-                const totalGramsSold = filteredSales.reduce((s, p) => s + p.qtyGrams, 0);
-                const totalGramsBought = filteredPurchases.reduce((s, p) => s + p.qtyPure, 0);
-                const inventoryTurnover = totalGramsBought > 0 ? totalGramsSold / totalGramsBought : 0;
-                const profitPerGram = totalGramsSold > 0 ? totalProfit / totalGramsSold : 0;
-                const returnOnCapital = goldCapital.initialCapital !== 0 ? ((profitLoss.netProfit / Math.abs(goldCapital.initialCapital)) * 100) : 0;
-
-                const ratios = [
-                  { label: "Gross Profit Margin", value: `${grossMargin.toFixed(1)}%`, health: grossMargin > 10 ? "success" : grossMargin > 5 ? "warning" : "loss" },
-                  { label: "Net Profit Margin", value: `${netMargin.toFixed(1)}%`, health: netMargin > 8 ? "success" : netMargin > 3 ? "warning" : "loss" },
-                  { label: "Operating Margin", value: `${operatingMargin.toFixed(1)}%`, health: operatingMargin > 8 ? "success" : operatingMargin > 3 ? "warning" : "loss" },
-                  { label: "Cost of Sales Ratio", value: `${costOfSalesRatio.toFixed(1)}%`, health: costOfSalesRatio < 85 ? "success" : costOfSalesRatio < 92 ? "warning" : "loss" },
-                  { label: "Hedge Expense Ratio", value: `${hedgeRatio.toFixed(1)}%`, health: hedgeRatio < 3 ? "success" : hedgeRatio < 5 ? "warning" : "loss" },
-                  { label: "Admin Expense Ratio", value: `${expenseRatio.toFixed(1)}%`, health: expenseRatio < 2 ? "success" : expenseRatio < 5 ? "warning" : "loss" },
-                  { label: "Discount Rate", value: `${discountRatio.toFixed(2)}%`, health: discountRatio < 0.5 ? "success" : discountRatio < 1 ? "warning" : "loss" },
-                  { label: "Return on Capital", value: `${returnOnCapital.toFixed(0)}%`, health: returnOnCapital > 50 ? "success" : returnOnCapital > 20 ? "warning" : "loss" },
-                  { label: "Inventory Turnover", value: `${inventoryTurnover.toFixed(2)}x`, health: inventoryTurnover > 0.9 ? "success" : inventoryTurnover > 0.5 ? "warning" : "loss" },
-                  { label: "Profit per Gram", value: formatCurrency(profitPerGram), health: profitPerGram > 15 ? "success" : profitPerGram > 5 ? "warning" : "loss" },
-                  { label: "Avg Sale Value", value: formatCurrency(avgSaleValue), health: "neutral" as const },
-                  { label: "Avg Purchase Value", value: formatCurrency(avgPurchaseValue), health: "neutral" as const },
-                ];
-
-                return (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                    {ratios.map((r, i) => (
-                      <div key={i} className="p-3 rounded-lg bg-secondary/30 border border-border/30">
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{r.label}</p>
-                        <p className={`text-lg font-bold font-serif ${
-                          r.health === "success" ? "text-success" : r.health === "warning" ? "text-primary" : r.health === "loss" ? "text-destructive" : "text-foreground"
-                        }`}>{r.value}</p>
-                      </div>
-                    ))}
-                  </div>
-                );
-              })()}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Balance Sheet */}
-        <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg font-serif text-foreground">Balance Sheet</CardTitle>
-            <p className="text-xs text-muted-foreground">As of March 18, 2026 • All amounts in USD</p>
-          </CardHeader>
-          <CardContent className="space-y-1">
-            {/* Assets */}
-            <div className="py-2 px-3 bg-secondary/40 rounded-md">
-              <span className="text-sm font-semibold text-foreground">Assets</span>
-            </div>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
             {[
-              { label: "Broker ZHOU (USD)", value: goldCapital.brokerZHOU },
-              { label: "Broker ZHOU (AED → USD)", value: goldCapital.brokerZHOUAED / AED_TO_USD_RATE },
-              { label: "Broker PY", value: goldCapital.brokerPY },
-              { label: "Gold Inventory", value: goldCapital.goldInventoryUSD },
-              { label: "AR — Moti", value: goldCapital.arMotiAED / AED_TO_USD_RATE },
-              { label: "AR — AL MASA", value: goldCapital.arAlMasaAED / AED_TO_USD_RATE },
-            ].map((item, i) => (
-              <div key={i} className="flex justify-between py-1.5 px-3 pl-6 text-sm">
-                <span className="text-muted-foreground">{item.label}</span>
-                <span className="tabular-nums text-foreground">{formatCurrency(item.value)}</span>
+              { tone: "red", text: `March profit ${fmt(selected.profit)} — dropped ${pct(Math.abs(profitDeltaPct))} from February ${fmt(previous.profit)}` },
+              { tone: "red", text: `Gold inventory ${formatNumber(goldInventory.balanceGrams, 0)}g (${fmt(goldInventory.costOfRemainingUSD)} book value) — largest asset sitting unsold` },
+              { tone: "red", text: `Customer concentration: Top 2 (Moti + UNIP HK) = 93.7% of all profit` },
+              { tone: "amber", text: `Broker PY payable: ${fmt(266259)} — must be settled from future sales` },
+              { tone: "amber", text: `Hedge expenses ${fmt(profitLoss.hedgeExpenses)} = 64.5% of all operating costs` },
+              { tone: "amber", text: `Ahmad withdrawals ${fmt(20000)} — monitor cash position` },
+            ].map((a, i) => (
+              <div key={i} className={`flex items-start gap-2 p-2 rounded ${a.tone === "red" ? "bg-destructive/10" : "bg-amber-500/10"}`}>
+                <span>{a.tone === "red" ? "🔴" : "⚠️"}</span>
+                <span className="text-foreground">{a.text}</span>
               </div>
             ))}
-            <div className="flex justify-between py-2 px-3 bg-secondary/30 rounded-md font-semibold text-sm">
-              <span className="text-foreground">Total Assets</span>
-              <span className="tabular-nums text-foreground">{formatCurrency(goldCapital.totalCurrentPosition)}</span>
+          </CardContent>
+        </Card>
+
+        {/* SECTION 4 — Monthly Executive Summary (collapsible) */}
+        <Card className="border-border/50">
+          <CardHeader className="pb-3 cursor-pointer" onClick={() => setExecOpen(!execOpen)}>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-serif flex items-center gap-2">
+                <Activity className="h-4 w-4 text-primary" /> Monthly Executive Summary — {selected.month} vs {previous.month}
+              </CardTitle>
+              {execOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </div>
+          </CardHeader>
+          {execOpen && (
+            <CardContent className="space-y-4">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs">Metric</TableHead>
+                    <TableHead className="text-xs text-right">Feb-26</TableHead>
+                    <TableHead className="text-xs text-right">Mar-26</TableHead>
+                    <TableHead className="text-xs text-right">Change</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {[
+                    { label: "Sales", a: previous.sales, b: selected.sales, fmtFn: fmt, bad: true },
+                    { label: "Gross / Net Profit", a: previous.profit, b: selected.profit, fmtFn: fmt, bad: true },
+                    { label: "Gold Sold (g)", a: previous.qtySold, b: selected.qtySold, fmtFn: (v: number) => `${formatNumber(v, 0)}g`, bad: true },
+                    { label: "Gold Inventory (g)", a: 548, b: goldInventory.balanceGrams, fmtFn: (v: number) => `${formatNumber(v, 0)}g`, bad: true, building: true },
+                    { label: "Avg Sell Rate USD/g", a: febAvgRate, b: marAvgRate, fmtFn: (v: number) => `$${v.toFixed(2)}/g`, bad: false },
+                  ].map((r) => {
+                    const delta = ((r.b - r.a) / r.a) * 100;
+                    const arrow = r.b > r.a ? "▲" : "▼";
+                    const isGood = r.bad ? r.b > r.a && r.building === undefined ? false : !r.bad ? true : r.b > r.a : r.b > r.a;
+                    const goodColor = !r.bad && r.b > r.a;
+                    return (
+                      <TableRow key={r.label}>
+                        <TableCell className="text-xs font-medium">{r.label}</TableCell>
+                        <TableCell className="text-xs text-right font-mono">{r.fmtFn(r.a)}</TableCell>
+                        <TableCell className="text-xs text-right font-mono">{r.fmtFn(r.b)}</TableCell>
+                        <TableCell className={`text-xs text-right font-mono ${goodColor ? "text-success" : "text-destructive"}`}>
+                          {arrow} {Math.abs(delta).toFixed(1)}% {goodColor ? "🟢" : "🔴"}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+
+              <div className="p-3 bg-muted/30 rounded text-xs text-foreground leading-relaxed">
+                <strong>March 2026 narrative:</strong> March 2026 recorded only one sale — 412g to Moti at $163.8/g generating $10,418 profit.
+                February had 3 large sales totalling 10,394g and $294,195 profit. Meanwhile 7,350g was purchased in March building inventory to
+                5,907g worth $798,688 at book value. Urgent action needed to activate large customer sales.
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="p-3 rounded border border-success/30 bg-success/5">
+                  <p className="text-xs font-bold text-success mb-1">✅ Improved</p>
+                  <p className="text-[11px] text-foreground">Gold sell rate $164/g · New supplier HDRSP onboarded</p>
+                </div>
+                <div className="p-3 rounded border border-destructive/30 bg-destructive/5">
+                  <p className="text-xs font-bold text-destructive mb-1">🔴 Deteriorated</p>
+                  <p className="text-[11px] text-foreground">Sales -96% · Profit -96.5% · Inventory building · No UNIP HK sale</p>
+                </div>
+                <div className="p-3 rounded border border-amber-500/30 bg-amber-500/5">
+                  <p className="text-xs font-bold text-amber-500 mb-1">⚠️ Watch</p>
+                  <p className="text-[11px] text-foreground">5,907g = $798,688 book value · Broker PY $266K payable · Concentration 93.7%</p>
+                </div>
+              </div>
+            </CardContent>
+          )}
+        </Card>
+
+        {/* SECTION 5 — KPI Cards */}
+        <div>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-2">Trading Performance · Inception to Date</p>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <KpiCard label="Total Net Sales" value={fmt(profitLoss.netSales)} icon={DollarSign} />
+            <KpiCard label="Gross Profit" value={fmt(profitLoss.grossProfit)} sub={`${pct(profitLoss.grossMargin * 100)} margin`} icon={TrendingUp} />
+            <KpiCard label="Net Profit" value={fmt(profitLoss.netProfit)} sub={`${pct(profitLoss.netMargin * 100)} margin`} icon={Coins} tone="success" />
+            <KpiCard label="Gold Bought" value={`${formatNumber(goldInventory.totalPurchasedGrams, 0)}g`} icon={Gem} />
+            <KpiCard label="Gold Sold" value={`${formatNumber(goldInventory.totalSoldGrams, 0)}g`} icon={Zap} />
+          </div>
+        </div>
+
+        <div>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-2">Current Position</p>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <KpiCard label="Gold Inventory" value={`${formatNumber(goldInventory.balanceGrams, 0)}g`} sub={`Book ${fmt(goldInventory.costOfRemainingUSD)}`} icon={Gem} tone="amber" />
+            <KpiCard label="Cash Equity" value={fmt(ahmadPosition.cashEquityClosing)} icon={Wallet} />
+            <KpiCard label="Broker PY Payable" value={`-${fmt(266259)}`} icon={AlertCircle} tone="destructive" />
+            <KpiCard label="Hedge Expenses" value={fmt(profitLoss.hedgeExpenses)} sub="3.33% of sales" icon={AlertTriangle} />
+            <KpiCard label="Ahmad Withdrawals" value={fmt(20000)} icon={User} />
+          </div>
+        </div>
+
+        {/* SECTION 6 — Monthly Profit Trend */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-serif">Monthly Profit Trend</CardTitle>
+            <p className="text-[11px] text-muted-foreground">Jan-26 peak driven by large UNIP HK sale 5,744g + Moti 4,000g</p>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={280}>
+              <ComposedChart data={monthlyProfit}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                <XAxis dataKey="month" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}K`} />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", fontSize: 12 }} formatter={(v: number) => fmt(v)} />
+                <Bar dataKey="profit" radius={[6, 6, 0, 0]}>
+                  {monthlyProfit.map((m, i) => (
+                    <Cell key={i} fill={trendColor(m.month)} />
+                  ))}
+                  <LabelList dataKey="profit" position="top" formatter={(v: number) => `$${(v / 1000).toFixed(0)}K`} fill="hsl(var(--foreground))" fontSize={10} />
+                </Bar>
+                <Line type="monotone" dataKey="profit" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* SECTION 7 — Customer Profit Analysis */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-serif">Profit by Customer — Inception to Date</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={customerProfitAgg} layout="vertical" margin={{ left: 60 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                <XAxis type="number" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}K`} />
+                <YAxis dataKey="name" type="category" tick={{ fill: "hsl(var(--foreground))", fontSize: 11 }} />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", fontSize: 12 }} formatter={(v: number) => fmt(v)} />
+                <Bar dataKey="profit" fill="hsl(43 74% 52%)" radius={[0, 4, 4, 0]}>
+                  <LabelList dataKey="share" position="right" formatter={(v: number) => `${v.toFixed(1)}%`} fill="hsl(var(--foreground))" fontSize={10} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+            <div className="mt-3 p-3 bg-destructive/10 border border-destructive/30 rounded text-xs text-foreground">
+              🔴 <strong>Moti + UNIP HK = 93.7% of all profit</strong> — critical concentration risk. Diversify customer base.
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* SECTION 8 — Gold Inventory Position */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-serif">Gold Inventory Status</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <Stat label="Current Inventory" value={`${formatNumber(goldInventory.balanceGrams, 2)}g`} />
+              <Stat label="Book Value" value={fmt(goldInventory.costOfRemainingUSD)} />
+              <Stat label="Book Value (AED)" value={`AED ${formatNumber(goldInventory.bookValueAED, 0)}`} />
+              <Stat label="Average Cost" value={`$${goldInventory.costPerGram.toFixed(2)}/g`} />
             </div>
 
-            <div className="h-2" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Gold Flow Summary</p>
+                <Table>
+                  <TableBody>
+                    <TableRow><TableCell className="text-xs">Total Purchased</TableCell><TableCell className="text-xs text-right font-mono">{formatNumber(goldInventory.totalPurchasedGrams, 2)}g</TableCell></TableRow>
+                    <TableRow><TableCell className="text-xs">Total Sold</TableCell><TableCell className="text-xs text-right font-mono">{formatNumber(goldInventory.totalSoldGrams, 2)}g</TableCell></TableRow>
+                    <TableRow><TableCell className="text-xs">Melting Losses</TableCell><TableCell className="text-xs text-right font-mono text-destructive">{formatNumber(goldInventory.totalMeltingLossGrams, 2)}g</TableCell></TableRow>
+                    <TableRow className="bg-primary/5"><TableCell className="text-xs font-bold">Closing Balance ✅</TableCell><TableCell className="text-xs text-right font-mono font-bold text-primary">{formatNumber(goldInventory.balanceGrams, 2)}g</TableCell></TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Supplier Breakdown</p>
+                <Table>
+                  <TableBody>
+                    {supplierPurchaseAgg.map((s) => (
+                      <TableRow key={s.name}>
+                        <TableCell className="text-xs font-medium">{s.name}</TableCell>
+                        <TableCell className="text-xs text-right font-mono">~{formatNumber(s.grams, 0)}g</TableCell>
+                        <TableCell className="text-[10px] text-muted-foreground">{s.note}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <p className="text-[11px] text-muted-foreground mt-2 italic">Supplier shifted from ELIZEU/LOUCS to HDRSP in recent months.</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-            {/* Liabilities */}
-            <div className="py-2 px-3 bg-secondary/40 rounded-md">
-              <span className="text-sm font-semibold text-foreground">Liabilities</span>
-            </div>
-            <div className="flex justify-between py-1.5 px-3 pl-6 text-sm">
-              <span className="text-muted-foreground">No outstanding liabilities</span>
-              <span className="tabular-nums text-foreground">$0.00</span>
-            </div>
-            <div className="flex justify-between py-2 px-3 bg-secondary/30 rounded-md font-semibold text-sm">
-              <span className="text-foreground">Total Liabilities</span>
-              <span className="tabular-nums text-foreground">$0.00</span>
+        {/* SECTION 9 — P&L Statement */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-serif">Profit & Loss — Inception to Date (USD)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableBody>
+                <PLRow label="Sales" amount={profitLoss.sales} />
+                <PLRow label="Less: Sales Discount" amount={-profitLoss.salesDiscount} />
+                <PLRow label="Net Sales" amount={profitLoss.netSales} bold />
+                <PLRow label="Cost of Sales" amount={-profitLoss.costOfSales} />
+                <PLRow label="Melting Loss" amount={-profitLoss.meltingLoss} />
+                <PLRow label="Hedge Expenses" amount={-profitLoss.hedgeExpenses} />
+                <PLRow label={`GROSS PROFIT (${pct(profitLoss.grossMargin * 100)})`} amount={profitLoss.grossProfit} bold highlight />
+                <PLRow label="Transport" amount={-profitLoss.transport} />
+                <PLRow label="Labor" amount={-profitLoss.labor} />
+                <PLRow label="Hotel" amount={-profitLoss.hotel} />
+                <PLRow label="Bonus" amount={-profitLoss.bonus} />
+                <PLRow label="Tax+Bonus" amount={-profitLoss.taxBonus} />
+                <PLRow label="Bengali Conversion" amount={-profitLoss.bengaliConversion} />
+                <PLRow label="JLN Shop Setup" amount={-profitLoss.jlnShopSetup} />
+                <PLRow label="Other Expenses" amount={-profitLoss.otherExp} />
+                <PLRow label="Total G&A" amount={-profitLoss.totalAdminExpenses} bold />
+                <PLRow label="OPERATING PROFIT" amount={profitLoss.operatingProfit} bold highlight />
+                <PLRow label="FX Gain" amount={profitLoss.fxGain} />
+                <PLRow label="FX Loss" amount={-profitLoss.fxLoss} />
+                <PLRow label={`NET PROFIT (${pct(profitLoss.netMargin * 100)})`} amount={profitLoss.netProfit} bold highlight />
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        {/* SECTION 10 — Expense Breakdown */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-serif">Operating Expense Breakdown (USD)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={expenseBreakdown} layout="vertical" margin={{ left: 100 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                <XAxis type="number" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}K`} />
+                <YAxis dataKey="name" type="category" tick={{ fill: "hsl(var(--foreground))", fontSize: 10 }} width={100} />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", fontSize: 12 }} formatter={(v: number) => fmt(v)} />
+                <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                  {expenseBreakdown.map((e, i) => (
+                    <Cell key={i} fill={e.flag ? "hsl(var(--destructive))" : "hsl(43 74% 52%)"} />
+                  ))}
+                  <LabelList dataKey="value" position="right" formatter={(v: number) => `${((v / totalOpex) * 100).toFixed(1)}%`} fill="hsl(var(--foreground))" fontSize={10} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+            <p className="text-[11px] text-muted-foreground mt-2 italic">
+              Hedge expenses represent <strong className="text-destructive">64.5% of all operating costs</strong> and 3.33% of net sales — the primary cost control lever.
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* SECTION 11 — Ahmad Investment Position */}
+        <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-serif flex items-center gap-2">
+              <User className="h-4 w-4 text-primary" /> Ahmad Investment Position — RYA Gold (100% Owner)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Part A */}
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-primary mb-2">Part A — Cash Equity</p>
+                <Table>
+                  <TableBody>
+                    <TableRow><TableCell className="text-xs">Opening Balance (initial capital)</TableCell><TableCell className="text-xs text-right font-mono text-success">+{fmt(ahmadPosition.openingBalance)}</TableCell></TableRow>
+                    <TableRow><TableCell className="text-xs">Net Profit (inception to date)</TableCell><TableCell className="text-xs text-right font-mono text-success">+{fmt(ahmadPosition.netProfit)}</TableCell></TableRow>
+                    <TableRow><TableCell className="text-xs">Less Ahmad Withdrawals</TableCell><TableCell className="text-xs text-right font-mono text-destructive">-{fmt(ahmadPosition.withdrawals)}</TableCell></TableRow>
+                    <TableRow className="bg-primary/10"><TableCell className="text-xs font-bold">Cash Flow Closing Balance</TableCell><TableCell className="text-xs text-right font-mono font-bold text-primary">{fmt(ahmadPosition.cashEquityClosing)}</TableCell></TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+              {/* Part B */}
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-primary mb-2">Part B — Net Profit Deployment</p>
+                <Table>
+                  <TableBody>
+                    <TableRow><TableCell className="text-xs">Opening reinvested</TableCell><TableCell className="text-xs text-right font-mono">{fmt(ahmadPosition.openingBalance)}</TableCell></TableRow>
+                    <TableRow><TableCell className="text-xs">Shareholder Withdrawals</TableCell><TableCell className="text-xs text-right font-mono">{fmt(ahmadPosition.withdrawals)}</TableCell></TableRow>
+                    <TableRow><TableCell className="text-xs">Gold Inventory (5,907g book)</TableCell><TableCell className="text-xs text-right font-mono">{fmt(ahmadPosition.goldInventoryUSD)}</TableCell></TableRow>
+                    <TableRow><TableCell className="text-xs">AR — AL MASA</TableCell><TableCell className="text-xs text-right font-mono">{fmt(ahmadPosition.arAlMasa)}</TableCell></TableRow>
+                    <TableRow><TableCell className="text-xs">Broker Zhou receivable</TableCell><TableCell className="text-xs text-right font-mono">{fmt(ahmadPosition.brokerZhouReceivable)}</TableCell></TableRow>
+                    <TableRow><TableCell className="text-xs">Less Broker PY payable</TableCell><TableCell className="text-xs text-right font-mono text-destructive">{fmt(ahmadPosition.brokerPYPayable)}</TableCell></TableRow>
+                    <TableRow className="bg-primary/10"><TableCell className="text-xs font-bold">Total = Net Profit ✅</TableCell><TableCell className="text-xs text-right font-mono font-bold text-primary">{fmt(ahmadPosition.netProfit)}</TableCell></TableRow>
+                  </TableBody>
+                </Table>
+              </div>
             </div>
 
-            <div className="h-2" />
-
-            {/* Owner's Equity */}
-            <div className="py-2 px-3 bg-secondary/40 rounded-md">
-              <span className="text-sm font-semibold text-foreground">Owner's Equity</span>
-            </div>
-            <div className="flex justify-between py-1.5 px-3 pl-6 text-sm">
-              <span className="text-muted-foreground">Initial Capital (Invested)</span>
-              <span className={`tabular-nums ${goldCapital.initialCapital >= 0 ? "text-foreground" : "text-destructive"}`}>
-                {goldCapital.initialCapital >= 0 ? formatCurrency(goldCapital.initialCapital) : `(${formatCurrency(Math.abs(goldCapital.initialCapital))})`}
-              </span>
-            </div>
-            <div className="flex justify-between py-1.5 px-3 pl-6 text-sm">
-              <span className="text-muted-foreground">Net Profit (Retained)</span>
-              <span className="tabular-nums text-success">{formatCurrency(goldCapital.netProfit)}</span>
-            </div>
-            <div className="flex justify-between py-2 px-3 bg-primary/10 border border-primary/20 rounded-md font-semibold text-sm">
-              <span className="text-primary font-serif">Total Equity</span>
-              <span className="tabular-nums text-primary font-serif">{formatCurrency(goldCapital.totalCurrentPosition)}</span>
+            <div className="p-3 bg-muted/30 rounded text-xs text-foreground">
+              <strong>Note:</strong> Part B shows how net profit of ${formatNumber(ahmadPosition.netProfit, 0)} is deployed. Gold inventory at book value ${formatNumber(ahmadPosition.goldInventoryUSD, 0)} is the largest component. Broker PY payable of $266,259 must be settled from future sales.
             </div>
 
-            <div className="h-2" />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2 border-t border-border/30">
+              <Stat label="Cash Equity" value={fmt(ahmadPosition.cashEquityClosing)} />
+              <Stat label="Gold Inventory" value={fmt(ahmadPosition.goldInventoryUSD)} />
+              <Stat label="Net Receivables" value={fmt(ahmadPosition.netReceivables)} tone={ahmadPosition.netReceivables < 0 ? "destructive" : "default"} />
+              <Stat label="Total Net Position" value={fmt(ahmadPosition.totalNetPosition)} tone="primary" />
+            </div>
+          </CardContent>
+        </Card>
 
-            {/* Check */}
-            <div className="flex justify-between py-2 px-3 bg-secondary/50 rounded-md font-bold text-sm border border-border/50">
-              <span className="text-foreground">Assets − Liabilities = Equity ✓</span>
-              <span className="tabular-nums text-success">{formatCurrency(goldCapital.totalCurrentPosition)}</span>
+        {/* SECTION 12 — Sales Transaction Log */}
+        <Card>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <CardTitle className="text-sm font-serif">Sales Transaction Log</CardTitle>
+              <Select value={customerFilter} onValueChange={setCustomerFilter}>
+                <SelectTrigger className="w-[180px] h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Customers</SelectItem>
+                  {customers.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs">Date</TableHead>
+                    <TableHead className="text-xs">Customer</TableHead>
+                    <TableHead className="text-xs text-right">Qty (g)</TableHead>
+                    <TableHead className="text-xs text-right">Rate $/g</TableHead>
+                    <TableHead className="text-xs text-right">Revenue</TableHead>
+                    <TableHead className="text-xs text-right">Cost</TableHead>
+                    <TableHead className="text-xs text-right">Profit</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredSales.map((s) => (
+                    <TableRow key={s.transId}>
+                      <TableCell className="text-xs">{s.date}</TableCell>
+                      <TableCell className="text-xs font-medium">{s.customer}</TableCell>
+                      <TableCell className="text-xs text-right font-mono">{formatNumber(s.qtyGrams, 2)}</TableCell>
+                      <TableCell className="text-xs text-right font-mono">${s.rateUSD.toFixed(2)}</TableCell>
+                      <TableCell className="text-xs text-right font-mono">{fmt(s.amountUSD)}</TableCell>
+                      <TableCell className="text-xs text-right font-mono">{fmt(s.costUSD)}</TableCell>
+                      <TableCell className="text-xs text-right font-mono text-success font-semibold">{fmt(s.profitUSD)}</TableCell>
+                    </TableRow>
+                  ))}
+                  <TableRow className="bg-primary/10 border-t-2 border-primary/30">
+                    <TableCell colSpan={2} className="text-xs font-bold">TOTAL ({filteredSales.length} transactions)</TableCell>
+                    <TableCell className="text-xs text-right font-mono font-bold">{formatNumber(totalQtyLog, 2)}</TableCell>
+                    <TableCell />
+                    <TableCell className="text-xs text-right font-mono font-bold">{fmt(totalRevenueLog)}</TableCell>
+                    <TableCell />
+                    <TableCell className="text-xs text-right font-mono font-bold text-success">{fmt(totalProfitLog)}</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
             </div>
           </CardContent>
         </Card>
       </main>
     </div>
+  );
+};
+
+// === Sub-components ===
+const KpiCard = ({ label, value, sub, icon: Icon, tone }: { label: string; value: string; sub?: string; icon: any; tone?: string }) => {
+  const ring = tone === "destructive" ? "border-destructive/40" : tone === "amber" ? "border-amber-500/40" : tone === "success" ? "border-success/40" : "border-border/50";
+  const valCol = tone === "destructive" ? "text-destructive" : tone === "amber" ? "text-amber-500" : tone === "success" ? "text-success" : "text-foreground";
+  return (
+    <Card className={`border ${ring}`}>
+      <CardContent className="p-3">
+        <div className="flex items-center justify-between mb-1">
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</p>
+          <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+        </div>
+        <p className={`text-base font-bold font-serif ${valCol}`}>{value}</p>
+        {sub && <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>}
+      </CardContent>
+    </Card>
+  );
+};
+
+const Stat = ({ label, value, tone }: { label: string; value: string; tone?: string }) => {
+  const col = tone === "primary" ? "text-primary" : tone === "destructive" ? "text-destructive" : "text-foreground";
+  return (
+    <div>
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</p>
+      <p className={`text-base font-bold font-serif ${col}`}>{value}</p>
+    </div>
+  );
+};
+
+const PLRow = ({ label, amount, bold, highlight }: { label: string; amount: number; bold?: boolean; highlight?: boolean }) => {
+  const negative = amount < 0;
+  return (
+    <TableRow className={highlight ? "bg-primary/10" : ""}>
+      <TableCell className={`text-xs ${bold ? "font-bold" : ""}`}>{label}</TableCell>
+      <TableCell className={`text-xs text-right font-mono ${bold ? "font-bold" : ""} ${negative ? "text-destructive" : highlight ? "text-primary" : "text-foreground"}`}>
+        {negative ? `(${fmt(Math.abs(amount))})` : fmt(amount)}
+      </TableCell>
+    </TableRow>
   );
 };
 
