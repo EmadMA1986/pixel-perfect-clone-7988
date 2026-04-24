@@ -535,6 +535,54 @@ const CombinedDashboard = () => {
 
         <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
+        {/* 6a. Portfolio Risk Dashboard — Critical / Watch / Healthy */}
+        <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+              <Shield className="h-4 w-4 text-primary" /> Portfolio Risk Dashboard
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {/* CRITICAL */}
+            <div className="rounded-lg border-2 border-loss/40 bg-loss/5 p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertTriangle className="h-4 w-4 text-loss" />
+                <p className="text-xs font-bold uppercase tracking-wider text-loss">🔴 Critical — Act Immediately</p>
+              </div>
+              <ul className="text-xs text-foreground space-y-1.5 list-disc list-inside leading-relaxed">
+                <li><span className="font-semibold">MKX:</span> 10 months runway at current burn — board decision required</li>
+                <li><span className="font-semibold">MK Garage:</span> Cash overdraft — inject capital or wind down</li>
+                <li><span className="font-semibold">MK Autos Co:</span> Debt 28.1x equity — cash critically low AED 50,989</li>
+                <li><span className="font-semibold">Portfolio:</span> -39.9% weighted ROI — 60.6% capital in worst performer</li>
+              </ul>
+            </div>
+            {/* WATCH */}
+            <div className="rounded-lg border-2 border-yellow-500/40 bg-yellow-500/5 p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                <p className="text-xs font-bold uppercase tracking-wider text-yellow-500">⚠️ Watch</p>
+              </div>
+              <ul className="text-xs text-foreground space-y-1.5 list-disc list-inside leading-relaxed">
+                <li><span className="font-semibold">RYA Gold:</span> USD 798,688 inventory unsold | Customer concentration 93.7%</li>
+                <li><span className="font-semibold">OTC:</span> Volume declining 6 months | Counterparty concentration 53.4%</li>
+                <li><span className="font-semibold">MK Cars:</span> 3 idle vehicles | Revenue declining 6 months</li>
+              </ul>
+            </div>
+            {/* HEALTHY */}
+            <div className="rounded-lg border-2 border-success/40 bg-success/5 p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <Trophy className="h-4 w-4 text-success" />
+                <p className="text-xs font-bold uppercase tracking-wider text-success">✅ Healthy</p>
+              </div>
+              <ul className="text-xs text-foreground space-y-1.5 list-disc list-inside leading-relaxed">
+                <li><span className="font-semibold">RYA Gold:</span> +1,224.1% ROI | Strong profit engine</li>
+                <li><span className="font-semibold">OTC:</span> +146% ROI | Spread improving | Profitable consistently</li>
+                <li><span className="font-semibold">MK Cars:</span> Strong gross margin 82.8% | Fleet value AED 2.93M</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* 6. Risk Flags — Concentration Recommendation + Loss Alerts + Concentration Risk */}
         <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
           <CardHeader className="pb-2">
