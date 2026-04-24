@@ -651,6 +651,23 @@ const CombinedDashboard = () => {
         {/* 7. Consolidated P&L Matrix */}
         <ConsolidatedPLMatrix allMonths={ALL_MONTHS} selectedMonth={selectedMonth} />
 
+        {/* Consolidation notes */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-primary mb-1">Intercompany Elimination</p>
+            <p className="text-xs text-foreground leading-relaxed">
+              MK Autos Company owes MK Garage <span className="font-semibold">AED 79,125</span>. This intercompany balance has been eliminated from both company balances in the consolidated portfolio view.
+            </p>
+          </div>
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-primary mb-1">Dummy Income Note</p>
+            <p className="text-xs text-foreground leading-relaxed">
+              MK Autos Company and MK Garage revenue figures exclude visa-sponsorship pass-through entries (matching offsets in payroll). Net profit unaffected in both companies.
+            </p>
+          </div>
+        </div>
+
+
         <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
         {/* 8. Executive Summary */}
