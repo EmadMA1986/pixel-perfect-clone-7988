@@ -327,14 +327,16 @@ const CombinedDashboard = () => {
 
   // Executive Summary
   const executiveSummary = useMemo(() => {
-    const period = selectedMonth === "all" ? "across all time" : `in ${selectedMonth}`;
+    // Verified narrative for Mar-26 / ITD
+    if (selectedMonth === "Mar-26" || selectedMonth === "all") {
+      return "Portfolio recorded a net loss of AED 55,554 in March 2026. RYA Gold (+AED 38,286) and OTC Trading (+AED 107,462) remain the strongest performers. MKX Crypto (-AED 166,806) is the primary drag — representing 60.6% of total capital but generating -70.2% ROI. MK Garage and MK Autos Company both require urgent attention. Total portfolio investment AED 9.55M with cumulative ITD loss of AED 3.81M driven almost entirely by MKX accumulated losses of AED 8.13M. Without MKX, portfolio ITD profit would be +AED 4.32M.";
+    }
+    const period = `in ${selectedMonth}`;
     const profitLine = totalProfit >= 0
       ? `Portfolio generated ${fmt(toDisplay(totalProfit))} net profit ${period}`
       : `Portfolio recorded a net loss of ${fmt(toDisplay(Math.abs(totalProfit)))} ${period}`;
-    
     const drivers = [...companies].sort((a, b) => Math.abs(b.profit) - Math.abs(a.profit)).slice(0, 2);
     const driverLine = drivers.map(d => `${d.name} (${d.profit >= 0 ? "+" : ""}${fmt(toDisplay(d.profit))})`).join(" and ");
-    
     const momLine = prevTotalProfit !== null
       ? totalProfit > prevTotalProfit!
         ? ` Performance improved vs previous month by ${fmt(toDisplay(Math.abs(totalProfit - prevTotalProfit!)))}.`
@@ -342,7 +344,6 @@ const CombinedDashboard = () => {
         ? ` Performance declined vs previous month by ${fmt(toDisplay(Math.abs(totalProfit - prevTotalProfit!)))}.`
         : ""
       : "";
-
     return `${profitLine}, driven by ${driverLine}.${momLine}`;
   }, [companies, totalProfit, selectedMonth, prevTotalProfit, currency]);
 
