@@ -748,6 +748,9 @@ const GarageDashboard = () => {
             <p className="text-[11px] text-muted-foreground mt-2">
               Fixed costs (Payroll + Rent) = <span className="font-semibold text-foreground">{formatAEDFull(fixedCostMonthly)}</span> per month minimum regardless of revenue
             </p>
+            <p className="text-[11px] text-loss mt-1">
+              Payroll {formatAEDFull(current.payroll)} = <span className="font-semibold">{((current.payroll / current.totalRevenue) * 100).toFixed(1)}%</span> of real revenue {current.month}
+            </p>
           </CardContent>
         </Card>
 
