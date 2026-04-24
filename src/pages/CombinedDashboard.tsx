@@ -195,12 +195,12 @@ const CombinedDashboard = () => {
   // (c) Ahmad's direct exposure (his ownership share only).
   // Used whenever selectedMonth === "Mar-26" or "all" (ITD).
   const VERIFIED_MAR_26 = {
-    rya:            { investment: 203_200,   profit: 2_293_945,   marProfit:   38_286 },
-    otc:            { investment: 257_800,   profit:   376_350,   marProfit:   53_731 }, // 50% of 107,462
-    mkAutosCars:    { investment: 2_390_000, profit: 1_580_000,   marProfit:  -13_677 },
-    mkAutosCompany: { investment:   135_000, profit:  -169_645,   marProfit:  -13_677 },
-    mkx:            { investment: 2_894_467, profit: -4_063_104,  marProfit:  -83_403 }, // 50% of -166,806
-    garage:         { investment:   208_000, profit:  -135_254,   marProfit:   -2_857 }, // 40% of -7,142
+    rya:            { investment:   203_200, profit:  2_293_945,  marProfit:   38_286 },
+    otc:            { investment:   515_600, profit:    752_700,  marProfit:  107_462 },
+    mkAutosCars:    { investment: 2_390_000, profit:  1_580_000,  marProfit:  -13_677 },
+    mkAutosCompany: { investment:   135_000, profit:   -169_645,  marProfit:  -13_677 },
+    mkx:            { investment: 5_788_934, profit: -8_126_209,  marProfit: -166_806 },
+    garage:         { investment:   520_000, profit:   -338_134,  marProfit:   -7_142 },
   } as const;
 
   const buildVerifiedSnapshot = (useMar = false) => {
