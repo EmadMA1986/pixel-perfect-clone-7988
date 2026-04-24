@@ -266,7 +266,7 @@ export const goldCapital = {
   brokerPY: -266259,
   brokerZHOU: 13313,
   brokerZHOUAED: 0,
-  goldInventoryUSD: 920254,
+  goldInventoryUSD: 798688,
   arMotiAED: 0,
   arAlMasaAED: 3478 * AED_TO_USD_RATE,
   arUnipHK: 0,
