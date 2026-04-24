@@ -21,7 +21,7 @@ import {
   AED_TO_USD_RATE, formatNumber,
 } from "@/data/goldData";
 
-const MONTHS = ["Oct-25", "Nov-25", "Dec-25", "Jan-26", "Feb-26", "Mar-26"] as const;
+const MONTHS = ["Oct-25", "Nov-25", "Dec-25", "Jan-26", "Feb-26", "Mar-26", "Apr-26"] as const;
 type MonthKey = typeof MONTHS[number] | "ITD";
 
 // Parse "M/D/YY" -> {y, m}
