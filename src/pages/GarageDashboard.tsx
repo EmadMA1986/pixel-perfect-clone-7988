@@ -49,6 +49,7 @@ import {
   monthlyPL,
   balanceSheet,
   partners,
+  indirectExpenseDetail,
   formatAED,
   formatAEDFull,
 } from "@/data/garageData";
@@ -124,7 +125,11 @@ const GarageDashboard = () => {
   // ---- Intelligence cards content ----
   const revDelta = previous ? pct(current.totalRevenue, previous.totalRevenue) : 0;
   const isRevDrop = revDelta < -10;
-  const mainIssue = isRevDrop
+  const isImprovingDespiteRevDrop = verdict.tone === "good" && isRevDrop;
+
+  const mainIssue = isImprovingDespiteRevDrop
+    ? `Net loss improved ${Math.abs(verdict.deltaPct).toFixed(1)}% vs ${previous!.month} despite revenue decline — cost reduction offset revenue drop`
+    : isRevDrop
     ? `Revenue dropped ${Math.abs(revDelta).toFixed(1)}%`
     : current.netProfit < 0
     ? `Operating at a loss of ${formatAEDFull(current.netProfit)}`
@@ -132,6 +137,8 @@ const GarageDashboard = () => {
 
   const mainDriver = (() => {
     if (!previous) return "First period — establishing baseline";
+    if (isImprovingDespiteRevDrop)
+      return `Indirect costs cut from ${formatAEDFull(previous.indirectExpenses)} to ${formatAEDFull(current.indirectExpenses)} — payroll dropped ${formatAEDFull(previous.payroll - current.payroll)}`;
     if (current.payroll / current.totalRevenue > 0.4)
       return `Payroll ${((current.payroll / current.totalRevenue) * 100).toFixed(0)}% of revenue — too high`;
     if (current.costOfSales / current.totalRevenue > 0.5)
@@ -139,7 +146,9 @@ const GarageDashboard = () => {
     return "Indirect expenses outpacing gross profit";
   })();
 
-  const action = current.totalRevenue < 100000
+  const action = isImprovingDespiteRevDrop
+    ? "Rebuild revenue while keeping cost discipline"
+    : current.totalRevenue < 100000
     ? "Drive revenue: chase AR, push labour jobs"
     : current.netProfit < 0
     ? "Cut indirect costs & collect AR"
@@ -268,16 +277,22 @@ const GarageDashboard = () => {
     return null;
   }, []);
 
-  // ---- Section 9: Expense breakdown for selected month ----
+  // ---- Section 9: Expense breakdown for selected month (granular line items) ----
   const expenseItems = useMemo(() => {
-    const otherIndirect = current.indirectExpenses - current.payroll - current.rent;
-    const items = [
-      { name: "Payroll", value: current.payroll, fixed: true, flag: current.payroll / current.totalRevenue > 0.4 },
-      { name: "Rent", value: current.rent, fixed: true },
-      { name: "Other Indirect", value: Math.max(0, otherIndirect), fixed: false },
-    ];
-    if (current.month === "Feb 26") items.push({ name: "Trade License (one-off)", value: 23366.25, fixed: false });
-    return items.filter((i) => i.value > 0).sort((a, b) => b.value - a.value);
+    const detail = indirectExpenseDetail[current.month] ?? {};
+    const totalDetail = Object.values(detail).reduce((s, v) => s + (v || 0), 0) || current.indirectExpenses;
+    const items = Object.entries(detail)
+      .filter(([, v]) => v && v > 0)
+      .map(([name, value]) => ({
+        name,
+        value,
+        pct: (value / totalDetail) * 100,
+        fixed: name === "Payroll" || name === "Rent",
+        flag: name === "Payroll" && value / current.totalRevenue > 0.4,
+        oneOff: name === "Trade License" || name === "Visa Fine",
+      }))
+      .sort((a, b) => b.value - a.value);
+    return items;
   }, [current]);
 
   const fixedCostMonthly = current.payroll + current.rent;
@@ -524,7 +539,21 @@ const GarageDashboard = () => {
                 <YAxis tick={{ fontSize: 10, fill: COLORS.muted }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
                 <Tooltip formatter={(v: number) => formatAEDFull(v)} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
-                <ReferenceLine y={Math.round(breakEvenRevenue)} stroke={COLORS.warning} strokeDasharray="4 4" label={{ value: `Break-even ${formatAED(breakEvenRevenue)}`, fill: COLORS.warning, fontSize: 10, position: "insideTopRight" }} />
+                <ReferenceLine
+                  y={Math.round(breakEvenRevenue)}
+                  stroke={COLORS.warning}
+                  strokeDasharray="5 4"
+                  strokeWidth={1.5}
+                  ifOverflow="extendDomain"
+                  label={{
+                    value: `Break-even ${formatAED(breakEvenRevenue)}`,
+                    fill: COLORS.warning,
+                    fontSize: 11,
+                    fontWeight: 600,
+                    position: "right",
+                    offset: 8,
+                  }}
+                />
                 <Bar dataKey="revenue" name="Real Revenue" radius={[4, 4, 0, 0]}>
                   {trendData.map((d, i) => (
                     <BarCell key={i} fill={d.isSelected ? COLORS.primary : "hsl(var(--primary) / 0.35)"} />
@@ -663,15 +692,34 @@ const GarageDashboard = () => {
             <CardTitle className="text-sm font-medium">Expense Breakdown — {current.month}</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={Math.max(180, expenseItems.length * 50)}>
-              <BarChart data={expenseItems} layout="vertical" margin={{ left: 100 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border} />
+            <ResponsiveContainer width="100%" height={Math.max(220, expenseItems.length * 26)}>
+              <BarChart data={expenseItems} layout="vertical" margin={{ left: 8, right: 60, top: 4, bottom: 4 }} barCategoryGap={4}>
+                <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border} horizontal={false} />
                 <XAxis type="number" tick={{ fontSize: 10, fill: COLORS.muted }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: COLORS.muted }} width={150} />
-                <Tooltip formatter={(v: number) => formatAEDFull(v)} />
-                <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  tick={{ fontSize: 11, fill: COLORS.muted }}
+                  width={130}
+                  tickFormatter={(name: string) => {
+                    const item = expenseItems.find((e) => e.name === name);
+                    return item?.oneOff ? `${name} ⚠` : name;
+                  }}
+                />
+                <Tooltip
+                  formatter={(v: number, _n, p: { payload?: { pct?: number } }) => [
+                    `${formatAEDFull(v)} (${(p?.payload?.pct ?? 0).toFixed(1)}%)`,
+                    "Amount",
+                  ]}
+                />
+                <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={18} label={{
+                  position: "right",
+                  fill: "hsl(var(--muted-foreground))",
+                  fontSize: 10,
+                  formatter: (v: number) => `${((v / (Object.values(indirectExpenseDetail[current.month] ?? {}).reduce((s, x) => s + (x || 0), 0) || 1)) * 100).toFixed(1)}%`,
+                }}>
                   {expenseItems.map((e, i) => (
-                    <BarCell key={i} fill={e.flag ? COLORS.loss : e.fixed ? COLORS.primary : COLORS.parts} />
+                    <BarCell key={i} fill={e.flag ? COLORS.loss : e.oneOff ? COLORS.warning : e.fixed ? COLORS.primary : COLORS.parts} />
                   ))}
                 </Bar>
               </BarChart>
@@ -702,12 +750,17 @@ const GarageDashboard = () => {
               <TableBody>
                 {partnerRows.map((p) => (
                   <TableRow key={p.name}>
-                    <TableCell className="text-xs font-medium">{p.name}</TableCell>
+                    <TableCell className="text-xs font-medium">
+                      <span className="inline-flex items-center gap-2">
+                        <span className={`inline-block h-2 w-2 rounded-full ${p.ownershipPct === 40 ? "bg-primary" : "bg-muted-foreground"}`} />
+                        {p.name}
+                      </span>
+                    </TableCell>
                     <TableCell className="text-xs text-right">{p.ownershipPct}%</TableCell>
-                    <TableCell className="text-xs text-right">{formatAEDFull(p.shareCapital)}</TableCell>
-                    <TableCell className="text-xs text-right">{p.loanToCompany > 0 ? formatAEDFull(p.loanToCompany) : "—"}</TableCell>
-                    <TableCell className="text-xs text-right font-semibold">{formatAEDFull(p.totalExposure)}</TableCell>
-                    <TableCell className="text-xs text-right text-loss">{formatAEDFull(p.shareOfLoss)}</TableCell>
+                    <TableCell className="text-xs text-right tabular-nums">{formatAEDFull(p.shareCapital)}</TableCell>
+                    <TableCell className="text-xs text-right tabular-nums">{p.loanToCompany > 0 ? formatAEDFull(p.loanToCompany) : "—"}</TableCell>
+                    <TableCell className="text-xs text-right font-semibold tabular-nums">{formatAEDFull(p.totalExposure)}</TableCell>
+                    <TableCell className="text-xs text-right text-loss tabular-nums font-semibold">{formatAEDFull(p.shareOfLoss)}</TableCell>
                   </TableRow>
                 ))}
                 <TableRow className="border-t-2 border-border bg-muted/20">
@@ -784,18 +837,25 @@ const GarageDashboard = () => {
                 </div>
               </div>
 
-              {/* Notes */}
-              <div className="space-y-2">
+              {/* Notes — compact inline list */}
+              <div className="space-y-1.5">
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold pb-1 border-b border-border/30">Notes</p>
-                <div className="rounded bg-warning/10 border border-warning/30 p-2 text-warning">
-                  ⚠️ Goodwill {formatAEDFull(balanceSheet.fixedAssets.goodwill)} ({((balanceSheet.fixedAssets.goodwill / balanceSheet.totalAssets) * 100).toFixed(0)}% of total assets) — Ignite Garage acquisition. Assess for impairment given accumulated losses.
-                </div>
-                <div className="rounded bg-loss/10 border border-loss/30 p-2 text-loss">
-                  🔴 Cash overdraft {formatAEDFull(balanceSheet.currentAssets.cashInHand)} — urgent cash injection or AR collection required.
-                </div>
-                <div className="rounded bg-muted/30 border border-border/50 p-2 text-muted-foreground">
-                  ℹ️ MK Autos owes MK Garage {formatAEDFull(balanceSheet.loans.sisterCompanyMkAutos)} — reconcile with MK Autos payables in portfolio consolidation.
-                </div>
+                <p className="text-[11px] leading-snug text-warning flex gap-1.5">
+                  <span>⚠️</span>
+                  <span>Goodwill {formatAEDFull(balanceSheet.fixedAssets.goodwill)} ({((balanceSheet.fixedAssets.goodwill / balanceSheet.totalAssets) * 100).toFixed(0)}% of assets) — Ignite Garage acquisition. Assess for impairment.</span>
+                </p>
+                <p className="text-[11px] leading-snug text-loss flex gap-1.5">
+                  <span>🔴</span>
+                  <span>Cash overdraft {formatAEDFull(balanceSheet.currentAssets.cashInHand)} — urgent injection or AR collection required.</span>
+                </p>
+                <p className="text-[11px] leading-snug text-muted-foreground flex gap-1.5">
+                  <span>ℹ️</span>
+                  <span>MK Autos owes MK Garage {formatAEDFull(balanceSheet.loans.sisterCompanyMkAutos)} — reconcile in portfolio consolidation.</span>
+                </p>
+                <p className="text-[11px] leading-snug text-muted-foreground flex gap-1.5">
+                  <span>ℹ️</span>
+                  <span>Accumulated loss {formatAEDFull(balanceSheet.profitAndLoss)} exceeds share capital {formatAEDFull(balanceSheet.capital.total)} — partner loans of {formatAEDFull(balanceSheet.loans.manalMussaCurrent + balanceSheet.loans.mrAhmedCurrent)} fund operations.</span>
+                </p>
               </div>
             </div>
           </CardContent>
