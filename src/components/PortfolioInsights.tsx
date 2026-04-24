@@ -128,15 +128,17 @@ const PortfolioInsights = ({
   }, [companies]);
 
   // === Investment signals ===
-  const signal = (c: CompanySnapshot): { label: "SCALE" | "HOLD" | "FIX" | "EXIT"; reason: string; color: string; Icon: any } => {
+  const signal = (c: CompanySnapshot): { label: "SCALE" | "HOLD" | "WATCH" | "EXIT"; reason: string; color: string; Icon: any } => {
     const growth = pctChange(c.current.profit, c.previous?.profit);
-    if (c.current.roi < -15 || (c.current.profit < 0 && (growth ?? 0) < -20)) {
-      return { label: "EXIT", reason: "Sustained losses & deteriorating trend", color: "text-loss border-loss/40 bg-loss/10", Icon: XCircle };
+    // EXIT: deep losses (ROI <= -50%) — catastrophic / wind-down
+    if (c.current.roi <= -50) {
+      return { label: "EXIT", reason: "Sustained deep losses — wind-down recommended", color: "text-loss border-loss/40 bg-loss/10", Icon: XCircle };
     }
-    if (c.current.profit < 0) {
-      return { label: "FIX", reason: "Currently loss-making — turnaround needed", color: "text-yellow-500 border-yellow-500/40 bg-yellow-500/10", Icon: Wrench };
+    // WATCH: loss-making but not yet catastrophic — needs intervention
+    if (c.current.profit < 0 || c.current.roi < 0) {
+      return { label: "WATCH", reason: "Loss-making — turnaround needed", color: "text-yellow-500 border-yellow-500/40 bg-yellow-500/10", Icon: Wrench };
     }
-    if (c.current.roi > 10 && (growth ?? 0) > 5) {
+    if (c.current.roi > 100 && (growth ?? 0) > 5) {
       return { label: "SCALE", reason: "Strong ROI with positive momentum", color: "text-success border-success/40 bg-success/10", Icon: Rocket };
     }
     return { label: "HOLD", reason: "Stable performance — maintain", color: "text-primary border-primary/40 bg-primary/10", Icon: CheckCircle2 };
