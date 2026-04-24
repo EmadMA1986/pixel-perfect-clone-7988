@@ -93,8 +93,8 @@ const RyaDashboard = () => {
     .filter(([k]) => !["Hedge Expenses", "Melting Loss"].includes(k))
     .reduce((s, [, v]) => s + v, 0);
 
-  // For ITD show the verified P&L totals; for month-bound use computed cumulative
-  const useITD = period === "ITD";
+  // For ITD (or Apr-26 = current period boundary) show the verified P&L totals; for earlier months use computed cumulative
+  const useITD = period === "ITD" || period === "Apr-26";
   const pNetSales = useITD ? profitLoss.netSales : cumNetSales;
   const pGrossProfit = useITD ? profitLoss.grossProfit : (cumGrossProfit - cumDiscount - cumHedge - cumMeltingLoss);
   const pHedge = useITD ? profitLoss.hedgeExpenses : cumHedge;
