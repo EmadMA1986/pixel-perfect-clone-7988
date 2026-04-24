@@ -124,7 +124,11 @@ const GarageDashboard = () => {
   // ---- Intelligence cards content ----
   const revDelta = previous ? pct(current.totalRevenue, previous.totalRevenue) : 0;
   const isRevDrop = revDelta < -10;
-  const mainIssue = isRevDrop
+  const isImprovingDespiteRevDrop = verdict.tone === "good" && isRevDrop;
+
+  const mainIssue = isImprovingDespiteRevDrop
+    ? `Net loss improved ${Math.abs(verdict.deltaPct).toFixed(1)}% vs ${previous!.month} despite revenue decline — cost reduction offset revenue drop`
+    : isRevDrop
     ? `Revenue dropped ${Math.abs(revDelta).toFixed(1)}%`
     : current.netProfit < 0
     ? `Operating at a loss of ${formatAEDFull(current.netProfit)}`
@@ -132,6 +136,8 @@ const GarageDashboard = () => {
 
   const mainDriver = (() => {
     if (!previous) return "First period — establishing baseline";
+    if (isImprovingDespiteRevDrop)
+      return `Indirect costs cut from ${formatAEDFull(previous.indirectExpenses)} to ${formatAEDFull(current.indirectExpenses)} — payroll dropped ${formatAEDFull(previous.payroll - current.payroll)}`;
     if (current.payroll / current.totalRevenue > 0.4)
       return `Payroll ${((current.payroll / current.totalRevenue) * 100).toFixed(0)}% of revenue — too high`;
     if (current.costOfSales / current.totalRevenue > 0.5)
@@ -139,7 +145,9 @@ const GarageDashboard = () => {
     return "Indirect expenses outpacing gross profit";
   })();
 
-  const action = current.totalRevenue < 100000
+  const action = isImprovingDespiteRevDrop
+    ? "Rebuild revenue while keeping cost discipline"
+    : current.totalRevenue < 100000
     ? "Drive revenue: chase AR, push labour jobs"
     : current.netProfit < 0
     ? "Cut indirect costs & collect AR"
