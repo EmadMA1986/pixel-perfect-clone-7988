@@ -233,11 +233,13 @@ export const monthlyPL: MonthlyPL[] = [
   { month: "Jul-25",  directIncome: 230109.07, costOfSales: 55633.35, grossProfit: 174475.72, indirectExpenses: 114068.12, otherExpense: 136478.74, netProfit: -76071.14 },
   { month: "Aug-25",  directIncome: 290707.10, costOfSales: 22211.77, grossProfit: 268495.33, indirectExpenses: 123196.00, otherExpense: 156629.01, netProfit: -11329.68 },
   { month: "Sep-25",  directIncome: 356125.72, costOfSales: 17246.08, grossProfit: 338879.64, indirectExpenses: 95384.71,  otherExpense: 170991.05, netProfit: 72503.88 },
-  { month: "Oct-25",  directIncome: 487216.29, costOfSales: 31512.15, grossProfit: 455704.14, indirectExpenses: 239299.37, otherExpense: 205983.66, netProfit: 10421.11 },
-  { month: "Nov-25",  directIncome: 441895.70, costOfSales: 29140.88, grossProfit: 412754.82, indirectExpenses: 149727.23, otherExpense: 198730.64, netProfit: 64296.95 },
-  { month: "Dec-25",  directIncome: 465592.28, costOfSales: 54000.75, grossProfit: 411591.53, indirectExpenses: 213683.34, otherExpense: 202555.38, netProfit: -4647.19 },
-  { month: "Jan-26",  directIncome: 528488.36, costOfSales: 72549.37, grossProfit: 455938.99, indirectExpenses: 235109.86, otherExpense: 206138.37, netProfit: 14690.76 },
-  { month: "Feb-26",  directIncome: 442132.76, costOfSales: 64321.19, grossProfit: 377811.57, indirectExpenses: 218513.13, otherExpense: 133965.02, netProfit: 25333.42 },
+  // Real revenue/expenses — visa sponsorship pass-through (Dummy Investor / Dummy Payroll) excluded:
+  // Oct-25 AED 83K | Nov-25 AED 8K | Dec-25–Feb-26 AED 78K/month. Net profit unaffected.
+  { month: "Oct-25",  directIncome: 404216.29, costOfSales: 31512.15, grossProfit: 372704.14, indirectExpenses: 156299.37, otherExpense: 205983.66, netProfit: 10421.11 },
+  { month: "Nov-25",  directIncome: 433895.70, costOfSales: 29140.88, grossProfit: 404754.82, indirectExpenses: 141727.23, otherExpense: 198730.64, netProfit: 64296.95 },
+  { month: "Dec-25",  directIncome: 387592.28, costOfSales: 54000.75, grossProfit: 333591.53, indirectExpenses: 135683.34, otherExpense: 202555.38, netProfit: -4647.19 },
+  { month: "Jan-26",  directIncome: 450488.36, costOfSales: 72549.37, grossProfit: 377938.99, indirectExpenses: 157109.86, otherExpense: 206138.37, netProfit: 14690.76 },
+  { month: "Feb-26",  directIncome: 364132.76, costOfSales: 64321.19, grossProfit: 299811.57, indirectExpenses: 140513.13, otherExpense: 133965.02, netProfit: 25333.42 },
   { month: "Mar-26",  directIncome: 246433.12, costOfSales: 42396.94, grossProfit: 204036.18, indirectExpenses: 132738.74, otherExpense: 84974.73,  netProfit: -13677.29 },
 ];
 
