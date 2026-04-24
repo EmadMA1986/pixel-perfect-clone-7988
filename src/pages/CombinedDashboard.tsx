@@ -195,7 +195,7 @@ const CombinedDashboard = () => {
   // (c) Ahmad's direct exposure (his ownership share only).
   // Used whenever selectedMonth === "Mar-26" or "all" (ITD).
   const VERIFIED_MAR_26 = {
-    rya:            { investment: 203_200,   profit: 2_493_050,   marProfit:   38_286 },
+    rya:            { investment: 203_200,   profit: 2_293_945,   marProfit:   38_286 },
     otc:            { investment: 257_800,   profit:   376_350,   marProfit:   53_731 }, // 50% of 107,462
     mkAutosCars:    { investment: 2_390_000, profit: 1_580_000,   marProfit:  -13_677 },
     mkAutosCompany: { investment:   135_000, profit:  -169_645,   marProfit:  -13_677 },
@@ -329,7 +329,7 @@ const CombinedDashboard = () => {
   const executiveSummary = useMemo(() => {
     // Verified narrative for Mar-26 / ITD
     if (selectedMonth === "Mar-26" || selectedMonth === "all") {
-      return "Portfolio recorded a net loss of AED 55,554 in March 2026. RYA Gold (+AED 38,286) and OTC Trading (+AED 107,462) remain the strongest performers. MKX Crypto (-AED 166,806) is the primary drag — representing 60.6% of total capital but generating -70.2% ROI. MK Garage and MK Autos Company both require urgent attention. Total portfolio investment AED 9.55M with cumulative ITD loss of AED 3.81M driven almost entirely by MKX accumulated losses of AED 8.13M. Without MKX, portfolio ITD profit would be +AED 4.32M.";
+      return "Portfolio recorded a net loss of AED 55,554 in March 2026. RYA Gold (+AED 38,286) and OTC Trading (+AED 107,462) remain the strongest performers. MKX Crypto (-AED 166,806) is the primary drag — representing 60.6% of total capital but generating -70.2% ROI. MK Garage and MK Autos Company both require urgent attention. Total portfolio investment AED 9.55M with cumulative ITD loss of AED 4.01M driven almost entirely by MKX accumulated losses of AED 8.13M. Without MKX, portfolio ITD profit would be +AED 4.12M.";
     }
     const period = `in ${selectedMonth}`;
     const profitLine = totalProfit >= 0
