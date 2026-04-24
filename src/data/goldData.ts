@@ -227,42 +227,57 @@ export const supplierBalances: LedgerBalance[] = [
   { name: "CAMS", role: "supplier", balanceUSD: 0, balanceAED: 0, balanceUSDEquiv: 0, totalUSD: 0 },
 ];
 
-// From Page 3: final balance 0g after melting loss on 3/17/26 consumed remaining 95.848g
-// All inventory fully consumed (sold + melting losses)
+// March 2026 closing position from P&L sheet
 export const goldInventory = {
-  balanceGrams: 0,
-  totalMeltingLossGrams: 233.798, // 97.85 previous + 95.848 final + 40.168 on 3/9/26
-  costPerGram: 0,
-  costOfRemainingUSD: 0,
+  balanceGrams: 5907.43,
+  totalMeltingLossGrams: 2092.13,
+  totalPurchasedGrams: 52834.81,
+  totalSoldGrams: 44835.25,
+  costPerGram: 798688 / 5907.43,
+  costOfRemainingUSD: 798688,
+  bookValueAED: 798688 * AED_TO_USD_RATE,
 };
 
-// Capital position calculated from current balances
+// Ahmad investment position (100% owner) — from P&L Equity section
+export const ahmadPosition = {
+  // Part A — Cash equity flow
+  openingBalance: 55327,
+  netProfit: 624547.90,
+  withdrawals: 20000,
+  cashEquityClosing: 549220.90, // 55327 + 624547.90 - 20000
+
+  // Part B — Net profit deployment (where the profit sits)
+  goldInventoryUSD: 798688,
+  arAlMasa: 3478,
+  brokerZhouReceivable: 13313,
+  brokerPYPayable: -266259,
+
+  // Receivables net
+  get netReceivables() {
+    return this.arAlMasa + this.brokerZhouReceivable + this.brokerPYPayable;
+  },
+  get totalNetPosition() {
+    return this.cashEquityClosing + this.goldInventoryUSD + this.netReceivables;
+  },
+};
+
+// Backwards-compat alias used by older components
 export const goldCapital = {
-  // Current Assets
-  brokerPY: 0,
-  brokerZHOU: 487959.95,
-  brokerZHOUAED: 479270.00,
-  goldInventoryUSD: 0,
+  brokerPY: -266259,
+  brokerZHOU: 13313,
+  brokerZHOUAED: 0,
+  goldInventoryUSD: 798688,
   arMotiAED: 0,
-  arAlMasaAED: 12775.12, // AL MASA owes us (debit balance)
+  arAlMasaAED: 3478 * AED_TO_USD_RATE,
   arUnipHK: 0,
   arGolden: 0,
-  // Computed
-  get totalAR_USD() {
-    return (this.arMotiAED + this.arAlMasaAED) / AED_TO_USD_RATE;
-  },
-  get totalBrokers() {
-    return this.brokerPY + this.brokerZHOU + this.brokerZHOUAED / AED_TO_USD_RATE;
-  },
+  get totalAR_USD() { return 3478; },
+  get totalBrokers() { return this.brokerPY + this.brokerZHOU; },
   get totalCurrentPosition() {
     return this.totalBrokers + this.goldInventoryUSD + this.totalAR_USD;
   },
-  // Net Profit from P&L
-  netProfit: 677250.52,
-  // Initial Capital = Current Position - Net Profit
-  get initialCapital() {
-    return this.totalCurrentPosition - this.netProfit;
-  },
+  netProfit: 624547.90,
+  get initialCapital() { return this.totalCurrentPosition - this.netProfit; },
 };
 
 export const formatCurrency = (value: number, currency = "USD") => {
