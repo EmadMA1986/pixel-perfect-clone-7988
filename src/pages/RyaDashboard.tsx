@@ -203,7 +203,7 @@ const RyaDashboard = () => {
 
   // Ahmad position — when filtered to a month other than ITD/Mar-26, scale net profit to cumulative
   const cumNetProfitForPosition = useITD ? ahmadPosition.netProfit : pNetProfit;
-  const positionGoldUSD = useITD || selectedMonth === "Mar-26" ? ahmadPosition.goldInventoryUSD : closingInventoryG * goldInventory.costPerGram;
+  const positionGoldUSD = useITD || selectedMonth === "Apr-26" ? ahmadPosition.goldInventoryUSD : closingInventoryG * goldInventory.costPerGram;
   const positionAR = ahmadPosition.arAlMasa;
   const positionBrokerZhou = ahmadPosition.brokerZhouReceivable;
   const positionBrokerPY = ahmadPosition.brokerPYPayable;
