@@ -357,15 +357,25 @@ const MkAutosCompanyDashboard = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {bankLoans.map((l) => (
-                <div key={l.name} className={`rounded-lg border p-4 ${l.trend === "down" ? "border-success/30 bg-success/5" : "border-loss/30 bg-loss/5"}`}>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{l.name}</p>
-                  <p className="text-lg font-bold tabular-nums text-foreground mt-1">{formatAED(l.current)}</p>
-                  <p className="text-[11px] text-muted-foreground mt-1">
-                    {l.priorMonth}: {formatAED(l.prior)} → {l.trend === "down" ? <span className="text-success">repaying ✅</span> : <span className="text-loss">increased 🔴</span>}
-                  </p>
-                </div>
-              ))}
+              {bankLoans.map((l) => {
+                const delta = l.current - l.prior;
+                const isUp = l.trend === "up";
+                return (
+                  <div key={l.name} className={`rounded-lg border p-4 ${isUp ? "border-loss/40 bg-loss/5" : "border-success/30 bg-success/5"}`}>
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{l.name}</p>
+                      <span className={`text-xs font-bold ${isUp ? "text-loss" : "text-success"}`}>{isUp ? "▲" : "▼"}</span>
+                    </div>
+                    <p className="text-lg font-bold tabular-nums text-foreground mt-1">{formatAED(l.current)}</p>
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      {l.priorMonth}: {formatAED(l.prior)} →{" "}
+                      {isUp
+                        ? <span className="text-loss font-semibold">▲ increased {formatAED(Math.abs(delta))} 🔴</span>
+                        : <span className="text-success font-semibold">▼ repaying {formatAED(Math.abs(delta))} ✅</span>}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t border-border/30">
               <div><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Total Bank Debt</p><p className="text-lg font-bold tabular-nums text-foreground">{formatAED(totalBankDebt)}</p></div>
