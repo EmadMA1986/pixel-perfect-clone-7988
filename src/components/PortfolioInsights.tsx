@@ -209,7 +209,6 @@ const PortfolioInsights = ({
     const actionMap: Record<typeof sig.label, string> = {
       SCALE: "Increase capital allocation to capture upside.",
       HOLD: "Maintain — monitor monthly.",
-      FIX: "Cut costs and review revenue mix urgently.",
       WATCH: "Cut costs and review revenue mix — urgent attention required.",
       EXIT: "Plan orderly wind-down to free capital.",
     };
