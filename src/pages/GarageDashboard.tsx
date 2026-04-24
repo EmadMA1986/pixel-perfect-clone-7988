@@ -539,7 +539,21 @@ const GarageDashboard = () => {
                 <YAxis tick={{ fontSize: 10, fill: COLORS.muted }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
                 <Tooltip formatter={(v: number) => formatAEDFull(v)} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
-                <ReferenceLine y={Math.round(breakEvenRevenue)} stroke={COLORS.warning} strokeDasharray="4 4" label={{ value: `Break-even ${formatAED(breakEvenRevenue)}`, fill: COLORS.warning, fontSize: 10, position: "insideTopRight" }} />
+                <ReferenceLine
+                  y={Math.round(breakEvenRevenue)}
+                  stroke={COLORS.warning}
+                  strokeDasharray="5 4"
+                  strokeWidth={1.5}
+                  ifOverflow="extendDomain"
+                  label={{
+                    value: `Break-even ${formatAED(breakEvenRevenue)}`,
+                    fill: COLORS.warning,
+                    fontSize: 11,
+                    fontWeight: 600,
+                    position: "right",
+                    offset: 8,
+                  }}
+                />
                 <Bar dataKey="revenue" name="Real Revenue" radius={[4, 4, 0, 0]}>
                   {trendData.map((d, i) => (
                     <BarCell key={i} fill={d.isSelected ? COLORS.primary : "hsl(var(--primary) / 0.35)"} />
