@@ -322,11 +322,14 @@ const PortfolioInsights = ({
                     <TableCell className="text-right text-sm tabular-nums text-foreground">
                       {format(toDisplay(c.current.investment))}
                     </TableCell>
-                    <TableCell className={`text-right text-sm tabular-nums ${c.current.profit >= 0 ? "text-success" : "text-loss"}`}>
-                      {format(toDisplay(c.current.profit))}
+                    <TableCell className={`text-right text-sm tabular-nums font-semibold ${(c.itdProfit ?? c.current.profit) >= 0 ? "text-success" : "text-loss"}`}>
+                      {(c.itdProfit ?? c.current.profit) >= 0 ? "+" : ""}{format(toDisplay(c.itdProfit ?? c.current.profit))}
                     </TableCell>
                     <TableCell className={`text-right text-sm font-bold tabular-nums ${c.current.roi >= 0 ? "text-success" : "text-loss"}`}>
                       {c.current.roi >= 0 ? "+" : ""}{c.current.roi.toFixed(1)}%
+                    </TableCell>
+                    <TableCell className={`text-right text-sm tabular-nums ${(c.marProfit ?? c.current.profit) >= 0 ? "text-success" : "text-loss"}`}>
+                      {(c.marProfit ?? c.current.profit) >= 0 ? "+" : ""}{format(toDisplay(c.marProfit ?? c.current.profit))}
                     </TableCell>
                     <TableCell className="text-right">
                       <Delta cur={c.current.profit} prev={c.previous?.profit} />
