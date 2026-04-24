@@ -21,7 +21,7 @@ import {
   AED_TO_USD_RATE, formatNumber,
 } from "@/data/goldData";
 
-const MONTHS = ["Oct-25", "Nov-25", "Dec-25", "Jan-26", "Feb-26", "Mar-26"] as const;
+const MONTHS = ["Oct-25", "Nov-25", "Dec-25", "Jan-26", "Feb-26", "Mar-26", "Apr-26"] as const;
 type MonthKey = typeof MONTHS[number] | "ITD";
 
 // Parse "M/D/YY" -> {y, m}
@@ -59,7 +59,7 @@ const RyaDashboard = () => {
   const pct = (v: number) => `${v.toFixed(1)}%`;
 
   // Selected period boundary
-  const selectedMonth = period === "ITD" ? "Mar-26" : period;
+  const selectedMonth = period === "ITD" ? "Apr-26" : period;
   const selectedIdx = MONTHS.indexOf(selectedMonth as typeof MONTHS[number]);
   const selectedMP = monthlyProfit.find((m) => m.month === selectedMonth)!;
   const previousMP = selectedIdx > 0 ? monthlyProfit.find((m) => m.month === MONTHS[selectedIdx - 1])! : null;
@@ -142,7 +142,7 @@ const RyaDashboard = () => {
   // and goldInventory totals scaled proportionally for ITD; for month boundary fall back
   // to known March endpoint when ITD or Mar-26.
   const closingInventoryG = useMemo(() => {
-    if (period === "ITD" || selectedMonth === "Mar-26") return goldInventory.balanceGrams;
+    if (period === "ITD" || selectedMonth === "Apr-26") return goldInventory.balanceGrams;
     // estimate: opening 0 + cumulative purchased - cumulative sold across months up to & inc selected
     const cumSoldG = monthlyProfit
       .filter((m) => monthIdx(m.month) <= monthIdx(selectedMonth))
@@ -203,7 +203,7 @@ const RyaDashboard = () => {
 
   // Ahmad position — when filtered to a month other than ITD/Mar-26, scale net profit to cumulative
   const cumNetProfitForPosition = useITD ? ahmadPosition.netProfit : pNetProfit;
-  const positionGoldUSD = useITD || selectedMonth === "Mar-26" ? ahmadPosition.goldInventoryUSD : closingInventoryG * goldInventory.costPerGram;
+  const positionGoldUSD = useITD || selectedMonth === "Apr-26" ? ahmadPosition.goldInventoryUSD : closingInventoryG * goldInventory.costPerGram;
   const positionAR = ahmadPosition.arAlMasa;
   const positionBrokerZhou = ahmadPosition.brokerZhouReceivable;
   const positionBrokerPY = ahmadPosition.brokerPYPayable;
@@ -292,8 +292,8 @@ const RyaDashboard = () => {
                 {previousMP && <> vs {previousMP.month} {fmt(previousMP.profit)} ({pct(profitDeltaPct)})</>}
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
-                {selectedMonth} sales of {formatNumber(selectedMP.qtySold, 0)}g
-                {selectedMonth === "Mar-26" && " — only 1 sale, UNIP HK absent. Convert 5,907g inventory urgently."}
+                {selectedMonth} sales of {formatNumber(selectedMP.qtySold, 0)}g across {monthSales.length} transaction{monthSales.length === 1 ? "" : "s"}
+                {closingInventoryG > 1000 && ` — ${formatNumber(closingInventoryG, 0)}g inventory still on hand.`}
               </p>
             </div>
           </CardContent>
