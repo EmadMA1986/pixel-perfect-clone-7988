@@ -837,18 +837,25 @@ const GarageDashboard = () => {
                 </div>
               </div>
 
-              {/* Notes */}
-              <div className="space-y-2">
+              {/* Notes — compact inline list */}
+              <div className="space-y-1.5">
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold pb-1 border-b border-border/30">Notes</p>
-                <div className="rounded bg-warning/10 border border-warning/30 p-2 text-warning">
-                  ⚠️ Goodwill {formatAEDFull(balanceSheet.fixedAssets.goodwill)} ({((balanceSheet.fixedAssets.goodwill / balanceSheet.totalAssets) * 100).toFixed(0)}% of total assets) — Ignite Garage acquisition. Assess for impairment given accumulated losses.
-                </div>
-                <div className="rounded bg-loss/10 border border-loss/30 p-2 text-loss">
-                  🔴 Cash overdraft {formatAEDFull(balanceSheet.currentAssets.cashInHand)} — urgent cash injection or AR collection required.
-                </div>
-                <div className="rounded bg-muted/30 border border-border/50 p-2 text-muted-foreground">
-                  ℹ️ MK Autos owes MK Garage {formatAEDFull(balanceSheet.loans.sisterCompanyMkAutos)} — reconcile with MK Autos payables in portfolio consolidation.
-                </div>
+                <p className="text-[11px] leading-snug text-warning flex gap-1.5">
+                  <span>⚠️</span>
+                  <span>Goodwill {formatAEDFull(balanceSheet.fixedAssets.goodwill)} ({((balanceSheet.fixedAssets.goodwill / balanceSheet.totalAssets) * 100).toFixed(0)}% of assets) — Ignite Garage acquisition. Assess for impairment.</span>
+                </p>
+                <p className="text-[11px] leading-snug text-loss flex gap-1.5">
+                  <span>🔴</span>
+                  <span>Cash overdraft {formatAEDFull(balanceSheet.currentAssets.cashInHand)} — urgent injection or AR collection required.</span>
+                </p>
+                <p className="text-[11px] leading-snug text-muted-foreground flex gap-1.5">
+                  <span>ℹ️</span>
+                  <span>MK Autos owes MK Garage {formatAEDFull(balanceSheet.loans.sisterCompanyMkAutos)} — reconcile in portfolio consolidation.</span>
+                </p>
+                <p className="text-[11px] leading-snug text-muted-foreground flex gap-1.5">
+                  <span>ℹ️</span>
+                  <span>Accumulated loss {formatAEDFull(balanceSheet.profitAndLoss)} exceeds share capital {formatAEDFull(balanceSheet.capital.total)} — partner loans of {formatAEDFull(balanceSheet.loans.manalMussaCurrent + balanceSheet.loans.mrAhmedCurrent)} fund operations.</span>
+                </p>
               </div>
             </div>
           </CardContent>
