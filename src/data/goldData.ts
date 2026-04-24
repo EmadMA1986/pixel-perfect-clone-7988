@@ -84,6 +84,8 @@ export const sales: SaleTransaction[] = [
   { transId: "260219-141227", date: "2/17/26", customer: "Moti", qtyGrams: 5000, rateUSD: 158.664, amountUSD: 793319.08, costUSD: 659332.36, profitUSD: 133986.72 },
   { transId: "260309-131753", date: "2/26/26", customer: "UNIP HK", qtyGrams: 14.70, rateUSD: 166.862, amountUSD: 2452.88, costUSD: 1972.22, profitUSD: 480.65 },
   { transId: "260310-133410", date: "3/9/26", customer: "Moti", qtyGrams: 412.096, rateUSD: 163.808, amountUSD: 67504.59, costUSD: 57086.71, profitUSD: 10417.88 },
+  { transId: "260422-181809", date: "4/1/26", customer: "UNIP HK", qtyGrams: 4490.71, rateUSD: 151.253, amountUSD: 679232.00, costUSD: 658752.13, profitUSD: 20479.87 },
+  { transId: "260422-181930", date: "4/2/26", customer: "Kenzo HK", qtyGrams: 1960, rateUSD: 150.491, amountUSD: 294962.00, costUSD: 284122.37, profitUSD: 10839.64 },
 ];
 
 export const expenses: ExpenseItem[] = [
@@ -138,28 +140,64 @@ export const salesDiscounts: ExpenseItem[] = [
 ];
 
 export const profitLoss = {
-  sales: 6047470.68,
+  sales: 7021664.68,
   salesDiscount: 19911.22,
-  costOfSales: 5049011.58,
-  meltingLoss: 19689.85,
-  hedgeExpenses: 223206,
-  grossProfit: 735652.03,
-  transport: 39388.01,
-  labor: 4442.07,
+  netSales: 7001753.46,
+  costOfSales: 5991886.08,
+  meltingLoss: 22593.98,
+  hedgeExpenses: 232875.60,
+  grossProfit: 754397.80,
+  transport: 68443.25,
+  labor: 5677.07,
   hotel: 1343.49,
   bonus: 10172.46,
   taxBonus: 780.67,
-  otherExp: 1917.26,
-  totalAdminExpenses: 58043.97,
-  operatingProfit: 677608.07,
+  bengaliConversion: 10085.00,
+  jlnShopSetup: 8414.00,
+  otherExp: 23975.26,
+  totalAdminExpenses: 128891.21,
+  operatingProfit: 625506.60,
   fxGain: 771.42,
-  fxLoss: 1128.97,
-  netProfit: 677250.52,
+  fxLoss: 1730.12,
+  netProfit: 624547.90,
+  // Margins
+  get grossMargin() { return this.grossProfit / this.netSales; },
+  get netMargin() { return this.netProfit / this.netSales; },
 };
 
+// Monthly profit (USD) from Profit Report sheet
+export const monthlyProfit = [
+  { month: "Oct-25", sales: 160285.48, profit: 7418.89, qtySold: 1194.74 },
+  { month: "Nov-25", sales: 655093.37, profit: 46191.78, qtySold: 4927.90 },
+  { month: "Dec-25", sales: 1064019.08, profit: 143416.05, qtySold: 7670.51 },
+  { month: "Jan-26", sales: 2430848.52, profit: 496819.06, qtySold: 18221.32 },
+  { month: "Feb-26", sales: 1669719.64, profit: 294195.44, qtySold: 10394.23 },
+  { month: "Mar-26", sales: 67504.59, profit: 10417.88, qtySold: 412.10 },
+  { month: "Apr-26", sales: 974194.00, profit: 31319.50, qtySold: 6450.71 },
+];
+
+// Customer profit aggregates (inception to date, USD)
+export const customerProfitAgg = [
+  { name: "Moti", profit: 586561.95, share: 56.96 },
+  { name: "UNIP HK", profit: 378138.17, share: 36.72 },
+  { name: "GOLDEN", profit: 46241.18, share: 4.49 },
+  { name: "Kenzo HK", profit: 10839.64, share: 1.05 },
+  { name: "AL MASA", profit: 7997.77, share: 0.78 },
+];
+
+// Supplier purchase aggregates (g)
+export const supplierPurchaseAgg = [
+  { name: "ELIZEU", grams: 14000, note: "Dec-Jan, largest historic" },
+  { name: "LOUCS", grams: 10500, note: "Nov-Dec" },
+  { name: "HDRSP", grams: 7000, note: "Mar-Apr, current main" },
+  { name: "LDO", grams: 5500, note: "Consistent all months" },
+  { name: "GUITO + others", grams: 2800, note: "Spot purchases" },
+];
+
+
 export const brokerBalances = {
-  brokerPY: { usd: 0, aed: 0 },
-  brokerZHOU: { usd: 487959.95, aed: 479270.00 },
+  brokerPY: { usd: -266259, aed: 0 },
+  brokerZHOU: { usd: 13313, aed: 0 },
 };
 
 export const AED_TO_USD_RATE = 3.673;
@@ -189,42 +227,57 @@ export const supplierBalances: LedgerBalance[] = [
   { name: "CAMS", role: "supplier", balanceUSD: 0, balanceAED: 0, balanceUSDEquiv: 0, totalUSD: 0 },
 ];
 
-// From Page 3: final balance 0g after melting loss on 3/17/26 consumed remaining 95.848g
-// All inventory fully consumed (sold + melting losses)
+// March 2026 closing position from P&L sheet
 export const goldInventory = {
-  balanceGrams: 0,
-  totalMeltingLossGrams: 233.798, // 97.85 previous + 95.848 final + 40.168 on 3/9/26
-  costPerGram: 0,
-  costOfRemainingUSD: 0,
+  balanceGrams: 5907.43,
+  totalMeltingLossGrams: 2092.13,
+  totalPurchasedGrams: 52834.81,
+  totalSoldGrams: 44835.25,
+  costPerGram: 798688 / 5907.43,
+  costOfRemainingUSD: 798688,
+  bookValueAED: 798688 * AED_TO_USD_RATE,
 };
 
-// Capital position calculated from current balances
+// Ahmad investment position (100% owner) — from P&L Equity section
+export const ahmadPosition = {
+  // Part A — Cash equity flow
+  openingBalance: 55327,
+  netProfit: 624547.90,
+  withdrawals: 20000,
+  cashEquityClosing: 549220.90, // 55327 + 624547.90 - 20000
+
+  // Part B — Net profit deployment (where the profit sits)
+  goldInventoryUSD: 798688,
+  arAlMasa: 3478,
+  brokerZhouReceivable: 13313,
+  brokerPYPayable: -266259,
+
+  // Receivables net
+  get netReceivables() {
+    return this.arAlMasa + this.brokerZhouReceivable + this.brokerPYPayable;
+  },
+  get totalNetPosition() {
+    return this.cashEquityClosing + this.goldInventoryUSD + this.netReceivables;
+  },
+};
+
+// Backwards-compat alias used by older components
 export const goldCapital = {
-  // Current Assets
-  brokerPY: 0,
-  brokerZHOU: 487959.95,
-  brokerZHOUAED: 479270.00,
-  goldInventoryUSD: 0,
+  brokerPY: -266259,
+  brokerZHOU: 13313,
+  brokerZHOUAED: 0,
+  goldInventoryUSD: 798688,
   arMotiAED: 0,
-  arAlMasaAED: 12775.12, // AL MASA owes us (debit balance)
+  arAlMasaAED: 3478 * AED_TO_USD_RATE,
   arUnipHK: 0,
   arGolden: 0,
-  // Computed
-  get totalAR_USD() {
-    return (this.arMotiAED + this.arAlMasaAED) / AED_TO_USD_RATE;
-  },
-  get totalBrokers() {
-    return this.brokerPY + this.brokerZHOU + this.brokerZHOUAED / AED_TO_USD_RATE;
-  },
+  get totalAR_USD() { return 3478; },
+  get totalBrokers() { return this.brokerPY + this.brokerZHOU; },
   get totalCurrentPosition() {
     return this.totalBrokers + this.goldInventoryUSD + this.totalAR_USD;
   },
-  // Net Profit from P&L
-  netProfit: 677250.52,
-  // Initial Capital = Current Position - Net Profit
-  get initialCapital() {
-    return this.totalCurrentPosition - this.netProfit;
-  },
+  netProfit: 624547.90,
+  get initialCapital() { return this.totalCurrentPosition - this.netProfit; },
 };
 
 export const formatCurrency = (value: number, currency = "USD") => {
