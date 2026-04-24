@@ -35,11 +35,12 @@ export const monthlyPL: MonthlyPL[] = [
   { month: "Jul 25", period: "1-Jul-25 to 31-Jul-25", sales: 124918.50, directIncome: 300, totalRevenue: 125218.50, costOfSales: 59892.53, grossProfit: 65325.97, indirectExpenses: 64653.10, netProfit: 672.87, payroll: 42602, rent: 10677 },
   { month: "Aug 25", period: "1-Aug-25 to 31-Aug-25", sales: 69061, directIncome: 500, totalRevenue: 69561, costOfSales: 35359, grossProfit: 34202, indirectExpenses: 59086.12, netProfit: -24884.12, payroll: 43452.80, rent: 10677 },
   { month: "Sep 25", period: "1-Sep-25 to 30-Sep-25", sales: 85385.50, directIncome: 1200, totalRevenue: 86585.50, costOfSales: 31804.24, grossProfit: 54781.26, indirectExpenses: 62226.45, netProfit: -7445.19, payroll: 42650, rent: 10677 },
-  { month: "Oct 25", period: "1-Oct-25 to 31-Oct-25", sales: 113994.60, directIncome: 26850, totalRevenue: 140844.60, costOfSales: 112672.33, grossProfit: 28172.27, indirectExpenses: 68476.09, netProfit: -40303.82, payroll: 42950, rent: 10677 },
-  { month: "Nov 25", period: "1-Nov-25 to 30-Nov-25", sales: 133289.37, directIncome: 30000, totalRevenue: 163289.37, costOfSales: 98140.83, grossProfit: 65148.54, indirectExpenses: 75900.29, netProfit: -10751.75, payroll: 54667, rent: 10677 },
-  { month: "Dec 25", period: "1-Dec-25 to 31-Dec-25", sales: 136671.79, directIncome: 31200, totalRevenue: 167871.79, costOfSales: 93617.18, grossProfit: 74254.61, indirectExpenses: 88798.04, netProfit: -14543.43, payroll: 63953, rent: 10677 },
-  { month: "Jan 26", period: "1-Jan-26 to 31-Jan-26", sales: 154653.98, directIncome: 31910, totalRevenue: 186563.98, costOfSales: 98480.39, grossProfit: 88083.59, indirectExpenses: 91330.94, netProfit: -3247.35, payroll: 59460, rent: 10677 },
-  { month: "Feb 26", period: "1-Feb-26 to 28-Feb-26", sales: 176306.62, directIncome: 30700, totalRevenue: 207006.62, costOfSales: 113834.97, grossProfit: 93171.65, indirectExpenses: 97206.95, netProfit: -4035.30, payroll: 54271, rent: 10677 },
+  { month: "Oct 25", period: "1-Oct-25 to 31-Oct-25", sales: 113994.60, directIncome: 350, totalRevenue: 114344.60, costOfSales: 86172.33, grossProfit: 28172.27, indirectExpenses: 68476.09, netProfit: -40303.82, payroll: 42950, rent: 10677 },
+  { month: "Nov 25", period: "1-Nov-25 to 30-Nov-25", sales: 133289.37, directIncome: 0, totalRevenue: 133289.37, costOfSales: 68140.83, grossProfit: 65148.54, indirectExpenses: 75900.29, netProfit: -10751.75, payroll: 54667, rent: 10677 },
+  { month: "Dec 25", period: "1-Dec-25 to 31-Dec-25", sales: 136671.79, directIncome: 1200, totalRevenue: 137871.79, costOfSales: 63617.18, grossProfit: 74254.61, indirectExpenses: 88798.04, netProfit: -14543.43, payroll: 63953, rent: 10677 },
+  { month: "Jan 26", period: "1-Jan-26 to 31-Jan-26", sales: 154653.98, directIncome: 1910, totalRevenue: 156563.98, costOfSales: 68480.39, grossProfit: 88083.59, indirectExpenses: 91330.94, netProfit: -3247.35, payroll: 59460, rent: 10677 },
+  { month: "Feb 26", period: "1-Feb-26 to 28-Feb-26", sales: 176306.62, directIncome: 700, totalRevenue: 177006.62, costOfSales: 83834.97, grossProfit: 93171.65, indirectExpenses: 97206.95, netProfit: -4035.30, payroll: 54271, rent: 10677 },
+  { month: "Mar 26", period: "1-Mar-26 to 31-Mar-26", sales: 61995.29, directIncome: 0, totalRevenue: 61995.29, costOfSales: 20114.30, grossProfit: 41880.99, indirectExpenses: 49022.93, netProfit: -7141.94, payroll: 29835, rent: 10677 },
 ];
 
 export const balanceSheet = {
