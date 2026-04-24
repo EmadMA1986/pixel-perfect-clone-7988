@@ -120,3 +120,25 @@ export const ahmadGarage = {
   shareCapital: 520000, // total exposure (capital + loan)
   totalCapital: 1300000, // legacy field kept for backward compat
 };
+
+// Per-month indirect expense breakdown (line items from Tally Indirect Expenses section)
+// Keys are stable display names; values in AED.
+export const indirectExpenseDetail: Record<string, Record<string, number>> = {
+  "Nov 24": { Payroll: 28716, Rent: 10677, "Legal & Prof": 20033, Garbage: 4504, Advertising: 4290, Office: 3718.10, "Staff Visa": 1810.65, Water: 557, "Card Charges": 479.50, Fuel: 439 },
+  "Dec 24": { Payroll: 37878, Rent: 10677, "Staff Visa": 16854, "Bank Charges": 6400, Office: 6943, Advertising: 3000, "Legal & Prof": 1140, Water: 331.50, "Card Charges": 206.97, Fuel: 169, "WiFi & Mobile": 182 },
+  "Jan 25": { Payroll: 39791, Rent: 10677, "Legal & Prof": 26377, "Staff Visa": 8933, Advertising: 7350, Office: 3569.17, DEWA: 1609.68, "Card Charges": 408.94, "WiFi & Mobile": 341.50, Fuel: 290, Water: 21 },
+  "Feb 25": { Payroll: 48136, "Staff Visa": 12747.50, Rent: 10677, "WiFi & Mobile": 4826.75, "Legal & Prof": 1364.50, "Card Charges": 530.35, Fuel: 357.60, "Al Ansari": 156.90, Office: 43.34 },
+  "Mar 25": { Payroll: 48212, Rent: 10677, Meals: 3375, "Card Charges": 1395.75, Office: 591.25, Fuel: 230, "Al Ansari": 193.25 },
+  "Apr 25": { Payroll: 47994, Rent: 10677, "WiFi & Mobile": 3495.57, DEWA: 1350, "Card Charges": 991.14, Office: 521.39, Fuel: 355, "Staff Visa": 200, Water: 131.50 },
+  "May 25": { Payroll: 44692, Rent: 10677, Advertising: 6750, DEWA: 1750, "Legal & Prof": 1260, Water: 657.50, "Card Charges": 562.30, "WiFi & Mobile": 342.49, Fuel: 277.29, "Bank Charges": 261.45, Office: 139.60, "Al Ansari": 105, "FB Ads": 7.58 },
+  "Jun 25": { Payroll: 46450, "Advertising": 12885.45, Rent: 10677, "Staff Visa": 7736, "WiFi & Mobile": 3130.73, Office: 1324.75, DEWA: 850, Fuel: 366.43, "Card Charges": 284.62, "Bank Charges": 261.45, "FB Ads": 154.42, "Google Ads": 51.57, "Al Ansari": 52.50 },
+  "Jul 25": { Payroll: 42602, Rent: 10677, Advertising: 6000, "WiFi & Mobile": 3129.03, DEWA: 850, "Card Charges": 389.49, Office: 292.50, Fuel: 264.19, "Bank Charges": 261.45, "FB Ads": 179.80, "Google Ads": 8.48 },
+  "Aug 25": { Payroll: 43452.80, Rent: 10677, "WiFi & Mobile": 1902.58, DEWA: 950, Office: 752, "Card Charges": 582.54, Fuel: 450, "Bank Charges": 261.45, "Al Ansari": 57.75 },
+  "Sep 25": { Payroll: 42650, Rent: 10677, Office: 3035.24, Advertising: 3000, "WiFi & Mobile": 1521.25, Fuel: 527.87, "Card Charges": 325.08, "Bank Charges": 267.65, Taxi: 165, "Al Ansari": 57.75 },
+  "Oct 25": { Payroll: 42950, Rent: 10677, Office: 6542, "Staff Visa": 4396, "WiFi & Mobile": 1816.25, Fuel: 640.01, "Card Charges": 491.70, DEWA: 354.62, Taxi: 300, "Bank Charges": 253, "Al Ansari": 55 },
+  "Nov 25": { Payroll: 54667, Rent: 10677, "Staff Visa": 3307.70, PRO: 1869.05, "WiFi & Mobile": 1699.96, DEWA: 941.73, "Card Charges": 743.13, Office: 608.52, Fuel: 606.24, "Bank Charges": 250, Advertising: 250, "FB Ads": 185.65, "Al Ansari": 95 },
+  "Dec 25": { Payroll: 63953, Rent: 10677, Office: 6775.71, PRO: 2821.25, DEWA: 1761.35, "Card Charges": 718.44, "Medical Ins": 725, "WiFi & Mobile": 496.85, Fuel: 385.41, "Bank Charges": 249, "Al Ansari": 135, Taxi: 100 },
+  "Jan 26": { Payroll: 59460, Rent: 10677, Meals: 7500, Office: 5915.50, PRO: 2831, "WiFi & Mobile": 1937.77, DEWA: 783.36, "Card Charges": 744.29, Fuel: 598.36, "Visa Fine": 370, "Bank Charges": 250, "FB Ads": 143.03, Taxi: 138, "Al Ansari": 30 },
+  "Feb 26": { Payroll: 54271, "Trade License": 23366.25, Rent: 10677, PRO: 4790, Office: 1450, "Legal & Prof": 1095.96, "WiFi & Mobile": 510.84, "Card Charges": 369.86, Fuel: 289.58, "Bank Charges": 254, "Staff Visa": 72.54, "Al Ansari": 60 },
+  "Mar 26": { Payroll: 29835, Rent: 10677, Office: 4171.14, PRO: 2292.34, DEWA: 778.93, "WiFi & Mobile": 494.26, Office_extra: 0, "Card Charges": 341.89, "Bank Charges": 251, Fuel: 121.37, "Al Ansari": 60 },
+};
