@@ -482,69 +482,86 @@ const CombinedDashboard = () => {
 
       <main className="container mx-auto px-4 py-6 space-y-6">
 
-        {/* 1. KPI Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        {/* === PERMANENT NOTES BANNER === */}
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="p-3">
+            <div className="flex items-start gap-2">
+              <FileText className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+              <div className="text-[11px] text-foreground leading-relaxed space-y-0.5">
+                <p>• RYA Gold figures converted at USD/AED 3.673 — <span className="font-semibold">updated to April 2026</span>.</p>
+                <p>• MK Autos Co and MK Garage revenue excludes visa-sponsorship pass-through (net profit unaffected).</p>
+                <p>• Intercompany balance eliminated: MK Autos Co ↔ MK Garage <span className="font-semibold">AED 79,125</span>.</p>
+                <p>• MK Autos Cars: <span className="font-semibold">AED 490,160</span> total owed to Ahmad (AED 445,160 profit + AED 45,000 personal loan); cash withdrawn AED 1,134,695.</p>
+                <p>• All figures as at March 2026 except RYA Gold (April 2026).</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 1. KPI Summary Cards — AHMAD'S SHARE ONLY */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-primary">Portfolio KPI Summary</h2>
+            <Badge variant="outline" className="text-[10px] border-primary/40 text-primary">Ahmad's Share Only</Badge>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
             <CardContent className="p-4 relative">
               <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground">Total Investment</p>
-              <p className="text-xl font-bold font-serif text-foreground">{fmt(toDisplay(totalInvestment))}</p>
-              <p className="text-[10px] text-muted-foreground">{companies.length} entities</p>
+              <p className="text-xl font-bold font-serif text-foreground">{fmt(toDisplay(ahmadTotalInvestment))}</p>
+              <p className="text-[10px] text-muted-foreground">{ahmadRows.length} entities · Ahmad</p>
             </CardContent>
           </Card>
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
             <CardContent className="p-4 relative">
               <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground">
-                {selectedMonth !== "all" ? "Monthly P/L" : "Total Profit/Loss"}
+                {selectedMonth === "Mar-26" ? "Ahmad Net P&L (Mar-26)" : "Ahmad Net P&L (ITD)"}
               </p>
-              <p className={`text-xl font-bold font-serif ${totalProfit >= 0 ? "text-success" : "text-loss"}`}>{fmt(toDisplay(totalProfit))}</p>
-              <div className="flex items-center gap-1">
-                <p className="text-[10px] text-muted-foreground">{profitableCompanies.length} profitable · {losingCompanies.length} losing</p>
-                <TrendBadge current={totalProfit} previous={prevTotalProfit ?? undefined} />
-              </div>
+              <p className={`text-xl font-bold font-serif ${ahmadProfitForPeriod >= 0 ? "text-success" : "text-loss"}`}>
+                {ahmadProfitForPeriod >= 0 ? "+" : ""}{fmt(toDisplay(ahmadProfitForPeriod))}
+              </p>
+              <p className="text-[10px] text-muted-foreground">
+                {ahmadRows.filter(r => (selectedMonth === "Mar-26" ? r.ahmadMar : r.ahmadITD) >= 0).length} profitable · {ahmadRows.filter(r => (selectedMonth === "Mar-26" ? r.ahmadMar : r.ahmadITD) < 0).length} losing
+              </p>
             </CardContent>
           </Card>
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
             <CardContent className="p-4 relative">
-              <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground">Net Position</p>
-              <p className={`text-xl font-bold font-serif ${totalNetPosition >= 0 ? "text-success" : "text-loss"}`}>{fmt(toDisplay(totalNetPosition))}</p>
-              <div className="flex items-center gap-1">
-                <p className="text-[10px] text-muted-foreground">Current portfolio value</p>
-                <TrendBadge current={totalNetPosition} previous={prevTotalNetPosition ?? undefined} />
-              </div>
+              <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground">Ahmad Net Position</p>
+              <p className={`text-xl font-bold font-serif ${ahmadNetPositionForPeriod >= 0 ? "text-success" : "text-loss"}`}>{fmt(toDisplay(ahmadNetPositionForPeriod))}</p>
+              <p className="text-[10px] text-muted-foreground">Investment + ITD P&L</p>
             </CardContent>
           </Card>
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
             <CardContent className="p-4 relative">
-              <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground">
-                {selectedMonth !== "all" ? "Monthly ROI" : "Overall ROI"}
+              <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground">Ahmad Weighted ROI</p>
+              <p className={`text-xl font-bold font-serif ${ahmadWeightedROI >= 0 ? "text-success" : "text-loss"}`}>
+                {ahmadWeightedROI >= 0 ? "+" : ""}{ahmadWeightedROI.toFixed(1)}%
               </p>
-              <p className={`text-xl font-bold font-serif ${overallROI >= 0 ? "text-success" : "text-loss"}`}>{overallROI.toFixed(1)}%</p>
-              <div className="flex items-center gap-1">
-                <p className="text-[10px] text-muted-foreground">Weighted average</p>
-                {prevOverallROI !== null && <TrendBadge current={overallROI} previous={prevOverallROI} isCurrency={false} />}
-              </div>
+              <p className="text-[10px] text-muted-foreground">ITD weighted average</p>
             </CardContent>
           </Card>
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
             <CardContent className="p-4 relative">
               <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground flex items-center gap-1"><Trophy className="h-3 w-3 text-success" />Best Performer</p>
-              <p className="text-xl font-bold font-serif text-success">{bestPerformer.roi.toFixed(1)}%</p>
-              <p className="text-[10px] text-muted-foreground">{bestPerformer.name}</p>
+              <p className="text-xl font-bold font-serif text-success">+{ahmadBest.ahmadROI.toFixed(1)}%</p>
+              <p className="text-[10px] text-muted-foreground">{ahmadBest.name}</p>
             </CardContent>
           </Card>
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
             <CardContent className="p-4 relative">
               <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground flex items-center gap-1"><Target className="h-3 w-3 text-loss" />Worst Performer</p>
-              <p className="text-xl font-bold font-serif text-loss">{worstPerformer.roi.toFixed(1)}%</p>
-              <p className="text-[10px] text-muted-foreground">{worstPerformer.name}</p>
+              <p className="text-xl font-bold font-serif text-loss">{ahmadWorst.ahmadROI.toFixed(1)}%</p>
+              <p className="text-[10px] text-muted-foreground">{ahmadWorst.name}</p>
             </CardContent>
           </Card>
+          </div>
         </div>
 
         <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
