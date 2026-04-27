@@ -189,29 +189,31 @@ const CombinedDashboard = () => {
     };
   };
 
-  // === VERIFIED MARCH 2026 FIGURES (single source of truth, overrides dynamic computation) ===
-  // These reflect: (a) dummy visa-sponsorship income removed from MK Autos Co + MK Garage,
-  // (b) intercompany AED 79,125 (Co owes Garage) eliminated from consolidated view,
-  // (c) Ahmad's direct exposure (his ownership share only).
-  // Used whenever selectedMonth === "Mar-26" or "all" (ITD).
-  const VERIFIED_MAR_26 = {
-    rya:            { investment:   203_200, profit:  2_293_945,  marProfit:   38_286 },
-    otc:            { investment:   515_600, profit:    752_700,  marProfit:  107_462 },
-    mkAutosCars:    { investment: 2_390_000, profit:  1_580_000,  marProfit:  -13_677 },
-    mkAutosCompany: { investment:   135_000, profit:   -169_645,  marProfit:  -13_677 },
-    mkx:            { investment: 5_788_934, profit: -8_126_209,  marProfit: -166_806 },
-    garage:         { investment:   520_000, profit:   -338_134,  marProfit:   -7_142 },
+  // === VERIFIED FIGURES (single source of truth) ===
+  // Two bases per company:
+  //   - entity:  Full Company (100%) — used for Ranking table + Consolidated P&L Matrix
+  //   - ahmad:   Ahmad's ownership share — used for KPI cards + Ahmad Position section
+  // Adjustments applied: dummy visa-sponsorship income removed (MK Co + Garage),
+  // intercompany AED 79,125 (Co ↔ Garage) eliminated, RYA Gold updated to Apr 2026.
+  const VERIFIED = {
+    rya:            { ahmadPct: 100, investment:   203_200, entityITD:  2_293_945, ahmadITD:  2_293_945, entityMar:   38_286, ahmadMar:   38_286 },
+    otc:            { ahmadPct:  50, investment:   515_600, entityITD:  1_505_420, ahmadITD:    752_710, entityMar:  214_924, ahmadMar:  107_462 },
+    mkAutosCars:    { ahmadPct: 100, investment: 2_390_000, entityITD:  1_579_855, ahmadITD:  1_579_855, entityMar:  -13_677, ahmadMar:  -13_677 },
+    mkAutosCompany: { ahmadPct:  45, investment:   135_000, entityITD:   -169_714, ahmadITD:    -76_371, entityMar:  -30_393, ahmadMar:  -13_677 },
+    mkx:            { ahmadPct:  50, investment: 5_788_934, entityITD: -8_126_209, ahmadITD: -4_063_104, entityMar: -333_612, ahmadMar: -166_806 },
+    garage:         { ahmadPct:  40, investment:   520_000, entityITD:   -338_134, ahmadITD:   -135_253, entityMar:  -17_855, ahmadMar:   -7_142 },
   } as const;
 
+  // For Ranking Table (entity basis) and aggregate ITD totals shown in that table
   const buildVerifiedSnapshot = (useMar = false) => {
-    const mk = (k: keyof typeof VERIFIED_MAR_26) => {
-      const v = VERIFIED_MAR_26[k];
-      const profit = useMar ? v.marProfit : v.profit;
+    const mk = (k: keyof typeof VERIFIED) => {
+      const v = VERIFIED[k];
+      const profit = useMar ? v.entityMar : v.entityITD;
       return {
         investment: v.investment,
         profit,
         netPosition: v.investment + profit,
-        roi: (v.profit / v.investment) * 100, // ROI always reflects ITD performance
+        roi: (v.entityITD / v.investment) * 100, // ROI always reflects ITD performance
       };
     };
     return {
@@ -308,6 +310,28 @@ const CombinedDashboard = () => {
   const totalNetPosition = companies.reduce((s, c) => s + c.netPosition, 0);
   const overallROI = (totalProfit / totalInvestment) * 100;
 
+  // === Ahmad's-share aggregates (KPI cards + Ahmad Position section) ===
+  const ahmadKeys = Object.keys(VERIFIED) as (keyof typeof VERIFIED)[];
+  const ahmadTotalInvestment = ahmadKeys.reduce((s, k) => s + VERIFIED[k].investment, 0);  // 9,552,734
+  const ahmadITDProfit = ahmadKeys.reduce((s, k) => s + VERIFIED[k].ahmadITD, 0);           // +351,782
+  const ahmadMarProfit = ahmadKeys.reduce((s, k) => s + VERIFIED[k].ahmadMar, 0);           // -55,554
+  const ahmadNetPosition = ahmadTotalInvestment + ahmadITDProfit;                           // 9,904,516
+  const ahmadWeightedROI = (ahmadITDProfit / ahmadTotalInvestment) * 100;                   // +3.7%
+  const ahmadProfitForPeriod = selectedMonth === "Mar-26" ? ahmadMarProfit : ahmadITDProfit;
+  const ahmadNetPositionForPeriod = ahmadTotalInvestment + ahmadProfitForPeriod;
+  const ahmadRows = ahmadKeys.map(k => ({
+    key: k,
+    name: ({ rya: "RYA Gold", otc: "OTC Trading", mkAutosCars: "MK Autos Cars", mkAutosCompany: "MK Autos Company", mkx: "MKX Crypto", garage: "MK Garage" } as const)[k],
+    pct: VERIFIED[k].ahmadPct,
+    investment: VERIFIED[k].investment,
+    entityITD: VERIFIED[k].entityITD,
+    ahmadITD: VERIFIED[k].ahmadITD,
+    ahmadMar: VERIFIED[k].ahmadMar,
+    ahmadROI: (VERIFIED[k].ahmadITD / VERIFIED[k].investment) * 100,
+  }));
+  const ahmadBest = [...ahmadRows].sort((a, b) => b.ahmadROI - a.ahmadROI)[0];
+  const ahmadWorst = [...ahmadRows].sort((a, b) => a.ahmadROI - b.ahmadROI)[0];
+
   // Previous month totals for MoM
   const prevTotalProfit = pd ? Object.values(pd).reduce((s, v) => s + v.profit, 0) : null;
   const prevTotalNetPosition = pd ? Object.values(pd).reduce((s, v) => s + v.netPosition, 0) : null;
@@ -328,8 +352,11 @@ const CombinedDashboard = () => {
   // Executive Summary
   const executiveSummary = useMemo(() => {
     // Verified narrative for Mar-26 / ITD
-    if (selectedMonth === "Mar-26" || selectedMonth === "all") {
-      return "Portfolio recorded a net loss of AED 55,554 in March 2026. RYA Gold (+AED 38,286) and OTC Trading (+AED 107,462) remain the strongest performers. MKX Crypto (-AED 166,806) is the primary drag — representing 60.6% of total capital but generating -70.2% ROI. MK Garage and MK Autos Company both require urgent attention. Total portfolio investment AED 9.55M with cumulative ITD loss of AED 4.01M driven almost entirely by MKX accumulated losses of AED 8.13M. Without MKX, portfolio ITD profit would be +AED 4.12M.";
+    if (selectedMonth === "all") {
+      return "Ahmad's portfolio of 6 companies has total investment AED 9,552,734 with net positive P&L of AED 351,782 (+3.7% ROI). The three profitable companies — RYA Gold (+AED 2,293,945), MK Autos Cars (+AED 1,579,855) and OTC Trading (+AED 752,710) — generated combined profit of AED 4,626,510. This is almost entirely offset by MKX Crypto losses of AED 4,063,104 (Ahmad 50% share of AED 8,126,209). Without MKX, Ahmad net portfolio profit = +AED 4,414,886. Immediate board-level decisions required on MKX (EXIT vs RESTRUCTURE) and MK Garage (capital injection vs wind-down). Every month of MKX inaction costs Ahmad approximately AED 83,403 (50% of AED 166,806 monthly burn).";
+    }
+    if (selectedMonth === "Mar-26") {
+      return "March 2026 portfolio net loss AED 55,554 (Ahmad share). OTC (+AED 107,462) and RYA Gold (+AED 38,286) were the only profitable companies. MKX (-AED 166,806) consumed all gains. Without MKX, March portfolio profit would be +AED 111,252. Ahmad ITD net position +AED 351,782 — without MKX would be +AED 4,414,886.";
     }
     const period = `in ${selectedMonth}`;
     const profitLine = totalProfit >= 0
@@ -458,82 +485,105 @@ const CombinedDashboard = () => {
 
       <main className="container mx-auto px-4 py-6 space-y-6">
 
-        {/* 1. KPI Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        {/* === PERMANENT NOTES BANNER === */}
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="p-3">
+            <div className="flex items-start gap-2">
+              <FileText className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+              <div className="text-[11px] text-foreground leading-relaxed space-y-0.5">
+                <p>• RYA Gold figures converted at USD/AED 3.673 — <span className="font-semibold">updated to April 2026</span>.</p>
+                <p>• MK Autos Co and MK Garage revenue excludes visa-sponsorship pass-through (net profit unaffected).</p>
+                <p>• Intercompany balance eliminated: MK Autos Co ↔ MK Garage <span className="font-semibold">AED 79,125</span>.</p>
+                <p>• MK Autos Cars: <span className="font-semibold">AED 490,160</span> total owed to Ahmad (AED 445,160 profit + AED 45,000 personal loan); cash withdrawn AED 1,134,695.</p>
+                <p>• All figures as at March 2026 except RYA Gold (April 2026).</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 1. KPI Summary Cards — AHMAD'S SHARE ONLY */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-primary">Portfolio KPI Summary</h2>
+            <Badge variant="outline" className="text-[10px] border-primary/40 text-primary">Ahmad's Share Only</Badge>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
             <CardContent className="p-4 relative">
               <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground">Total Investment</p>
-              <p className="text-xl font-bold font-serif text-foreground">{fmt(toDisplay(totalInvestment))}</p>
-              <p className="text-[10px] text-muted-foreground">{companies.length} entities</p>
+              <p className="text-xl font-bold font-serif text-foreground">{fmt(toDisplay(ahmadTotalInvestment))}</p>
+              <p className="text-[10px] text-muted-foreground">{ahmadRows.length} entities · Ahmad</p>
             </CardContent>
           </Card>
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
             <CardContent className="p-4 relative">
               <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground">
-                {selectedMonth !== "all" ? "Monthly P/L" : "Total Profit/Loss"}
+                {selectedMonth === "Mar-26" ? "Ahmad Net P&L (Mar-26)" : "Ahmad Net P&L (ITD)"}
               </p>
-              <p className={`text-xl font-bold font-serif ${totalProfit >= 0 ? "text-success" : "text-loss"}`}>{fmt(toDisplay(totalProfit))}</p>
-              <div className="flex items-center gap-1">
-                <p className="text-[10px] text-muted-foreground">{profitableCompanies.length} profitable · {losingCompanies.length} losing</p>
-                <TrendBadge current={totalProfit} previous={prevTotalProfit ?? undefined} />
-              </div>
+              <p className={`text-xl font-bold font-serif ${ahmadProfitForPeriod >= 0 ? "text-success" : "text-loss"}`}>
+                {ahmadProfitForPeriod >= 0 ? "+" : ""}{fmt(toDisplay(ahmadProfitForPeriod))}
+              </p>
+              <p className="text-[10px] text-muted-foreground">
+                {ahmadRows.filter(r => (selectedMonth === "Mar-26" ? r.ahmadMar : r.ahmadITD) >= 0).length} profitable · {ahmadRows.filter(r => (selectedMonth === "Mar-26" ? r.ahmadMar : r.ahmadITD) < 0).length} losing
+              </p>
             </CardContent>
           </Card>
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
             <CardContent className="p-4 relative">
-              <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground">Net Position</p>
-              <p className={`text-xl font-bold font-serif ${totalNetPosition >= 0 ? "text-success" : "text-loss"}`}>{fmt(toDisplay(totalNetPosition))}</p>
-              <div className="flex items-center gap-1">
-                <p className="text-[10px] text-muted-foreground">Current portfolio value</p>
-                <TrendBadge current={totalNetPosition} previous={prevTotalNetPosition ?? undefined} />
-              </div>
+              <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground">Ahmad Net Position</p>
+              <p className={`text-xl font-bold font-serif ${ahmadNetPositionForPeriod >= 0 ? "text-success" : "text-loss"}`}>{fmt(toDisplay(ahmadNetPositionForPeriod))}</p>
+              <p className="text-[10px] text-muted-foreground">Investment + ITD P&L</p>
             </CardContent>
           </Card>
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
             <CardContent className="p-4 relative">
-              <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground">
-                {selectedMonth !== "all" ? "Monthly ROI" : "Overall ROI"}
+              <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground">Ahmad Weighted ROI</p>
+              <p className={`text-xl font-bold font-serif ${ahmadWeightedROI >= 0 ? "text-success" : "text-loss"}`}>
+                {ahmadWeightedROI >= 0 ? "+" : ""}{ahmadWeightedROI.toFixed(1)}%
               </p>
-              <p className={`text-xl font-bold font-serif ${overallROI >= 0 ? "text-success" : "text-loss"}`}>{overallROI.toFixed(1)}%</p>
-              <div className="flex items-center gap-1">
-                <p className="text-[10px] text-muted-foreground">Weighted average</p>
-                {prevOverallROI !== null && <TrendBadge current={overallROI} previous={prevOverallROI} isCurrency={false} />}
-              </div>
+              <p className="text-[10px] text-muted-foreground">ITD weighted average</p>
             </CardContent>
           </Card>
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
             <CardContent className="p-4 relative">
               <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground flex items-center gap-1"><Trophy className="h-3 w-3 text-success" />Best Performer</p>
-              <p className="text-xl font-bold font-serif text-success">{bestPerformer.roi.toFixed(1)}%</p>
-              <p className="text-[10px] text-muted-foreground">{bestPerformer.name}</p>
+              <p className="text-xl font-bold font-serif text-success">+{ahmadBest.ahmadROI.toFixed(1)}%</p>
+              <p className="text-[10px] text-muted-foreground">{ahmadBest.name}</p>
             </CardContent>
           </Card>
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
             <CardContent className="p-4 relative">
               <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground flex items-center gap-1"><Target className="h-3 w-3 text-loss" />Worst Performer</p>
-              <p className="text-xl font-bold font-serif text-loss">{worstPerformer.roi.toFixed(1)}%</p>
-              <p className="text-[10px] text-muted-foreground">{worstPerformer.name}</p>
+              <p className="text-xl font-bold font-serif text-loss">{ahmadWorst.ahmadROI.toFixed(1)}%</p>
+              <p className="text-[10px] text-muted-foreground">{ahmadWorst.name}</p>
             </CardContent>
           </Card>
+          </div>
         </div>
 
         <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
         {/* 2-5. Performance Verdict + Critical Alerts, Ranking table, MoM, Trend chart */}
-        <PortfolioInsights
-          companies={companySnapshots}
-          selectedMonth={selectedMonth}
-          prevMonthLabel={prevMonthLabel}
-          format={fmt}
-          toDisplay={toDisplay}
-          portfolioTrend={portfolioTrend}
-        />
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-primary">Company Ranking & Insights</h2>
+            <Badge variant="outline" className="text-[10px] border-primary/40 text-primary">Full Company (100%)</Badge>
+          </div>
+          <PortfolioInsights
+            companies={companySnapshots}
+            selectedMonth={selectedMonth}
+            prevMonthLabel={prevMonthLabel}
+            format={fmt}
+            toDisplay={toDisplay}
+            portfolioTrend={portfolioTrend}
+          />
+        </div>
 
         <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
@@ -552,10 +602,10 @@ const CombinedDashboard = () => {
                 <p className="text-xs font-bold uppercase tracking-wider text-loss">🔴 Critical — Act Immediately</p>
               </div>
               <ul className="text-xs text-foreground space-y-1.5 list-disc list-inside leading-relaxed">
-                <li><span className="font-semibold">MKX:</span> 10 months runway at current burn — board decision required</li>
-                <li><span className="font-semibold">MK Garage:</span> Cash overdraft — inject capital or wind down</li>
-                <li><span className="font-semibold">MK Autos Co:</span> Debt 28.1x equity — cash critically low AED 50,989</li>
-                <li><span className="font-semibold">Portfolio:</span> -39.9% weighted ROI — 60.6% capital in worst performer</li>
+                <li><span className="font-semibold">MKX:</span> -AED 166,806 loss Mar-26 · 10 months runway · VARA 7 risk flags — <span className="font-bold">EXIT</span></li>
+                <li><span className="font-semibold">MK Garage:</span> Cash overdraft -AED 69,521 · ITD losses -AED 338,134 exceed share capital AED 300,000 — <span className="font-bold">EXIT</span></li>
+                <li><span className="font-semibold">MK Autos Co:</span> Debt 28.1x equity · cash AED 50,989 critically low</li>
+                <li><span className="font-semibold">MKX = 60.6% of capital</span> at -70.2% ROI — critical misallocation</li>
               </ul>
             </div>
             {/* WATCH */}
@@ -577,9 +627,9 @@ const CombinedDashboard = () => {
                 <p className="text-xs font-bold uppercase tracking-wider text-success">✅ Healthy</p>
               </div>
               <ul className="text-xs text-foreground space-y-1.5 list-disc list-inside leading-relaxed">
-                <li><span className="font-semibold">RYA Gold:</span> +1,224.1% ROI | Strong profit engine</li>
-                <li><span className="font-semibold">OTC:</span> +146% ROI | Spread improving | Profitable consistently</li>
-                <li><span className="font-semibold">MK Cars:</span> Strong gross margin 82.8% | Fleet value AED 2.93M</li>
+                <li><span className="font-semibold">RYA Gold:</span> +1,129.4% ROI · Strong profit engine (Apr 2026)</li>
+                <li><span className="font-semibold">OTC:</span> +146.0% ROI · Profitable consistently</li>
+                <li><span className="font-semibold">MK Cars:</span> +66.1% ROI · Fleet value AED 2.93M</li>
               </ul>
             </div>
           </CardContent>
@@ -650,8 +700,14 @@ const CombinedDashboard = () => {
 
         <div className="h-[2px] bg-gradient-to-r from-transparent via-primary/70 to-transparent rounded-full" />
 
-        {/* 7. Consolidated P&L Matrix */}
-        <ConsolidatedPLMatrix allMonths={ALL_MONTHS} selectedMonth={selectedMonth} />
+        {/* 7. Consolidated P&L Matrix — FULL COMPANY */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-primary">Consolidated P&L Matrix</h2>
+            <Badge variant="outline" className="text-[10px] border-primary/40 text-primary">Full Company (100%)</Badge>
+          </div>
+          <ConsolidatedPLMatrix allMonths={ALL_MONTHS} selectedMonth={selectedMonth} />
+        </div>
 
         {/* Consolidation notes */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -672,7 +728,165 @@ const CombinedDashboard = () => {
 
         <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
-        {/* 8. Executive Summary */}
+        {/* 8. AHMAD'S INVESTMENT POSITION — Ahmad Share Only */}
+        <Card className="border-primary/30 bg-card/80 backdrop-blur-sm">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+                <Briefcase className="h-4 w-4 text-primary" /> Ahmad's Direct Investment Position — All Companies
+              </CardTitle>
+              <Badge variant="outline" className="text-[10px] border-primary/40 text-primary">Ahmad's Share Only</Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0 overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">Company</TableHead>
+                  <TableHead className="text-xs text-center">Ahmad %</TableHead>
+                  <TableHead className="text-xs text-right">Investment</TableHead>
+                  <TableHead className="text-xs text-right">Company Total P&L</TableHead>
+                  <TableHead className="text-xs text-right">Ahmad P&L Share</TableHead>
+                  <TableHead className="text-xs text-right">Ahmad ROI</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {ahmadRows.map(r => {
+                  const exitRow = r.key === "mkx" || r.key === "garage";
+                  const winRow = r.ahmadITD > 0;
+                  const rowBg = exitRow ? "bg-loss/5" : winRow ? "bg-success/5" : "";
+                  return (
+                    <TableRow key={r.key} className={rowBg}>
+                      <TableCell className="text-sm font-semibold text-foreground">{r.name}</TableCell>
+                      <TableCell className="text-center text-xs text-muted-foreground">{r.pct}%</TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">{fmt(toDisplay(r.investment))}</TableCell>
+                      <TableCell className={`text-right text-sm tabular-nums ${r.entityITD >= 0 ? "text-success" : "text-loss"}`}>
+                        {r.entityITD >= 0 ? "+" : ""}{fmt(toDisplay(r.entityITD))}
+                      </TableCell>
+                      <TableCell className={`text-right text-sm font-semibold tabular-nums ${r.ahmadITD >= 0 ? "text-success" : "text-loss"}`}>
+                        {r.ahmadITD >= 0 ? "+" : ""}{fmt(toDisplay(r.ahmadITD))}
+                      </TableCell>
+                      <TableCell className={`text-right text-sm font-bold tabular-nums ${r.ahmadROI >= 0 ? "text-success" : "text-loss"}`}>
+                        {r.ahmadROI >= 0 ? "+" : ""}{r.ahmadROI.toFixed(1)}%
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                <TableRow className="border-t-2 border-primary/40 bg-primary/5 font-bold">
+                  <TableCell className="text-sm font-bold">TOTAL</TableCell>
+                  <TableCell />
+                  <TableCell className="text-right text-sm font-bold tabular-nums">{fmt(toDisplay(ahmadTotalInvestment))}</TableCell>
+                  <TableCell className={`text-right text-sm font-bold tabular-nums ${ahmadRows.reduce((s, r) => s + r.entityITD, 0) >= 0 ? "text-success" : "text-loss"}`}>
+                    {(() => { const t = ahmadRows.reduce((s, r) => s + r.entityITD, 0); return `${t >= 0 ? "+" : ""}${fmt(toDisplay(t))}`; })()}
+                  </TableCell>
+                  <TableCell className={`text-right text-sm font-bold tabular-nums ${ahmadITDProfit >= 0 ? "text-success" : "text-loss"}`}>
+                    {ahmadITDProfit >= 0 ? "+" : ""}{fmt(toDisplay(ahmadITDProfit))}
+                  </TableCell>
+                  <TableCell className={`text-right text-sm font-bold tabular-nums ${ahmadWeightedROI >= 0 ? "text-success" : "text-loss"}`}>
+                    {ahmadWeightedROI >= 0 ? "+" : ""}{ahmadWeightedROI.toFixed(1)}%
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        {/* Sub-notes per company */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+          <div className="rounded-md border border-border/50 bg-card/60 p-2.5">
+            <p className="text-[10px] font-bold uppercase text-primary mb-0.5">MK Autos Cars</p>
+            <p className="text-foreground/90">Total owed to Ahmad: <span className="font-semibold">AED 490,160</span> (AED 445,160 uncollected profit + AED 45,000 personal loan) · Cash withdrawn AED 1,134,695.</p>
+          </div>
+          <div className="rounded-md border border-border/50 bg-card/60 p-2.5">
+            <p className="text-[10px] font-bold uppercase text-primary mb-0.5">OTC Trading</p>
+            <p className="text-foreground/90">Total company profit AED 1,505,420 · Ahmad 50%: AED 752,710 · Maria 50%: AED 752,710.</p>
+          </div>
+          <div className="rounded-md border border-border/50 bg-card/60 p-2.5">
+            <p className="text-[10px] font-bold uppercase text-primary mb-0.5">MK Autos Company</p>
+            <p className="text-foreground/90">Total capital AED 300,000 · Ahmad 45% (AED 135,000) · Total company P&L -AED 169,714 · Ahmad share -AED 76,371.</p>
+          </div>
+          <div className="rounded-md border border-border/50 bg-card/60 p-2.5">
+            <p className="text-[10px] font-bold uppercase text-primary mb-0.5">MK Garage</p>
+            <p className="text-foreground/90">Total company P&L -AED 338,134 · Ahmad 40% share -AED 135,253 · Ahmad total exposure: AED 520,000 (capital AED 120,000 + loan AED 400,000).</p>
+          </div>
+        </div>
+
+        {/* Three insight cards: Winners / Loss Exposure / Net Summary */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <Card className="border-success/40 bg-success/5">
+            <CardHeader className="pb-2"><CardTitle className="text-sm font-bold text-success flex items-center gap-2"><Trophy className="h-4 w-4" /> Ahmad's Winners</CardTitle></CardHeader>
+            <CardContent className="text-xs space-y-1">
+              <p>RYA Gold: <span className="font-semibold text-success">+AED 2,293,945</span> <span className="text-muted-foreground">(Apr 2026)</span></p>
+              <p>MK Autos Cars: <span className="font-semibold text-success">+AED 1,579,855</span> <span className="text-muted-foreground">(AED 490,160 owed)</span></p>
+              <p>OTC Trading: <span className="font-semibold text-success">+AED 752,710</span></p>
+              <p className="pt-1 border-t border-success/30 mt-1.5"><span className="font-bold">Combined positive: +AED 4,626,510</span></p>
+            </CardContent>
+          </Card>
+          <Card className="border-loss/40 bg-loss/5">
+            <CardHeader className="pb-2"><CardTitle className="text-sm font-bold text-loss flex items-center gap-2"><AlertTriangle className="h-4 w-4" /> Ahmad's Loss Exposure</CardTitle></CardHeader>
+            <CardContent className="text-xs space-y-1">
+              <p>MKX Crypto: <span className="font-semibold text-loss">-AED 4,063,104</span></p>
+              <p>MK Garage: <span className="font-semibold text-loss">-AED 135,253</span></p>
+              <p>MK Autos Company: <span className="font-semibold text-loss">-AED 76,371</span></p>
+              <p className="pt-1 border-t border-loss/30 mt-1.5"><span className="font-bold">Combined negative: -AED 4,274,728</span></p>
+            </CardContent>
+          </Card>
+          <Card className="border-primary/40 bg-primary/5">
+            <CardHeader className="pb-2"><CardTitle className="text-sm font-bold text-primary flex items-center gap-2"><Target className="h-4 w-4" /> Net Summary</CardTitle></CardHeader>
+            <CardContent className="text-xs space-y-1">
+              <p>Ahmad Net P&L: <span className="font-bold text-success">+AED 351,782 ✅</span></p>
+              <p>Without MKX: <span className="font-bold text-success">+AED 4,414,886</span></p>
+              <p>MKX has cost Ahmad: <span className="font-bold text-loss">AED 4,063,104</span></p>
+              <p className="pt-1 border-t border-primary/30 mt-1.5 text-yellow-500 font-semibold">⚠ Portfolio marginally positive — MKX is the only drag</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+
+        {/* 9. WEEKLY ACTION ITEMS (always visible) */}
+        <Card className="border-primary/40 bg-card/80 backdrop-blur-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+              ⚡ Weekly Action Items — What Needs Attention This Week
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="rounded-lg border-2 border-loss/40 bg-loss/5 p-3">
+              <p className="text-xs font-bold uppercase tracking-wider text-loss mb-2">🔴 Urgent — Act This Week</p>
+              <ul className="text-xs text-foreground space-y-1.5 list-disc list-inside leading-relaxed">
+                <li><span className="font-semibold">MKX:</span> Present EXIT vs RESTRUCTURE to board — every week costs Ahmad AED 41,750</li>
+                <li><span className="font-semibold">MK Garage:</span> Chase AR AED 206,831 to clear overdraft -AED 69,521</li>
+                <li><span className="font-semibold">MK Autos Co:</span> Chase AR AED 436,323 — solve cash crisis AED 50,989</li>
+                <li><span className="font-semibold">MK Cars:</span> Activate Lamborghini + Patrol — idle depreciation AED 26,417/mo</li>
+                <li><span className="font-semibold">RYA Gold:</span> Contact UNIP HK — USD 798,688 inventory idle</li>
+              </ul>
+            </div>
+            <div className="rounded-lg border-2 border-yellow-500/40 bg-yellow-500/5 p-3">
+              <p className="text-xs font-bold uppercase tracking-wider text-yellow-500 mb-2">🟡 This Month</p>
+              <ul className="text-xs text-foreground space-y-1.5 list-disc list-inside leading-relaxed">
+                <li><span className="font-semibold">OTC:</span> Investigate volume drop Jan 72.9M → Mar 36.6M</li>
+                <li><span className="font-semibold">MK Cars:</span> List GLE53 + C200 — save AED 14,350/mo depreciation</li>
+                <li><span className="font-semibold">MK Garage:</span> Assess wind-down vs capital injection</li>
+                <li><span className="font-semibold">RYA Gold:</span> Add 2 new customers — reduce 93.7% concentration</li>
+                <li><span className="font-semibold">MKX:</span> Engage compliance on 7 VARA risk flags</li>
+              </ul>
+            </div>
+            <div className="rounded-lg border-2 border-success/40 bg-success/5 p-3">
+              <p className="text-xs font-bold uppercase tracking-wider text-success mb-2">🟢 Monitor Weekly</p>
+              <ul className="text-xs text-foreground space-y-1.5 list-disc list-inside leading-relaxed">
+                <li><span className="font-semibold">OTC:</span> Spread above 0.300% target ✓ · watch volume recovery</li>
+                <li><span className="font-semibold">RYA:</span> Gold price trend vs USD 798,688 book value</li>
+                <li><span className="font-semibold">MKX:</span> Asset coverage ratio — must stay above 1.00x</li>
+                <li><span className="font-semibold">Portfolio:</span> Plan MKX exit to unlock +AED 4,414,886 net position</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+
+        {/* 10. Executive Summary */}
         <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-transparent backdrop-blur-sm">
           <CardContent className="p-4 flex items-start gap-3">
             <FileText className="h-5 w-5 text-primary shrink-0 mt-0.5" />
