@@ -457,9 +457,11 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
           </TableBody>
         </Table>
         <p className="text-xs text-muted-foreground mt-3">
-          All figures show <span className="text-foreground font-medium">Ahmad's ownership share</span> (OTC 50% · Cars 100% · MKX 50% · Garage 40% · Company 45% · RYA 100%) — totals reconcile with the KPI cards above.
-          Best value bordered in gold · Worst in red · Trend arrows compare vs prior {period === "MTD" ? "month" : period === "YTD" ? "year" : "period"}.
+          All figures shown on <span className="text-foreground font-medium">Full Company (100%) basis</span> — the businesses, not Ahmad's ownership share.
+          Best value bordered in gold · Worst in red · Trend arrows compare vs prior {period === "MTD" ? "month" : period === "YTD" ? "same period last year" : "period"}.
           Cells showing "—" indicate no data for the selected period. OTC and Cars report rental/trading P&L without separate Revenue/COGS split.
+          {period === "MTD" && currentMonths[0] === "Mar-26" && " · Mar-26 Net Profit cells use verified Group Finance figures."}
+          {period === "ALL" && " · ITD Net Profit cells use verified Group Finance figures (RYA updated to Apr 2026)."}
         </p>
       </CardContent>
     </Card>
