@@ -352,8 +352,11 @@ const CombinedDashboard = () => {
   // Executive Summary
   const executiveSummary = useMemo(() => {
     // Verified narrative for Mar-26 / ITD
-    if (selectedMonth === "Mar-26" || selectedMonth === "all") {
-      return "Portfolio recorded a net loss of AED 55,554 in March 2026. RYA Gold (+AED 38,286) and OTC Trading (+AED 107,462) remain the strongest performers. MKX Crypto (-AED 166,806) is the primary drag — representing 60.6% of total capital but generating -70.2% ROI. MK Garage and MK Autos Company both require urgent attention. Total portfolio investment AED 9.55M with cumulative ITD loss of AED 4.01M driven almost entirely by MKX accumulated losses of AED 8.13M. Without MKX, portfolio ITD profit would be +AED 4.12M.";
+    if (selectedMonth === "all") {
+      return "Ahmad's portfolio of 6 companies has total investment AED 9,552,734 with net positive P&L of AED 351,782 (+3.7% ROI). The three profitable companies — RYA Gold (+AED 2,293,945), MK Autos Cars (+AED 1,579,855) and OTC Trading (+AED 752,710) — generated combined profit of AED 4,626,510. This is almost entirely offset by MKX Crypto losses of AED 4,063,104 (Ahmad 50% share of AED 8,126,209). Without MKX, Ahmad net portfolio profit = +AED 4,414,886. Immediate board-level decisions required on MKX (EXIT vs RESTRUCTURE) and MK Garage (capital injection vs wind-down). Every month of MKX inaction costs Ahmad approximately AED 83,403 (50% of AED 166,806 monthly burn).";
+    }
+    if (selectedMonth === "Mar-26") {
+      return "March 2026 portfolio net loss AED 55,554 (Ahmad share). OTC (+AED 107,462) and RYA Gold (+AED 38,286) were the only profitable companies. MKX (-AED 166,806) consumed all gains. Without MKX, March portfolio profit would be +AED 111,252. Ahmad ITD net position +AED 351,782 — without MKX would be +AED 4,414,886.";
     }
     const period = `in ${selectedMonth}`;
     const profitLine = totalProfit >= 0
