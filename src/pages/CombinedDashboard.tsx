@@ -189,29 +189,31 @@ const CombinedDashboard = () => {
     };
   };
 
-  // === VERIFIED MARCH 2026 FIGURES (single source of truth, overrides dynamic computation) ===
-  // These reflect: (a) dummy visa-sponsorship income removed from MK Autos Co + MK Garage,
-  // (b) intercompany AED 79,125 (Co owes Garage) eliminated from consolidated view,
-  // (c) Ahmad's direct exposure (his ownership share only).
-  // Used whenever selectedMonth === "Mar-26" or "all" (ITD).
-  const VERIFIED_MAR_26 = {
-    rya:            { investment:   203_200, profit:  2_293_945,  marProfit:   38_286 },
-    otc:            { investment:   515_600, profit:    752_700,  marProfit:  107_462 },
-    mkAutosCars:    { investment: 2_390_000, profit:  1_580_000,  marProfit:  -13_677 },
-    mkAutosCompany: { investment:   135_000, profit:   -169_645,  marProfit:  -13_677 },
-    mkx:            { investment: 5_788_934, profit: -8_126_209,  marProfit: -166_806 },
-    garage:         { investment:   520_000, profit:   -338_134,  marProfit:   -7_142 },
+  // === VERIFIED FIGURES (single source of truth) ===
+  // Two bases per company:
+  //   - entity:  Full Company (100%) — used for Ranking table + Consolidated P&L Matrix
+  //   - ahmad:   Ahmad's ownership share — used for KPI cards + Ahmad Position section
+  // Adjustments applied: dummy visa-sponsorship income removed (MK Co + Garage),
+  // intercompany AED 79,125 (Co ↔ Garage) eliminated, RYA Gold updated to Apr 2026.
+  const VERIFIED = {
+    rya:            { ahmadPct: 100, investment:   203_200, entityITD:  2_293_945, ahmadITD:  2_293_945, entityMar:   38_286, ahmadMar:   38_286 },
+    otc:            { ahmadPct:  50, investment:   515_600, entityITD:  1_505_420, ahmadITD:    752_710, entityMar:  214_924, ahmadMar:  107_462 },
+    mkAutosCars:    { ahmadPct: 100, investment: 2_390_000, entityITD:  1_579_855, ahmadITD:  1_579_855, entityMar:  -13_677, ahmadMar:  -13_677 },
+    mkAutosCompany: { ahmadPct:  45, investment:   135_000, entityITD:   -169_714, ahmadITD:    -76_371, entityMar:  -30_393, ahmadMar:  -13_677 },
+    mkx:            { ahmadPct:  50, investment: 5_788_934, entityITD: -8_126_209, ahmadITD: -4_063_104, entityMar: -333_612, ahmadMar: -166_806 },
+    garage:         { ahmadPct:  40, investment:   520_000, entityITD:   -338_134, ahmadITD:   -135_253, entityMar:  -17_855, ahmadMar:   -7_142 },
   } as const;
 
+  // For Ranking Table (entity basis) and aggregate ITD totals shown in that table
   const buildVerifiedSnapshot = (useMar = false) => {
-    const mk = (k: keyof typeof VERIFIED_MAR_26) => {
-      const v = VERIFIED_MAR_26[k];
-      const profit = useMar ? v.marProfit : v.profit;
+    const mk = (k: keyof typeof VERIFIED) => {
+      const v = VERIFIED[k];
+      const profit = useMar ? v.entityMar : v.entityITD;
       return {
         investment: v.investment,
         profit,
         netPosition: v.investment + profit,
-        roi: (v.profit / v.investment) * 100, // ROI always reflects ITD performance
+        roi: (v.entityITD / v.investment) * 100, // ROI always reflects ITD performance
       };
     };
     return {
