@@ -725,13 +725,6 @@ const CombinedDashboard = () => {
 
         <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
-        {/* 8. Executive Summary */}
-        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-transparent backdrop-blur-sm">
-          <CardContent className="p-4 flex items-start gap-3">
-            <FileText className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-            <div>
-        <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-
         {/* 8. AHMAD'S INVESTMENT POSITION — Ahmad Share Only */}
         <Card className="border-primary/30 bg-card/80 backdrop-blur-sm">
           <CardHeader className="pb-2">
