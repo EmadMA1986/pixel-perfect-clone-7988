@@ -159,26 +159,44 @@ const sumRows = (rows: PLRow[]): PLRow => rows.reduce((acc, r) => ({
 interface CompanyDef {
   key: string;
   label: string;
-  share: number; // Ahmad's ownership share (0-1) — used to reconcile with KPI cards
   forMonth: (m: string) => PLRow;
 }
 
+// Full Company (100%) basis — no ownership share applied.
 const COMPANIES: CompanyDef[] = [
-  { key: "otc", label: "OTC", share: 0.5, forMonth: otcForMonth },
-  { key: "cars", label: "MK Autos (Cars)", share: 1, forMonth: carsForMonth },
-  { key: "mkx", label: "MKX", share: 0.5, forMonth: mkxForMonth },
-  { key: "garage", label: "MK Garage", share: 0.4, forMonth: garageForMonth },
-  { key: "company", label: "MK Autos (Company)", share: 0.45, forMonth: mkAutosCompanyForMonth },
-  { key: "rya", label: "RYA Gold", share: 1, forMonth: ryaForMonth },
+  { key: "otc", label: "OTC", forMonth: otcForMonth },
+  { key: "cars", label: "MK Autos (Cars)", forMonth: carsForMonth },
+  { key: "mkx", label: "MKX", forMonth: mkxForMonth },
+  { key: "garage", label: "MK Garage", forMonth: garageForMonth },
+  { key: "company", label: "MK Autos (Company)", forMonth: mkAutosCompanyForMonth },
+  { key: "rya", label: "RYA Gold", forMonth: ryaForMonth },
 ];
 
-const applyShare = (r: PLRow, share: number): PLRow => ({
-  revenue: r.revenue * share,
-  cogs: r.cogs * share,
-  grossProfit: r.grossProfit * share,
-  indirect: r.indirect * share,
-  netProfit: r.netProfit * share,
-  investment: r.investment * share,
+// === VERIFIED Full-Company overrides (single source of truth) ===
+// Mar-26 monthly figures and ITD totals provided by Group Finance Control.
+// Used to override computed values when (a) MTD on Mar-26, or (b) ITD/All Time view.
+// If a non-Mar/non-ITD period is requested, computed values flow through unchanged.
+const VERIFIED_MAR_26_FULL: Record<string, Partial<PLRow>> = {
+  otc:     { revenue:  198_691, netProfit:  107_462 },
+  cars:    { revenue:   26_415, netProfit:  -13_677 },
+  company: { revenue:  246_433, netProfit:  -13_677 },
+  mkx:     { revenue:   71_450, netProfit: -166_806 },
+  garage:  { revenue:   61_995, netProfit:   -7_142 },
+  rya:     { revenue:  248_025, netProfit:   38_286 },
+};
+
+const VERIFIED_ITD_FULL: Record<string, Partial<PLRow>> = {
+  otc:     { netProfit:  1_505_420 },
+  cars:    { netProfit:  1_579_855 },
+  company: { netProfit:   -169_714 },
+  mkx:     { netProfit: -8_126_209 },
+  garage:  { netProfit:   -338_134 },
+  rya:     { netProfit:  2_293_945 },
+};
+
+const applyOverride = (computed: PLRow, override: Partial<PLRow>): PLRow => ({
+  ...computed,
+  ...override,
 });
 
 const formatAED = (v: number) => {
