@@ -241,14 +241,19 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
         prevMonths: [],
       };
     }
-    // YTD: all months in same year as anchor up to anchor
-    const [, anchorYear] = anchor.split("-");
+    // YTD: same number of months in current year vs same months in prior year
+    // e.g. Apr-26 selected → Jan-26..Apr-26 vs Jan-25..Apr-25 (apples-to-apples)
+    const [anchorM, anchorYear] = anchor.split("-");
     const ytd = sorted.filter(m => {
       const [, y] = m.split("-");
       return y === anchorYear && compareMonth(m, anchor) <= 0;
     });
     const prevYearLabel = String(parseInt(anchorYear) - 1).padStart(2, "0");
-    const prev = sorted.filter(m => m.endsWith(`-${prevYearLabel}`));
+    const prevAnchor = `${anchorM}-${prevYearLabel}`;
+    const prev = sorted.filter(m => {
+      const [, y] = m.split("-");
+      return y === prevYearLabel && compareMonth(m, prevAnchor) <= 0;
+    });
     return { currentMonths: ytd, prevMonths: prev };
   }, [period, selectedMonth, allMonths]);
 
