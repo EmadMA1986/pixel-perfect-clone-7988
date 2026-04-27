@@ -697,8 +697,14 @@ const CombinedDashboard = () => {
 
         <div className="h-[2px] bg-gradient-to-r from-transparent via-primary/70 to-transparent rounded-full" />
 
-        {/* 7. Consolidated P&L Matrix */}
-        <ConsolidatedPLMatrix allMonths={ALL_MONTHS} selectedMonth={selectedMonth} />
+        {/* 7. Consolidated P&L Matrix — FULL COMPANY */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-primary">Consolidated P&L Matrix</h2>
+            <Badge variant="outline" className="text-[10px] border-primary/40 text-primary">Full Company (100%)</Badge>
+          </div>
+          <ConsolidatedPLMatrix allMonths={ALL_MONTHS} selectedMonth={selectedMonth} />
+        </div>
 
         {/* Consolidation notes */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
