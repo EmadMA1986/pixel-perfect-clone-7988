@@ -599,10 +599,10 @@ const CombinedDashboard = () => {
                 <p className="text-xs font-bold uppercase tracking-wider text-loss">🔴 Critical — Act Immediately</p>
               </div>
               <ul className="text-xs text-foreground space-y-1.5 list-disc list-inside leading-relaxed">
-                <li><span className="font-semibold">MKX:</span> 10 months runway at current burn — board decision required</li>
-                <li><span className="font-semibold">MK Garage:</span> Cash overdraft — inject capital or wind down</li>
-                <li><span className="font-semibold">MK Autos Co:</span> Debt 28.1x equity — cash critically low AED 50,989</li>
-                <li><span className="font-semibold">Portfolio:</span> -39.9% weighted ROI — 60.6% capital in worst performer</li>
+                <li><span className="font-semibold">MKX:</span> -AED 166,806 loss Mar-26 · 10 months runway · VARA 7 risk flags — <span className="font-bold">EXIT</span></li>
+                <li><span className="font-semibold">MK Garage:</span> Cash overdraft -AED 69,521 · ITD losses -AED 338,134 exceed share capital AED 300,000 — <span className="font-bold">EXIT</span></li>
+                <li><span className="font-semibold">MK Autos Co:</span> Debt 28.1x equity · cash AED 50,989 critically low</li>
+                <li><span className="font-semibold">MKX = 60.6% of capital</span> at -70.2% ROI — critical misallocation</li>
               </ul>
             </div>
             {/* WATCH */}
