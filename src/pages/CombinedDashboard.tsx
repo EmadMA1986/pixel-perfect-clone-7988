@@ -567,14 +567,20 @@ const CombinedDashboard = () => {
         <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
         {/* 2-5. Performance Verdict + Critical Alerts, Ranking table, MoM, Trend chart */}
-        <PortfolioInsights
-          companies={companySnapshots}
-          selectedMonth={selectedMonth}
-          prevMonthLabel={prevMonthLabel}
-          format={fmt}
-          toDisplay={toDisplay}
-          portfolioTrend={portfolioTrend}
-        />
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-primary">Company Ranking & Insights</h2>
+            <Badge variant="outline" className="text-[10px] border-primary/40 text-primary">Full Company (100%)</Badge>
+          </div>
+          <PortfolioInsights
+            companies={companySnapshots}
+            selectedMonth={selectedMonth}
+            prevMonthLabel={prevMonthLabel}
+            format={fmt}
+            toDisplay={toDisplay}
+            portfolioTrend={portfolioTrend}
+          />
+        </div>
 
         <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
