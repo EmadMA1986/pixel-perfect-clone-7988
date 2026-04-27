@@ -159,26 +159,44 @@ const sumRows = (rows: PLRow[]): PLRow => rows.reduce((acc, r) => ({
 interface CompanyDef {
   key: string;
   label: string;
-  share: number; // Ahmad's ownership share (0-1) — used to reconcile with KPI cards
   forMonth: (m: string) => PLRow;
 }
 
+// Full Company (100%) basis — no ownership share applied.
 const COMPANIES: CompanyDef[] = [
-  { key: "otc", label: "OTC", share: 0.5, forMonth: otcForMonth },
-  { key: "cars", label: "MK Autos (Cars)", share: 1, forMonth: carsForMonth },
-  { key: "mkx", label: "MKX", share: 0.5, forMonth: mkxForMonth },
-  { key: "garage", label: "MK Garage", share: 0.4, forMonth: garageForMonth },
-  { key: "company", label: "MK Autos (Company)", share: 0.45, forMonth: mkAutosCompanyForMonth },
-  { key: "rya", label: "RYA Gold", share: 1, forMonth: ryaForMonth },
+  { key: "otc", label: "OTC", forMonth: otcForMonth },
+  { key: "cars", label: "MK Autos (Cars)", forMonth: carsForMonth },
+  { key: "mkx", label: "MKX", forMonth: mkxForMonth },
+  { key: "garage", label: "MK Garage", forMonth: garageForMonth },
+  { key: "company", label: "MK Autos (Company)", forMonth: mkAutosCompanyForMonth },
+  { key: "rya", label: "RYA Gold", forMonth: ryaForMonth },
 ];
 
-const applyShare = (r: PLRow, share: number): PLRow => ({
-  revenue: r.revenue * share,
-  cogs: r.cogs * share,
-  grossProfit: r.grossProfit * share,
-  indirect: r.indirect * share,
-  netProfit: r.netProfit * share,
-  investment: r.investment * share,
+// === VERIFIED Full-Company overrides (single source of truth) ===
+// Mar-26 monthly figures and ITD totals provided by Group Finance Control.
+// Used to override computed values when (a) MTD on Mar-26, or (b) ITD/All Time view.
+// If a non-Mar/non-ITD period is requested, computed values flow through unchanged.
+const VERIFIED_MAR_26_FULL: Record<string, Partial<PLRow>> = {
+  otc:     { revenue:  198_691, netProfit:  107_462 },
+  cars:    { revenue:   26_415, netProfit:  -13_677 },
+  company: { revenue:  246_433, netProfit:  -13_677 },
+  mkx:     { revenue:   71_450, netProfit: -166_806 },
+  garage:  { revenue:   61_995, netProfit:   -7_142 },
+  rya:     { revenue:  248_025, netProfit:   38_286 },
+};
+
+const VERIFIED_ITD_FULL: Record<string, Partial<PLRow>> = {
+  otc:     { netProfit:  1_505_420 },
+  cars:    { netProfit:  1_579_855 },
+  company: { netProfit:   -169_714 },
+  mkx:     { netProfit: -8_126_209 },
+  garage:  { netProfit:   -338_134 },
+  rya:     { netProfit:  2_293_945 },
+};
+
+const applyOverride = (computed: PLRow, override: Partial<PLRow>): PLRow => ({
+  ...computed,
+  ...override,
 });
 
 const formatAED = (v: number) => {
@@ -223,14 +241,19 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
         prevMonths: [],
       };
     }
-    // YTD: all months in same year as anchor up to anchor
-    const [, anchorYear] = anchor.split("-");
+    // YTD: same number of months in current year vs same months in prior year
+    // e.g. Apr-26 selected → Jan-26..Apr-26 vs Jan-25..Apr-25 (apples-to-apples)
+    const [anchorM, anchorYear] = anchor.split("-");
     const ytd = sorted.filter(m => {
       const [, y] = m.split("-");
       return y === anchorYear && compareMonth(m, anchor) <= 0;
     });
     const prevYearLabel = String(parseInt(anchorYear) - 1).padStart(2, "0");
-    const prev = sorted.filter(m => m.endsWith(`-${prevYearLabel}`));
+    const prevAnchor = `${anchorM}-${prevYearLabel}`;
+    const prev = sorted.filter(m => {
+      const [, y] = m.split("-");
+      return y === prevYearLabel && compareMonth(m, prevAnchor) <= 0;
+    });
     return { currentMonths: ytd, prevMonths: prev };
   }, [period, selectedMonth, allMonths]);
 
@@ -242,29 +265,37 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
   const sortedAll = useMemo(() => [...allMonths].sort(compareMonth), [allMonths]);
 
   const resolveCurrent = (c: CompanyDef): PLRow => {
-    if (period !== "MTD") return applyShare(sumRows(currentMonths.map(c.forMonth)), c.share);
+    if (period !== "MTD") return sumRows(currentMonths.map(c.forMonth));
     const anchor = currentMonths[0];
     if (!anchor) return sumRows([]);
     const direct = c.forMonth(anchor);
-    if (!isRowEmpty(direct)) return applyShare(direct, c.share);
+    if (!isRowEmpty(direct)) return direct;
     // walk back through prior months until we find data
     const idx = sortedAll.indexOf(anchor);
     for (let i = idx - 1; i >= 0; i--) {
       const candidate = c.forMonth(sortedAll[i]);
-      if (!isRowEmpty(candidate)) return applyShare(candidate, c.share);
+      if (!isRowEmpty(candidate)) return candidate;
     }
-    return applyShare(direct, c.share);
+    return direct;
   };
 
   const data = useMemo(() => {
+    const anchor = currentMonths[0];
     return COMPANIES.map(c => {
-      const rawCurrent = period === "MTD" ? c.forMonth(currentMonths[0] ?? "") : sumRows(currentMonths.map(c.forMonth));
+      const rawCurrent = period === "MTD" ? c.forMonth(anchor ?? "") : sumRows(currentMonths.map(c.forMonth));
+      let current = resolveCurrent(c);
+      // Apply verified Full-Company overrides where applicable
+      if (period === "MTD" && anchor === "Mar-26" && VERIFIED_MAR_26_FULL[c.key]) {
+        current = applyOverride(current, VERIFIED_MAR_26_FULL[c.key]);
+      } else if (period === "ALL" && VERIFIED_ITD_FULL[c.key]) {
+        current = applyOverride(current, VERIFIED_ITD_FULL[c.key]);
+      }
       return {
         ...c,
-        current: resolveCurrent(c),
-        previous: applyShare(sumRows(prevMonths.map(c.forMonth)), c.share),
+        current,
+        previous: sumRows(prevMonths.map(c.forMonth)),
         // Track whether the company has ANY data in the selected period — used to render '—' for empty cells
-        hasData: !isRowEmpty(rawCurrent),
+        hasData: !isRowEmpty(rawCurrent) || (period === "MTD" && anchor === "Mar-26" && !!VERIFIED_MAR_26_FULL[c.key]) || (period === "ALL" && !!VERIFIED_ITD_FULL[c.key]),
       };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -426,9 +457,11 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
           </TableBody>
         </Table>
         <p className="text-xs text-muted-foreground mt-3">
-          All figures show <span className="text-foreground font-medium">Ahmad's ownership share</span> (OTC 50% · Cars 100% · MKX 50% · Garage 40% · Company 45% · RYA 100%) — totals reconcile with the KPI cards above.
-          Best value bordered in gold · Worst in red · Trend arrows compare vs prior {period === "MTD" ? "month" : period === "YTD" ? "year" : "period"}.
+          All figures shown on <span className="text-foreground font-medium">Full Company (100%) basis</span> — the businesses, not Ahmad's ownership share.
+          Best value bordered in gold · Worst in red · Trend arrows compare vs prior {period === "MTD" ? "month" : period === "YTD" ? "same period last year" : "period"}.
           Cells showing "—" indicate no data for the selected period. OTC and Cars report rental/trading P&L without separate Revenue/COGS split.
+          {period === "MTD" && currentMonths[0] === "Mar-26" && " · Mar-26 Net Profit cells use verified Group Finance figures."}
+          {period === "ALL" && " · ITD Net Profit cells use verified Group Finance figures (RYA updated to Apr 2026)."}
         </p>
       </CardContent>
     </Card>
