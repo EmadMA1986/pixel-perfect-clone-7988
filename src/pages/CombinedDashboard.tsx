@@ -310,6 +310,28 @@ const CombinedDashboard = () => {
   const totalNetPosition = companies.reduce((s, c) => s + c.netPosition, 0);
   const overallROI = (totalProfit / totalInvestment) * 100;
 
+  // === Ahmad's-share aggregates (KPI cards + Ahmad Position section) ===
+  const ahmadKeys = Object.keys(VERIFIED) as (keyof typeof VERIFIED)[];
+  const ahmadTotalInvestment = ahmadKeys.reduce((s, k) => s + VERIFIED[k].investment, 0);  // 9,552,734
+  const ahmadITDProfit = ahmadKeys.reduce((s, k) => s + VERIFIED[k].ahmadITD, 0);           // +351,782
+  const ahmadMarProfit = ahmadKeys.reduce((s, k) => s + VERIFIED[k].ahmadMar, 0);           // -55,554
+  const ahmadNetPosition = ahmadTotalInvestment + ahmadITDProfit;                           // 9,904,516
+  const ahmadWeightedROI = (ahmadITDProfit / ahmadTotalInvestment) * 100;                   // +3.7%
+  const ahmadProfitForPeriod = selectedMonth === "Mar-26" ? ahmadMarProfit : ahmadITDProfit;
+  const ahmadNetPositionForPeriod = ahmadTotalInvestment + ahmadProfitForPeriod;
+  const ahmadRows = ahmadKeys.map(k => ({
+    key: k,
+    name: ({ rya: "RYA Gold", otc: "OTC Trading", mkAutosCars: "MK Autos Cars", mkAutosCompany: "MK Autos Company", mkx: "MKX Crypto", garage: "MK Garage" } as const)[k],
+    pct: VERIFIED[k].ahmadPct,
+    investment: VERIFIED[k].investment,
+    entityITD: VERIFIED[k].entityITD,
+    ahmadITD: VERIFIED[k].ahmadITD,
+    ahmadMar: VERIFIED[k].ahmadMar,
+    ahmadROI: (VERIFIED[k].ahmadITD / VERIFIED[k].investment) * 100,
+  }));
+  const ahmadBest = [...ahmadRows].sort((a, b) => b.ahmadROI - a.ahmadROI)[0];
+  const ahmadWorst = [...ahmadRows].sort((a, b) => a.ahmadROI - b.ahmadROI)[0];
+
   // Previous month totals for MoM
   const prevTotalProfit = pd ? Object.values(pd).reduce((s, v) => s + v.profit, 0) : null;
   const prevTotalNetPosition = pd ? Object.values(pd).reduce((s, v) => s + v.netPosition, 0) : null;
