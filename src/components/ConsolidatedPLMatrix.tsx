@@ -265,29 +265,37 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
   const sortedAll = useMemo(() => [...allMonths].sort(compareMonth), [allMonths]);
 
   const resolveCurrent = (c: CompanyDef): PLRow => {
-    if (period !== "MTD") return applyShare(sumRows(currentMonths.map(c.forMonth)), c.share);
+    if (period !== "MTD") return sumRows(currentMonths.map(c.forMonth));
     const anchor = currentMonths[0];
     if (!anchor) return sumRows([]);
     const direct = c.forMonth(anchor);
-    if (!isRowEmpty(direct)) return applyShare(direct, c.share);
+    if (!isRowEmpty(direct)) return direct;
     // walk back through prior months until we find data
     const idx = sortedAll.indexOf(anchor);
     for (let i = idx - 1; i >= 0; i--) {
       const candidate = c.forMonth(sortedAll[i]);
-      if (!isRowEmpty(candidate)) return applyShare(candidate, c.share);
+      if (!isRowEmpty(candidate)) return candidate;
     }
-    return applyShare(direct, c.share);
+    return direct;
   };
 
   const data = useMemo(() => {
+    const anchor = currentMonths[0];
     return COMPANIES.map(c => {
-      const rawCurrent = period === "MTD" ? c.forMonth(currentMonths[0] ?? "") : sumRows(currentMonths.map(c.forMonth));
+      const rawCurrent = period === "MTD" ? c.forMonth(anchor ?? "") : sumRows(currentMonths.map(c.forMonth));
+      let current = resolveCurrent(c);
+      // Apply verified Full-Company overrides where applicable
+      if (period === "MTD" && anchor === "Mar-26" && VERIFIED_MAR_26_FULL[c.key]) {
+        current = applyOverride(current, VERIFIED_MAR_26_FULL[c.key]);
+      } else if (period === "ALL" && VERIFIED_ITD_FULL[c.key]) {
+        current = applyOverride(current, VERIFIED_ITD_FULL[c.key]);
+      }
       return {
         ...c,
-        current: resolveCurrent(c),
-        previous: applyShare(sumRows(prevMonths.map(c.forMonth)), c.share),
+        current,
+        previous: sumRows(prevMonths.map(c.forMonth)),
         // Track whether the company has ANY data in the selected period — used to render '—' for empty cells
-        hasData: !isRowEmpty(rawCurrent),
+        hasData: !isRowEmpty(rawCurrent) || (period === "MTD" && anchor === "Mar-26" && !!VERIFIED_MAR_26_FULL[c.key]) || (period === "ALL" && !!VERIFIED_ITD_FULL[c.key]),
       };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
