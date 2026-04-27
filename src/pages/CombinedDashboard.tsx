@@ -624,9 +624,9 @@ const CombinedDashboard = () => {
                 <p className="text-xs font-bold uppercase tracking-wider text-success">✅ Healthy</p>
               </div>
               <ul className="text-xs text-foreground space-y-1.5 list-disc list-inside leading-relaxed">
-                <li><span className="font-semibold">RYA Gold:</span> +1,224.1% ROI | Strong profit engine</li>
-                <li><span className="font-semibold">OTC:</span> +146% ROI | Spread improving | Profitable consistently</li>
-                <li><span className="font-semibold">MK Cars:</span> Strong gross margin 82.8% | Fleet value AED 2.93M</li>
+                <li><span className="font-semibold">RYA Gold:</span> +1,129.4% ROI · Strong profit engine (Apr 2026)</li>
+                <li><span className="font-semibold">OTC:</span> +146.0% ROI · Profitable consistently</li>
+                <li><span className="font-semibold">MK Cars:</span> +66.1% ROI · Fleet value AED 2.93M</li>
               </ul>
             </div>
           </CardContent>
