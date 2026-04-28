@@ -433,9 +433,12 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
                   </TableCell>
                   {values.map((v, i) => {
                     const companyHasData = data[i].hasData;
-                    const isBest = best !== null && v === best && nonZero.length > 1 && companyHasData;
-                    const isWorst = worst !== null && v === worst && nonZero.length > 1 && best !== worst && companyHasData;
-                    const colorClass = !companyHasData ? "text-muted-foreground/60" : v === 0 ? "text-muted-foreground" : v >= 0 ? "text-success" : "text-loss";
+                    const anchor = currentMonths[0];
+                    const isFlagged = period === "MTD" && anchor === "Mar-26"
+                      && FLAGGED_MAR_26[data[i].key]?.has(String(row.key));
+                    const isBest = !isFlagged && best !== null && v === best && nonZero.length > 1 && companyHasData;
+                    const isWorst = !isFlagged && worst !== null && v === worst && nonZero.length > 1 && best !== worst && companyHasData;
+                    const colorClass = isFlagged ? "text-muted-foreground/60" : !companyHasData ? "text-muted-foreground/60" : v === 0 ? "text-muted-foreground" : v >= 0 ? "text-success" : "text-loss";
                     const borderClass = isBest
                       ? "ring-2 ring-inset ring-primary"
                       : isWorst
@@ -445,10 +448,11 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
                       <TableCell
                         key={i}
                         className={`text-right text-base tabular-nums ${colorClass} ${borderClass}`}
+                        title={isFlagged ? "Pending COGS reclassification — figure withheld" : undefined}
                       >
                         <span className="inline-flex items-center gap-1 justify-end">
-                          {!companyHasData ? "—" : isPct ? formatPct(v) : formatAED(v)}
-                          {companyHasData && <Trend curr={v} prev={prev[i]} positiveIsBetter={row.positiveIsBetter} />}
+                          {isFlagged ? "—" : !companyHasData ? "—" : isPct ? formatPct(v) : formatAED(v)}
+                          {!isFlagged && companyHasData && <Trend curr={v} prev={prev[i]} positiveIsBetter={row.positiveIsBetter} />}
                         </span>
                       </TableCell>
                     );
