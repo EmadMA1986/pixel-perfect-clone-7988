@@ -536,13 +536,13 @@ const CombinedDashboard = () => {
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
             <CardContent className="p-4 relative">
               <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground">
-                {selectedMonth === "Mar-26" ? "Ahmad Net P&L (Mar-26)" : "Ahmad Net P&L (ITD)"}
+                Ahmad Net P&L ({selectedMonth === "all" ? "ITD" : selectedMonth})
               </p>
               <p className={`text-xl font-bold font-serif ${ahmadProfitForPeriod >= 0 ? "text-success" : "text-loss"}`}>
                 {ahmadProfitForPeriod >= 0 ? "+" : ""}{fmt(toDisplay(ahmadProfitForPeriod))}
               </p>
               <p className="text-[10px] text-muted-foreground">
-                {ahmadRows.filter(r => (selectedMonth === "Mar-26" ? r.ahmadMar : r.ahmadITD) >= 0).length} profitable · {ahmadRows.filter(r => (selectedMonth === "Mar-26" ? r.ahmadMar : r.ahmadITD) < 0).length} losing
+                {ahmadRows.filter(r => r.ahmadPeriod >= 0).length} profitable · {ahmadRows.filter(r => r.ahmadPeriod < 0).length} losing
               </p>
             </CardContent>
           </Card>
