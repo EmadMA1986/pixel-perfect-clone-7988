@@ -183,7 +183,8 @@ const VERIFIED_MAR_26_FULL: Record<string, Partial<PLRow>> = {
   cars:    { revenue:   26_415, cogs: 4_543, grossProfit: 21_872, indirect: 35_549, netProfit: -13_677 },
   company: { revenue:  246_433, netProfit:  -13_677 },
   mkx:     { revenue:   71_450, netProfit: -166_806 },
-  garage:  { revenue:   61_995, netProfit:   -7_142 },
+  // Garage cogs/GP/indirect intentionally zeroed — flagged below pending classification reconciliation
+  garage:  { revenue:   61_995, cogs: 0, grossProfit: 0, indirect: 0, netProfit: -7_142 },
   rya:     { revenue:  248_025, netProfit:   38_286 },
 };
 
