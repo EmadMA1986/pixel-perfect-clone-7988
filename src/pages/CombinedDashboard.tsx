@@ -88,105 +88,140 @@ const CombinedDashboard = () => {
   const navigate = useNavigate();
 
   // === Helper to compute per-company data for any month ===
+  // CRITICAL: when a specific month is selected and a company has NO entry
+  // for that month, profit MUST be returned as null (renders "—") — never
+  // fall back to ITD/latest-month data. Investment + ROI stay at the
+  // company-level constants because they're not period-scoped.
   const computeForMonth = (month: string) => {
     const isAll = month === "all";
     const norm = isAll ? "" : month;
 
-    // RYA Gold
-    let ryaProfitUSD: number;
+    // RYA Gold — has per-trade dated data, sum into the selected month
+    let ryaProfitUSD: number | null;
     let ryaInvestmentUSD = Math.abs(goldCapital.initialCapital);
-    let ryaNetPositionUSD: number;
+    let ryaNetPositionUSD: number | null;
     if (isAll) {
       ryaProfitUSD = ryaPL.netProfit;
       ryaNetPositionUSD = goldCapital.totalCurrentPosition;
     } else {
-      const salesInMonth = goldSales.filter(s => {
-        const d = new Date(s.date);
+      const matches = (dateStr: string) => {
+        const d = new Date(dateStr);
         if (isNaN(d.getTime())) return false;
         return `${d.toLocaleString("en-US", { month: "short" })}-${String(d.getFullYear()).slice(2)}` === norm;
-      });
-      const expInMonth = goldExpenses.filter(e => {
-        const d = new Date(e.date);
-        if (isNaN(d.getTime())) return false;
-        return `${d.toLocaleString("en-US", { month: "short" })}-${String(d.getFullYear()).slice(2)}` === norm;
-      });
-      const discInMonth = goldDiscounts.filter(e => {
-        const d = new Date(e.date);
-        if (isNaN(d.getTime())) return false;
-        return `${d.toLocaleString("en-US", { month: "short" })}-${String(d.getFullYear()).slice(2)}` === norm;
-      });
-      ryaProfitUSD = salesInMonth.reduce((s, t) => s + t.profitUSD, 0) - expInMonth.reduce((s, t) => s + t.amount, 0) - discInMonth.reduce((s, t) => s + t.amount, 0);
-      ryaNetPositionUSD = ryaInvestmentUSD + ryaProfitUSD;
+      };
+      const salesInMonth = goldSales.filter(s => matches(s.date));
+      const expInMonth = goldExpenses.filter(e => matches(e.date));
+      const discInMonth = goldDiscounts.filter(e => matches(e.date));
+      const hasAny = salesInMonth.length + expInMonth.length + discInMonth.length > 0;
+      if (!hasAny) {
+        ryaProfitUSD = null;
+        ryaNetPositionUSD = null;
+      } else {
+        ryaProfitUSD = salesInMonth.reduce((s, t) => s + t.profitUSD, 0)
+          - expInMonth.reduce((s, t) => s + t.amount, 0)
+          - discInMonth.reduce((s, t) => s + t.amount, 0);
+        ryaNetPositionUSD = ryaInvestmentUSD + ryaProfitUSD;
+      }
     }
     const ryaInvestment = ryaInvestmentUSD * AED_TO_USD_RATE;
-    const ryaProfit = ryaProfitUSD * AED_TO_USD_RATE;
-    const ryaNetPosition = (isAll ? ryaNetPositionUSD : ryaInvestmentUSD + ryaProfitUSD) * AED_TO_USD_RATE;
-    const ryaROI = (ryaProfitUSD / ryaInvestmentUSD) * 100;
+    const ryaProfit = ryaProfitUSD === null ? null : ryaProfitUSD * AED_TO_USD_RATE;
+    const ryaNetPosition = ryaNetPositionUSD === null ? null : ryaNetPositionUSD * AED_TO_USD_RATE;
+    const ryaROI = ryaProfitUSD === null ? null : (ryaProfitUSD / ryaInvestmentUSD) * 100;
 
     // OTC Trading (50/50)
-    let otcProfitShare: number;
+    let otcProfitShare: number | null;
     if (isAll) {
       otcProfitShare = partnerCapital.ahmad.profitShare;
     } else {
       const row = otcMonthlyPL.find(r => normalizeMonth(r.month) === norm);
-      otcProfitShare = row ? row.netProfit * 0.5 : 0;
+      otcProfitShare = row ? row.netProfit * 0.5 : null;
     }
     const otcInvestment = partnerCapital.ahmad.net;
-    const otcNetPosition = isAll ? partnerCapital.ahmad.netPosition : otcInvestment + otcProfitShare;
-    const otcROI = (otcProfitShare / otcInvestment) * 100;
+    const otcNetPosition = isAll
+      ? partnerCapital.ahmad.netPosition
+      : (otcProfitShare === null ? null : otcInvestment + otcProfitShare);
+    const otcROI = otcProfitShare === null ? null : (otcProfitShare / otcInvestment) * 100;
 
-    // MK Autos Company (45%)
+    // MK Autos Company — uses monthlyPL (full-company entity P&L) per month,
+    // then × Ahmad share %. Falls back to balance-sheet ITD only when "all".
     const mkAutosShareInvestment = mkAutosAhmad.shareCapital;
-    const mkAutosCompanyPL = mkAutosBS.profitLoss.total;
-    const mkAutosShareProfit = mkAutosCompanyPL * (mkAutosAhmad.sharePercentage / 100);
-    const mkAutosSharePosition = mkAutosShareInvestment + mkAutosShareProfit;
-    const mkAutosShareROI = (mkAutosShareProfit / mkAutosShareInvestment) * 100;
+    let mkAutosShareProfit: number | null;
+    if (isAll) {
+      mkAutosShareProfit = mkAutosBS.profitLoss.total * (mkAutosAhmad.sharePercentage / 100);
+    } else {
+      const row = mkAutosCompanyMonthlyPL.find(r => normalizeMonth(r.month) === norm);
+      mkAutosShareProfit = row ? row.netProfit * (mkAutosAhmad.sharePercentage / 100) : null;
+    }
+    const mkAutosSharePosition = mkAutosShareProfit === null ? null : mkAutosShareInvestment + mkAutosShareProfit;
+    const mkAutosShareROI = mkAutosShareProfit === null ? null : (mkAutosShareProfit / mkAutosShareInvestment) * 100;
 
-    // MK Autos Cars (100%)
-    let mkAutosCarsProfit: number;
+    // MK Autos Cars (100%) — monthly source has rental income only;
+    // treat as monthly contribution-margin proxy (matches /mk-autos dashboard).
+    let mkAutosCarsProfit: number | null;
     if (isAll) {
       mkAutosCarsProfit = mkAutosSummary.netProfit;
     } else {
       const row = mkAutosMonthlyIncome.find(r => normalizeMonth(r.month) === norm);
-      mkAutosCarsProfit = row ? row.total : 0;
+      mkAutosCarsProfit = row ? row.total : null;
     }
     const mkAutosCarsInvestment = mkAutosSummary.totalNBV;
-    const mkAutosCarsPosition = isAll ? mkAutosAhmad.positionAgainstCars : mkAutosCarsInvestment + mkAutosCarsProfit;
-    const mkAutosCarsROI = isAll ? mkAutosSummary.overallROI : (mkAutosCarsProfit / mkAutosCarsInvestment) * 100;
+    const mkAutosCarsPosition = isAll
+      ? mkAutosAhmad.positionAgainstCars
+      : (mkAutosCarsProfit === null ? null : mkAutosCarsInvestment + mkAutosCarsProfit);
+    const mkAutosCarsROI = isAll
+      ? mkAutosSummary.overallROI
+      : (mkAutosCarsProfit === null ? null : (mkAutosCarsProfit / mkAutosCarsInvestment) * 100);
 
     // MKX Crypto (50%)
-    const mkxShareCapital = isAll ? 5788933.98 : (mkxAhmadCapital[norm] ?? 5329871.48);
-    let mkxTotalPL: number;
+    let mkxTotalPL: number | null;
+    let mkxShareCapital: number;
     if (isAll) {
+      mkxShareCapital = 5788933.98;
       const mkxRetainedEarnings = -7261014.27;
       const mkxNetIncome = -865195.22;
       mkxTotalPL = (mkxRetainedEarnings + mkxNetIncome) * 0.5;
     } else {
+      mkxShareCapital = mkxAhmadCapital[norm] ?? 5329871.48;
       const row = mkxMonthlyData.find(r => normalizeMonth(r.month) === norm);
-      mkxTotalPL = row ? row.netProfit * 0.5 : 0;
+      mkxTotalPL = row ? row.netProfit * 0.5 : null;
     }
-    const mkxNetPosition = mkxShareCapital + mkxTotalPL;
-    const mkxROI = (mkxTotalPL / mkxShareCapital) * 100;
+    const mkxNetPosition = mkxTotalPL === null ? null : mkxShareCapital + mkxTotalPL;
+    const mkxROI = mkxTotalPL === null ? null : (mkxTotalPL / mkxShareCapital) * 100;
 
     // MK Garage (40%)
     const garageInvestment = ahmadGarage.shareCapital;
-    let garageProfitShare: number;
+    let garageProfitShare: number | null;
     if (isAll) {
       garageProfitShare = garagePL.reduce((s, m) => s + m.netProfit, 0) * (ahmadGarage.sharePercent / 100);
     } else {
       const row = garagePL.find(r => normalizeMonth(r.month) === norm);
-      garageProfitShare = row ? row.netProfit * (ahmadGarage.sharePercent / 100) : 0;
+      garageProfitShare = row ? row.netProfit * (ahmadGarage.sharePercent / 100) : null;
     }
-    const garageNetPosition = garageInvestment + garageProfitShare;
-    const garageROI = (garageProfitShare / garageInvestment) * 100;
+    const garageNetPosition = garageProfitShare === null ? null : garageInvestment + garageProfitShare;
+    const garageROI = garageProfitShare === null ? null : (garageProfitShare / garageInvestment) * 100;
+
+    // Replace nulls with 0 for downstream aggregation but preserve a hasData flag.
+    // Downstream code reads `.profit` as a number; we expose `.hasData` for the UI.
+    const wrap = (
+      investment: number,
+      profit: number | null,
+      netPosition: number | null,
+      roi: number | null,
+    ) => ({
+      investment,
+      profit: profit ?? 0,
+      netPosition: netPosition ?? investment,
+      roi: roi ?? 0,
+      hasData: profit !== null,
+    });
 
     return {
-      rya: { investment: ryaInvestment, profit: ryaProfit, netPosition: ryaNetPosition, roi: ryaROI },
-      otc: { investment: otcInvestment, profit: otcProfitShare, netPosition: otcNetPosition, roi: otcROI },
-      mkAutosCompany: { investment: mkAutosShareInvestment, profit: mkAutosShareProfit, netPosition: mkAutosSharePosition, roi: mkAutosShareROI },
-      mkAutosCars: { investment: mkAutosCarsInvestment, profit: mkAutosCarsProfit, netPosition: mkAutosCarsPosition, roi: mkAutosCarsROI },
-      mkx: { investment: mkxShareCapital, profit: mkxTotalPL, netPosition: mkxNetPosition, roi: mkxROI },
-      garage: { investment: garageInvestment, profit: garageProfitShare, netPosition: garageNetPosition, roi: garageROI },
+      rya: wrap(ryaInvestment, ryaProfit, ryaNetPosition, ryaROI),
+      otc: wrap(otcInvestment, otcProfitShare, otcNetPosition, otcROI),
+      mkAutosCompany: wrap(mkAutosShareInvestment, mkAutosShareProfit, mkAutosSharePosition, mkAutosShareROI),
+      mkAutosCars: wrap(mkAutosCarsInvestment, mkAutosCarsProfit, mkAutosCarsPosition, mkAutosCarsROI),
+      mkx: wrap(mkxShareCapital, mkxTotalPL, mkxNetPosition, mkxROI),
+      garage: wrap(garageInvestment, garageProfitShare, garageNetPosition, garageROI),
     };
   };
 
