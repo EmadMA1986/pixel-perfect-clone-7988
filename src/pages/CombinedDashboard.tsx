@@ -80,7 +80,8 @@ const ALL_MONTHS = buildAllMonths();
 
 const CombinedDashboard = () => {
   const [currency, setCurrency] = useState<"AED" | "USD">("AED");
-  const [selectedMonth, setSelectedMonth] = useState(ALL_MONTHS[ALL_MONTHS.length - 1] ?? "all");
+  // Default to Inception to Date — every section subscribes to selectedMonth.
+  const [selectedMonth, setSelectedMonth] = useState<string>("all");
   const toDisplay = (aedValue: number) => currency === "AED" ? aedValue : aedValue / AED_TO_USD_RATE;
   const fmt = (v: number) => currency === "AED" ? formatAEDShort(v) : formatUSDShort(v);
   const fmtFull = (v: number) => currency === "AED" ? formatAED(v) : formatUSD(v);
@@ -310,14 +311,29 @@ const CombinedDashboard = () => {
   const totalNetPosition = companies.reduce((s, c) => s + c.netPosition, 0);
   const overallROI = (totalProfit / totalInvestment) * 100;
 
-  // === Ahmad's-share aggregates (KPI cards + Ahmad Position section) ===
+  // === Ahmad's-share aggregates — DERIVED from companyData (subscribes to selectedMonth) ===
+  // Entity P&L for the selected period × Ahmad's ownership % per company.
+  // For "all" and "Mar-26" we use the verified static figures; every other month
+  // pulls live from each company's monthly data via computeForMonth.
   const ahmadKeys = Object.keys(VERIFIED) as (keyof typeof VERIFIED)[];
-  const ahmadTotalInvestment = ahmadKeys.reduce((s, k) => s + VERIFIED[k].investment, 0);  // 9,552,734
-  const ahmadITDProfit = ahmadKeys.reduce((s, k) => s + VERIFIED[k].ahmadITD, 0);           // +351,782
-  const ahmadMarProfit = ahmadKeys.reduce((s, k) => s + VERIFIED[k].ahmadMar, 0);           // -55,554
-  const ahmadNetPosition = ahmadTotalInvestment + ahmadITDProfit;                           // 9,904,516
-  const ahmadWeightedROI = (ahmadITDProfit / ahmadTotalInvestment) * 100;                   // +3.7%
-  const ahmadProfitForPeriod = selectedMonth === "Mar-26" ? ahmadMarProfit : ahmadITDProfit;
+  const keyToCompanyKey: Record<keyof typeof VERIFIED, keyof typeof d> = {
+    rya: "rya", otc: "otc", mkAutosCars: "mkAutosCars",
+    mkAutosCompany: "mkAutosCompany", mkx: "mkx", garage: "garage",
+  };
+  const ahmadTotalInvestment = ahmadKeys.reduce((s, k) => s + VERIFIED[k].investment, 0);  // 9,552,734 (constant)
+  // ITD profit & ROI are constant — anchored to verified ITD figures.
+  const ahmadITDProfit = ahmadKeys.reduce((s, k) => s + VERIFIED[k].ahmadITD, 0);          // +351,782
+  const ahmadNetPosition = ahmadTotalInvestment + ahmadITDProfit;                          // 9,904,516
+  const ahmadWeightedROI = (ahmadITDProfit / ahmadTotalInvestment) * 100;                  // +3.7%
+  // Period-scoped Ahmad profit — recomputes on every selectedMonth change.
+  const ahmadPeriodProfitByKey = (k: keyof typeof VERIFIED): number => {
+    if (selectedMonth === "all") return VERIFIED[k].ahmadITD;
+    if (selectedMonth === "Mar-26") return VERIFIED[k].ahmadMar;
+    // Derive from live company data: entity period profit × Ahmad share %
+    const entityProfit = d[keyToCompanyKey[k]].profit;
+    return entityProfit * (VERIFIED[k].ahmadPct / 100);
+  };
+  const ahmadProfitForPeriod = ahmadKeys.reduce((s, k) => s + ahmadPeriodProfitByKey(k), 0);
   const ahmadNetPositionForPeriod = ahmadTotalInvestment + ahmadProfitForPeriod;
   const ahmadRows = ahmadKeys.map(k => ({
     key: k,
@@ -326,7 +342,7 @@ const CombinedDashboard = () => {
     investment: VERIFIED[k].investment,
     entityITD: VERIFIED[k].entityITD,
     ahmadITD: VERIFIED[k].ahmadITD,
-    ahmadMar: VERIFIED[k].ahmadMar,
+    ahmadPeriod: ahmadPeriodProfitByKey(k),
     ahmadROI: (VERIFIED[k].ahmadITD / VERIFIED[k].investment) * 100,
   }));
   const ahmadBest = [...ahmadRows].sort((a, b) => b.ahmadROI - a.ahmadROI)[0];
@@ -520,13 +536,13 @@ const CombinedDashboard = () => {
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
             <CardContent className="p-4 relative">
               <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground">
-                {selectedMonth === "Mar-26" ? "Ahmad Net P&L (Mar-26)" : "Ahmad Net P&L (ITD)"}
+                Ahmad Net P&L ({selectedMonth === "all" ? "ITD" : selectedMonth})
               </p>
               <p className={`text-xl font-bold font-serif ${ahmadProfitForPeriod >= 0 ? "text-success" : "text-loss"}`}>
                 {ahmadProfitForPeriod >= 0 ? "+" : ""}{fmt(toDisplay(ahmadProfitForPeriod))}
               </p>
               <p className="text-[10px] text-muted-foreground">
-                {ahmadRows.filter(r => (selectedMonth === "Mar-26" ? r.ahmadMar : r.ahmadITD) >= 0).length} profitable · {ahmadRows.filter(r => (selectedMonth === "Mar-26" ? r.ahmadMar : r.ahmadITD) < 0).length} losing
+                {ahmadRows.filter(r => r.ahmadPeriod >= 0).length} profitable · {ahmadRows.filter(r => r.ahmadPeriod < 0).length} losing
               </p>
             </CardContent>
           </Card>
@@ -745,8 +761,11 @@ const CombinedDashboard = () => {
                   <TableHead className="text-xs">Company</TableHead>
                   <TableHead className="text-xs text-center">Ahmad %</TableHead>
                   <TableHead className="text-xs text-right">Investment</TableHead>
-                  <TableHead className="text-xs text-right">Company Total P&L</TableHead>
-                  <TableHead className="text-xs text-right">Ahmad P&L Share</TableHead>
+                  <TableHead className="text-xs text-right">Company Total P&L (ITD)</TableHead>
+                  <TableHead className="text-xs text-right">Ahmad P&L Share (ITD)</TableHead>
+                  {selectedMonth !== "all" && (
+                    <TableHead className="text-xs text-right">Ahmad P&L ({selectedMonth})</TableHead>
+                  )}
                   <TableHead className="text-xs text-right">Ahmad ROI</TableHead>
                 </TableRow>
               </TableHeader>
@@ -766,6 +785,11 @@ const CombinedDashboard = () => {
                       <TableCell className={`text-right text-sm font-semibold tabular-nums ${r.ahmadITD >= 0 ? "text-success" : "text-loss"}`}>
                         {r.ahmadITD >= 0 ? "+" : ""}{fmt(toDisplay(r.ahmadITD))}
                       </TableCell>
+                      {selectedMonth !== "all" && (
+                        <TableCell className={`text-right text-sm tabular-nums ${r.ahmadPeriod >= 0 ? "text-success" : "text-loss"}`}>
+                          {r.ahmadPeriod === 0 ? "—" : `${r.ahmadPeriod >= 0 ? "+" : ""}${fmt(toDisplay(r.ahmadPeriod))}`}
+                        </TableCell>
+                      )}
                       <TableCell className={`text-right text-sm font-bold tabular-nums ${r.ahmadROI >= 0 ? "text-success" : "text-loss"}`}>
                         {r.ahmadROI >= 0 ? "+" : ""}{r.ahmadROI.toFixed(1)}%
                       </TableCell>
@@ -782,6 +806,11 @@ const CombinedDashboard = () => {
                   <TableCell className={`text-right text-sm font-bold tabular-nums ${ahmadITDProfit >= 0 ? "text-success" : "text-loss"}`}>
                     {ahmadITDProfit >= 0 ? "+" : ""}{fmt(toDisplay(ahmadITDProfit))}
                   </TableCell>
+                  {selectedMonth !== "all" && (
+                    <TableCell className={`text-right text-sm font-bold tabular-nums ${ahmadProfitForPeriod >= 0 ? "text-success" : "text-loss"}`}>
+                      {ahmadProfitForPeriod >= 0 ? "+" : ""}{fmt(toDisplay(ahmadProfitForPeriod))}
+                    </TableCell>
+                  )}
                   <TableCell className={`text-right text-sm font-bold tabular-nums ${ahmadWeightedROI >= 0 ? "text-success" : "text-loss"}`}>
                     {ahmadWeightedROI >= 0 ? "+" : ""}{ahmadWeightedROI.toFixed(1)}%
                   </TableCell>
