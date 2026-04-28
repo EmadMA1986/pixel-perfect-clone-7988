@@ -546,7 +546,19 @@ const CombinedDashboard = () => {
                 <p>• MK Autos Co and MK Garage revenue excludes visa-sponsorship pass-through (net profit unaffected).</p>
                 <p>• Intercompany balance eliminated: MK Autos Co ↔ MK Garage <span className="font-semibold">AED 79,125</span>.</p>
                 <p>• MK Autos Cars: <span className="font-semibold">AED 490,160</span> total owed to Ahmad (AED 445,160 profit + AED 45,000 personal loan); cash withdrawn AED 1,134,695.</p>
-                <p>• All figures as at March 2026 except RYA Gold (April 2026).</p>
+                <p>• {(() => {
+                  const monthLong: Record<string, string> = { Jan: "January", Feb: "February", Mar: "March", Apr: "April", May: "May", Jun: "June", Jul: "July", Aug: "August", Sep: "September", Oct: "October", Nov: "November", Dec: "December" };
+                  const longLabel = (m: string) => {
+                    const parts = m.split("-");
+                    if (parts.length !== 2) return m;
+                    return `${monthLong[parts[0]] ?? parts[0]} 20${parts[1]}`;
+                  };
+                  const latestClosed = ALL_MONTHS[ALL_MONTHS.length - 1];
+                  if (selectedMonth === "all") {
+                    return `All figures Inception to Date through ${longLabel(latestClosed)}. RYA Gold updated to April 2026.`;
+                  }
+                  return `All figures as at ${longLabel(selectedMonth)}. RYA Gold updated to April 2026.`;
+                })()}</p>
               </div>
             </div>
           </CardContent>
