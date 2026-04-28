@@ -761,8 +761,11 @@ const CombinedDashboard = () => {
                   <TableHead className="text-xs">Company</TableHead>
                   <TableHead className="text-xs text-center">Ahmad %</TableHead>
                   <TableHead className="text-xs text-right">Investment</TableHead>
-                  <TableHead className="text-xs text-right">Company Total P&L</TableHead>
-                  <TableHead className="text-xs text-right">Ahmad P&L Share</TableHead>
+                  <TableHead className="text-xs text-right">Company Total P&L (ITD)</TableHead>
+                  <TableHead className="text-xs text-right">Ahmad P&L Share (ITD)</TableHead>
+                  {selectedMonth !== "all" && (
+                    <TableHead className="text-xs text-right">Ahmad P&L ({selectedMonth})</TableHead>
+                  )}
                   <TableHead className="text-xs text-right">Ahmad ROI</TableHead>
                 </TableRow>
               </TableHeader>
@@ -782,6 +785,11 @@ const CombinedDashboard = () => {
                       <TableCell className={`text-right text-sm font-semibold tabular-nums ${r.ahmadITD >= 0 ? "text-success" : "text-loss"}`}>
                         {r.ahmadITD >= 0 ? "+" : ""}{fmt(toDisplay(r.ahmadITD))}
                       </TableCell>
+                      {selectedMonth !== "all" && (
+                        <TableCell className={`text-right text-sm tabular-nums ${r.ahmadPeriod >= 0 ? "text-success" : "text-loss"}`}>
+                          {r.ahmadPeriod === 0 ? "—" : `${r.ahmadPeriod >= 0 ? "+" : ""}${fmt(toDisplay(r.ahmadPeriod))}`}
+                        </TableCell>
+                      )}
                       <TableCell className={`text-right text-sm font-bold tabular-nums ${r.ahmadROI >= 0 ? "text-success" : "text-loss"}`}>
                         {r.ahmadROI >= 0 ? "+" : ""}{r.ahmadROI.toFixed(1)}%
                       </TableCell>
@@ -798,6 +806,11 @@ const CombinedDashboard = () => {
                   <TableCell className={`text-right text-sm font-bold tabular-nums ${ahmadITDProfit >= 0 ? "text-success" : "text-loss"}`}>
                     {ahmadITDProfit >= 0 ? "+" : ""}{fmt(toDisplay(ahmadITDProfit))}
                   </TableCell>
+                  {selectedMonth !== "all" && (
+                    <TableCell className={`text-right text-sm font-bold tabular-nums ${ahmadProfitForPeriod >= 0 ? "text-success" : "text-loss"}`}>
+                      {ahmadProfitForPeriod >= 0 ? "+" : ""}{fmt(toDisplay(ahmadProfitForPeriod))}
+                    </TableCell>
+                  )}
                   <TableCell className={`text-right text-sm font-bold tabular-nums ${ahmadWeightedROI >= 0 ? "text-success" : "text-loss"}`}>
                     {ahmadWeightedROI >= 0 ? "+" : ""}{ahmadWeightedROI.toFixed(1)}%
                   </TableCell>
