@@ -469,13 +469,23 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
             })}
           </TableBody>
         </Table>
-        <p className="text-xs text-muted-foreground mt-3">
-          All figures shown on <span className="text-foreground font-medium">Full Company (100%) basis</span> — the businesses, not Ahmad's ownership share.
-          Best value bordered in gold · Worst in red · Trend arrows compare vs prior {period === "MTD" ? "month" : period === "YTD" ? "same period last year" : "period"}.
-          Cells showing "—" indicate no data for the selected period. OTC and Cars report rental/trading P&L without separate Revenue/COGS split.
-          {period === "MTD" && currentMonths[0] === "Mar-26" && " · Mar-26 Net Profit cells use verified Group Finance figures."}
-          {period === "ALL" && " · ITD Net Profit cells use verified Group Finance figures (RYA updated to Apr 2026)."}
-        </p>
+        <div className="text-xs text-muted-foreground mt-3 space-y-1.5">
+          <p>
+            All figures shown on <span className="text-foreground font-medium">Full Company (100%) basis</span> — the businesses, not Ahmad's ownership share.
+            Best value bordered in gold · Worst in red · Trend arrows compare vs prior {period === "MTD" ? "month" : period === "YTD" ? "same period last year" : "period"}.
+            Cells showing "—" indicate no data for the selected period. OTC and Cars report rental/trading P&L without separate Revenue/COGS split.
+            {period === "MTD" && currentMonths[0] === "Mar-26" && " · Mar-26 Net Profit cells use verified Group Finance figures."}
+            {period === "ALL" && " · ITD Net Profit cells use verified Group Finance figures (RYA updated to Apr 2026)."}
+          </p>
+          <p>
+            <span className="text-foreground font-medium">Note:</span> MK Autos Company and MK Garage revenue excludes visa-sponsorship pass-through. Net profit unaffected.
+          </p>
+          {period === "MTD" && currentMonths[0] === "Mar-26" && (
+            <p>
+              <span className="text-loss font-medium">Flagged:</span> MK Garage Cost of Sales / Gross Profit / Gross Margin % shown as "—" pending COGS classification reconciliation (source ledger gives 67.6% GM%; management spec is 19.2% — gap reflects whether labour is COGS or indirect).
+            </p>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
