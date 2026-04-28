@@ -176,13 +176,22 @@ const COMPANIES: CompanyDef[] = [
 // Mar-26 monthly figures and ITD totals provided by Group Finance Control.
 // Used to override computed values when (a) MTD on Mar-26, or (b) ITD/All Time view.
 // If a non-Mar/non-ITD period is requested, computed values flow through unchanged.
+// Cars: GP back-solved at verified GM% 82.8% (Rev 26,415 → GP 21,872 → COGS 4,543).
+//        Indirect = GP - Net = 21,872 - (-13,677) = 35,549.
 const VERIFIED_MAR_26_FULL: Record<string, Partial<PLRow>> = {
   otc:     { revenue:  198_691, netProfit:  107_462 },
-  cars:    { revenue:   26_415, netProfit:  -13_677 },
+  cars:    { revenue:   26_415, cogs: 4_543, grossProfit: 21_872, indirect: 35_549, netProfit: -13_677 },
   company: { revenue:  246_433, netProfit:  -13_677 },
   mkx:     { revenue:   71_450, netProfit: -166_806 },
-  garage:  { revenue:   61_995, netProfit:   -7_142 },
+  // Garage cogs/GP/indirect intentionally zeroed — flagged below pending classification reconciliation
+  garage:  { revenue:   61_995, cogs: 0, grossProfit: 0, indirect: 0, netProfit: -7_142 },
   rya:     { revenue:  248_025, netProfit:   38_286 },
+};
+
+// Per-(month, company) metrics that should display "—" instead of a computed value.
+// Used when source data classification is in dispute and management has not yet reconciled.
+const FLAGGED_MAR_26: Record<string, Set<string>> = {
+  garage: new Set(["cogs", "grossProfit", "grossMargin", "indirect"]),
 };
 
 const VERIFIED_ITD_FULL: Record<string, Partial<PLRow>> = {
@@ -425,9 +434,12 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
                   </TableCell>
                   {values.map((v, i) => {
                     const companyHasData = data[i].hasData;
-                    const isBest = best !== null && v === best && nonZero.length > 1 && companyHasData;
-                    const isWorst = worst !== null && v === worst && nonZero.length > 1 && best !== worst && companyHasData;
-                    const colorClass = !companyHasData ? "text-muted-foreground/60" : v === 0 ? "text-muted-foreground" : v >= 0 ? "text-success" : "text-loss";
+                    const anchor = currentMonths[0];
+                    const isFlagged = period === "MTD" && anchor === "Mar-26"
+                      && FLAGGED_MAR_26[data[i].key]?.has(String(row.key));
+                    const isBest = !isFlagged && best !== null && v === best && nonZero.length > 1 && companyHasData;
+                    const isWorst = !isFlagged && worst !== null && v === worst && nonZero.length > 1 && best !== worst && companyHasData;
+                    const colorClass = isFlagged ? "text-muted-foreground/60" : !companyHasData ? "text-muted-foreground/60" : v === 0 ? "text-muted-foreground" : v >= 0 ? "text-success" : "text-loss";
                     const borderClass = isBest
                       ? "ring-2 ring-inset ring-primary"
                       : isWorst
@@ -437,10 +449,11 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
                       <TableCell
                         key={i}
                         className={`text-right text-base tabular-nums ${colorClass} ${borderClass}`}
+                        title={isFlagged ? "Pending COGS reclassification — figure withheld" : undefined}
                       >
                         <span className="inline-flex items-center gap-1 justify-end">
-                          {!companyHasData ? "—" : isPct ? formatPct(v) : formatAED(v)}
-                          {companyHasData && <Trend curr={v} prev={prev[i]} positiveIsBetter={row.positiveIsBetter} />}
+                          {isFlagged ? "—" : !companyHasData ? "—" : isPct ? formatPct(v) : formatAED(v)}
+                          {!isFlagged && companyHasData && <Trend curr={v} prev={prev[i]} positiveIsBetter={row.positiveIsBetter} />}
                         </span>
                       </TableCell>
                     );
@@ -456,13 +469,23 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
             })}
           </TableBody>
         </Table>
-        <p className="text-xs text-muted-foreground mt-3">
-          All figures shown on <span className="text-foreground font-medium">Full Company (100%) basis</span> — the businesses, not Ahmad's ownership share.
-          Best value bordered in gold · Worst in red · Trend arrows compare vs prior {period === "MTD" ? "month" : period === "YTD" ? "same period last year" : "period"}.
-          Cells showing "—" indicate no data for the selected period. OTC and Cars report rental/trading P&L without separate Revenue/COGS split.
-          {period === "MTD" && currentMonths[0] === "Mar-26" && " · Mar-26 Net Profit cells use verified Group Finance figures."}
-          {period === "ALL" && " · ITD Net Profit cells use verified Group Finance figures (RYA updated to Apr 2026)."}
-        </p>
+        <div className="text-xs text-muted-foreground mt-3 space-y-1.5">
+          <p>
+            All figures shown on <span className="text-foreground font-medium">Full Company (100%) basis</span> — the businesses, not Ahmad's ownership share.
+            Best value bordered in gold · Worst in red · Trend arrows compare vs prior {period === "MTD" ? "month" : period === "YTD" ? "same period last year" : "period"}.
+            Cells showing "—" indicate no data for the selected period. OTC and Cars report rental/trading P&L without separate Revenue/COGS split.
+            {period === "MTD" && currentMonths[0] === "Mar-26" && " · Mar-26 Net Profit cells use verified Group Finance figures."}
+            {period === "ALL" && " · ITD Net Profit cells use verified Group Finance figures (RYA updated to Apr 2026)."}
+          </p>
+          <p>
+            <span className="text-foreground font-medium">Note:</span> MK Autos Company and MK Garage revenue excludes visa-sponsorship pass-through. Net profit unaffected.
+          </p>
+          {period === "MTD" && currentMonths[0] === "Mar-26" && (
+            <p>
+              <span className="text-loss font-medium">Flagged:</span> MK Garage Cost of Sales / Gross Profit / Gross Margin % shown as "—" pending COGS classification reconciliation (source ledger gives 67.6% GM%; management spec is 19.2% — gap reflects whether labour is COGS or indirect).
+            </p>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
