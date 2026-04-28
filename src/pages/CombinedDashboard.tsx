@@ -311,14 +311,29 @@ const CombinedDashboard = () => {
   const totalNetPosition = companies.reduce((s, c) => s + c.netPosition, 0);
   const overallROI = (totalProfit / totalInvestment) * 100;
 
-  // === Ahmad's-share aggregates (KPI cards + Ahmad Position section) ===
+  // === Ahmad's-share aggregates — DERIVED from companyData (subscribes to selectedMonth) ===
+  // Entity P&L for the selected period × Ahmad's ownership % per company.
+  // For "all" and "Mar-26" we use the verified static figures; every other month
+  // pulls live from each company's monthly data via computeForMonth.
   const ahmadKeys = Object.keys(VERIFIED) as (keyof typeof VERIFIED)[];
-  const ahmadTotalInvestment = ahmadKeys.reduce((s, k) => s + VERIFIED[k].investment, 0);  // 9,552,734
-  const ahmadITDProfit = ahmadKeys.reduce((s, k) => s + VERIFIED[k].ahmadITD, 0);           // +351,782
-  const ahmadMarProfit = ahmadKeys.reduce((s, k) => s + VERIFIED[k].ahmadMar, 0);           // -55,554
-  const ahmadNetPosition = ahmadTotalInvestment + ahmadITDProfit;                           // 9,904,516
-  const ahmadWeightedROI = (ahmadITDProfit / ahmadTotalInvestment) * 100;                   // +3.7%
-  const ahmadProfitForPeriod = selectedMonth === "Mar-26" ? ahmadMarProfit : ahmadITDProfit;
+  const keyToCompanyKey: Record<keyof typeof VERIFIED, keyof typeof d> = {
+    rya: "rya", otc: "otc", mkAutosCars: "mkAutosCars",
+    mkAutosCompany: "mkAutosCompany", mkx: "mkx", garage: "garage",
+  };
+  const ahmadTotalInvestment = ahmadKeys.reduce((s, k) => s + VERIFIED[k].investment, 0);  // 9,552,734 (constant)
+  // ITD profit & ROI are constant — anchored to verified ITD figures.
+  const ahmadITDProfit = ahmadKeys.reduce((s, k) => s + VERIFIED[k].ahmadITD, 0);          // +351,782
+  const ahmadNetPosition = ahmadTotalInvestment + ahmadITDProfit;                          // 9,904,516
+  const ahmadWeightedROI = (ahmadITDProfit / ahmadTotalInvestment) * 100;                  // +3.7%
+  // Period-scoped Ahmad profit — recomputes on every selectedMonth change.
+  const ahmadPeriodProfitByKey = (k: keyof typeof VERIFIED): number => {
+    if (selectedMonth === "all") return VERIFIED[k].ahmadITD;
+    if (selectedMonth === "Mar-26") return VERIFIED[k].ahmadMar;
+    // Derive from live company data: entity period profit × Ahmad share %
+    const entityProfit = d[keyToCompanyKey[k]].profit;
+    return entityProfit * (VERIFIED[k].ahmadPct / 100);
+  };
+  const ahmadProfitForPeriod = ahmadKeys.reduce((s, k) => s + ahmadPeriodProfitByKey(k), 0);
   const ahmadNetPositionForPeriod = ahmadTotalInvestment + ahmadProfitForPeriod;
   const ahmadRows = ahmadKeys.map(k => ({
     key: k,
@@ -327,7 +342,7 @@ const CombinedDashboard = () => {
     investment: VERIFIED[k].investment,
     entityITD: VERIFIED[k].entityITD,
     ahmadITD: VERIFIED[k].ahmadITD,
-    ahmadMar: VERIFIED[k].ahmadMar,
+    ahmadPeriod: ahmadPeriodProfitByKey(k),
     ahmadROI: (VERIFIED[k].ahmadITD / VERIFIED[k].investment) * 100,
   }));
   const ahmadBest = [...ahmadRows].sort((a, b) => b.ahmadROI - a.ahmadROI)[0];
