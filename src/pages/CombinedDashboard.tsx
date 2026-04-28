@@ -80,7 +80,8 @@ const ALL_MONTHS = buildAllMonths();
 
 const CombinedDashboard = () => {
   const [currency, setCurrency] = useState<"AED" | "USD">("AED");
-  const [selectedMonth, setSelectedMonth] = useState(ALL_MONTHS[ALL_MONTHS.length - 1] ?? "all");
+  // Default to Inception to Date — every section subscribes to selectedMonth.
+  const [selectedMonth, setSelectedMonth] = useState<string>("all");
   const toDisplay = (aedValue: number) => currency === "AED" ? aedValue : aedValue / AED_TO_USD_RATE;
   const fmt = (v: number) => currency === "AED" ? formatAEDShort(v) : formatUSDShort(v);
   const fmtFull = (v: number) => currency === "AED" ? formatAED(v) : formatUSD(v);
