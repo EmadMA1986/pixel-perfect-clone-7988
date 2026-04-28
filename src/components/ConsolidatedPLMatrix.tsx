@@ -176,13 +176,21 @@ const COMPANIES: CompanyDef[] = [
 // Mar-26 monthly figures and ITD totals provided by Group Finance Control.
 // Used to override computed values when (a) MTD on Mar-26, or (b) ITD/All Time view.
 // If a non-Mar/non-ITD period is requested, computed values flow through unchanged.
+// Cars: GP back-solved at verified GM% 82.8% (Rev 26,415 → GP 21,872 → COGS 4,543).
+//        Indirect = GP - Net = 21,872 - (-13,677) = 35,549.
 const VERIFIED_MAR_26_FULL: Record<string, Partial<PLRow>> = {
   otc:     { revenue:  198_691, netProfit:  107_462 },
-  cars:    { revenue:   26_415, netProfit:  -13_677 },
+  cars:    { revenue:   26_415, cogs: 4_543, grossProfit: 21_872, indirect: 35_549, netProfit: -13_677 },
   company: { revenue:  246_433, netProfit:  -13_677 },
   mkx:     { revenue:   71_450, netProfit: -166_806 },
   garage:  { revenue:   61_995, netProfit:   -7_142 },
   rya:     { revenue:  248_025, netProfit:   38_286 },
+};
+
+// Per-(month, company) metrics that should display "—" instead of a computed value.
+// Used when source data classification is in dispute and management has not yet reconciled.
+const FLAGGED_MAR_26: Record<string, Set<string>> = {
+  garage: new Set(["cogs", "grossProfit", "grossMargin", "indirect"]),
 };
 
 const VERIFIED_ITD_FULL: Record<string, Partial<PLRow>> = {
