@@ -873,8 +873,13 @@ const CombinedDashboard = () => {
                         {r.ahmadITD >= 0 ? "+" : ""}{fmt(toDisplay(r.ahmadITD))}
                       </TableCell>
                       {selectedMonth !== "all" && (
-                        <TableCell className={`text-right text-sm tabular-nums ${r.ahmadPeriod >= 0 ? "text-success" : "text-loss"}`}>
-                          {r.ahmadPeriod === 0 ? "—" : `${r.ahmadPeriod >= 0 ? "+" : ""}${fmt(toDisplay(r.ahmadPeriod))}`}
+                        <TableCell className={`text-right text-sm tabular-nums ${r.ahmadPeriodOrNull === null ? "text-muted-foreground" : (r.ahmadPeriodOrNull ?? 0) >= 0 ? "text-success" : "text-loss"}`}>
+                          {r.ahmadPeriodOrNull === null ? (
+                            <div className="flex flex-col items-end leading-tight">
+                              <span>—</span>
+                              <span className="text-[9px] text-muted-foreground">No data</span>
+                            </div>
+                          ) : `${r.ahmadPeriodOrNull >= 0 ? "+" : ""}${fmt(toDisplay(r.ahmadPeriodOrNull))}`}
                         </TableCell>
                       )}
                       <TableCell className={`text-right text-sm font-bold tabular-nums ${r.ahmadROI >= 0 ? "text-success" : "text-loss"}`}>
