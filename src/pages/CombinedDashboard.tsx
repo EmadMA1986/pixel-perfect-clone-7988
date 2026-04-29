@@ -200,8 +200,10 @@ const CombinedDashboard = () => {
     const garageNetPosition = garageProfitShare === null ? null : garageInvestment + garageProfitShare;
     const garageROI = garageProfitShare === null ? null : (garageProfitShare / garageInvestment) * 100;
 
-    // Replace nulls with 0 for downstream aggregation but preserve a hasData flag.
-    // Downstream code reads `.profit` as a number; we expose `.hasData` for the UI.
+    // Preserve null profit/position/roi via dedicated *OrNull fields. The legacy
+    // numeric fields keep 0/investment fallbacks for charts and other consumers
+    // that aren't null-aware. UI display, totals and aggregations MUST use the
+    // *OrNull fields and the `hasData` flag — never the legacy numeric fields.
     const wrap = (
       investment: number,
       profit: number | null,
@@ -210,8 +212,11 @@ const CombinedDashboard = () => {
     ) => ({
       investment,
       profit: profit ?? 0,
+      profitOrNull: profit,
       netPosition: netPosition ?? investment,
+      netPositionOrNull: netPosition,
       roi: roi ?? 0,
+      roiOrNull: roi,
       hasData: profit !== null,
     });
 
