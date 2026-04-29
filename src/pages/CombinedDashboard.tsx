@@ -253,8 +253,12 @@ const CombinedDashboard = () => {
       return {
         investment: v.investment,
         profit,
+        profitOrNull: profit as number | null,
         netPosition: v.investment + profit,
+        netPositionOrNull: (v.investment + profit) as number | null,
         roi: (v.entityITD / v.investment) * 100, // ROI always reflects ITD performance
+        roiOrNull: ((v.entityITD / v.investment) * 100) as number | null,
+        hasData: true,
       };
     };
     return {
