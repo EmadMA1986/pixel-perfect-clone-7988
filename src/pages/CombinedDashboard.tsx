@@ -425,7 +425,12 @@ const CombinedDashboard = () => {
   const cumulativeByKey = (k: keyof typeof cumulative) => cumulative[k];
   const bestPerformer = [...companies].sort((a, b) => cumulativeByKey(b.key).roi - cumulativeByKey(a.key).roi)[0];
   const worstPerformer = [...companies].sort((a, b) => cumulativeByKey(a.key).roi - cumulativeByKey(b.key).roi)[0];
-  const losingCompanies = companies.filter(c => cumulativeByKey(c.key).profit < 0);
+  // Loss alerts reflect the SELECTED period when a specific month is chosen,
+  // and ITD when "all" is selected. Entities with no data for the period are
+  // excluded (can't tell if they're loss-making).
+  const losingCompanies = selectedMonth === "all"
+    ? companies.filter(c => cumulativeByKey(c.key).profit < 0)
+    : companies.filter(c => c.hasData && c.profitOrNull !== null && c.profitOrNull < 0);
   const profitableCompanies = companies.filter(c => cumulativeByKey(c.key).profit >= 0);
   const largestExposure = [...companies].sort((a, b) => b.investment - a.investment)[0];
   const largestExposurePct = (largestExposure.investment / totalInvestment) * 100;
