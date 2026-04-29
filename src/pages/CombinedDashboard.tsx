@@ -612,15 +612,25 @@ const CombinedDashboard = () => {
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
             <CardContent className="p-4 relative">
-              <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground">
+              <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground flex items-center gap-1.5">
                 Ahmad Net P&L ({selectedMonth === "all" ? "ITD" : selectedMonth})
+                {ahmadIsPartial && <Badge variant="outline" className="text-[8px] border-yellow-500/40 text-yellow-500 px-1 py-0 leading-none">partial</Badge>}
               </p>
-              <p className={`text-xl font-bold font-serif ${ahmadProfitForPeriod >= 0 ? "text-success" : "text-loss"}`}>
-                {ahmadProfitForPeriod >= 0 ? "+" : ""}{fmt(toDisplay(ahmadProfitForPeriod))}
-              </p>
-              <p className="text-[10px] text-muted-foreground">
-                {ahmadRows.filter(r => r.ahmadPeriod >= 0).length} profitable · {ahmadRows.filter(r => r.ahmadPeriod < 0).length} losing
-              </p>
+              {ahmadReportingKeys.length === 0 ? (
+                <>
+                  <p className="text-xl font-bold font-serif text-muted-foreground">—</p>
+                  <p className="text-[10px] text-muted-foreground">No data for {selectedMonth}</p>
+                </>
+              ) : (
+                <>
+                  <p className={`text-xl font-bold font-serif ${ahmadProfitForPeriod >= 0 ? "text-success" : "text-loss"}`}>
+                    {ahmadProfitForPeriod >= 0 ? "+" : ""}{fmt(toDisplay(ahmadProfitForPeriod))}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {ahmadReportingKeys.length} of {ahmadKeys.length} reporting · {ahmadRows.filter(r => (r.ahmadPeriodOrNull ?? 0) >= 0 && r.ahmadPeriodOrNull !== null).length} profitable · {ahmadRows.filter(r => (r.ahmadPeriodOrNull ?? 0) < 0).length} losing
+                  </p>
+                </>
+              )}
             </CardContent>
           </Card>
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
