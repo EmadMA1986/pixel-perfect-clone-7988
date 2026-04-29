@@ -295,7 +295,7 @@ const PortfolioInsights = ({
                 <TableHead className="text-xs text-right">Investment</TableHead>
                 <TableHead className="text-xs text-right">P&L (ITD)</TableHead>
                 <TableHead className="text-xs text-right">ROI %</TableHead>
-                <TableHead className="text-xs text-right">Mar Profit</TableHead>
+                <TableHead className="text-xs text-right">{selectedMonth === "all" ? "Period Profit" : `${selectedMonth} Profit`}</TableHead>
                 <TableHead className="text-xs text-right">vs Last Month</TableHead>
                 <TableHead className="text-xs text-right">% of Portfolio</TableHead>
                 <TableHead className="text-xs">AI Insight</TableHead>

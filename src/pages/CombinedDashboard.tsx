@@ -200,8 +200,10 @@ const CombinedDashboard = () => {
     const garageNetPosition = garageProfitShare === null ? null : garageInvestment + garageProfitShare;
     const garageROI = garageProfitShare === null ? null : (garageProfitShare / garageInvestment) * 100;
 
-    // Replace nulls with 0 for downstream aggregation but preserve a hasData flag.
-    // Downstream code reads `.profit` as a number; we expose `.hasData` for the UI.
+    // Preserve null profit/position/roi via dedicated *OrNull fields. The legacy
+    // numeric fields keep 0/investment fallbacks for charts and other consumers
+    // that aren't null-aware. UI display, totals and aggregations MUST use the
+    // *OrNull fields and the `hasData` flag — never the legacy numeric fields.
     const wrap = (
       investment: number,
       profit: number | null,
@@ -210,8 +212,11 @@ const CombinedDashboard = () => {
     ) => ({
       investment,
       profit: profit ?? 0,
+      profitOrNull: profit,
       netPosition: netPosition ?? investment,
+      netPositionOrNull: netPosition,
       roi: roi ?? 0,
+      roiOrNull: roi,
       hasData: profit !== null,
     });
 
@@ -248,8 +253,12 @@ const CombinedDashboard = () => {
       return {
         investment: v.investment,
         profit,
+        profitOrNull: profit as number | null,
         netPosition: v.investment + profit,
+        netPositionOrNull: (v.investment + profit) as number | null,
         roi: (v.entityITD / v.investment) * 100, // ROI always reflects ITD performance
+        roiOrNull: ((v.entityITD / v.investment) * 100) as number | null,
+        hasData: true,
       };
     };
     return {
@@ -307,11 +316,13 @@ const CombinedDashboard = () => {
     {
       name: "RYA Gold", icon: Gem, route: "/", share: "100%", key: "rya" as const,
       investment: d.rya.investment, profit: d.rya.profit, netPosition: d.rya.netPosition, roi: d.rya.roi,
+      hasData: d.rya.hasData, profitOrNull: d.rya.profitOrNull,
       color: "hsl(43, 74%, 52%)", subtitle: "Gold trading", updatedTo: "Mar 2026",
     },
     {
       name: "OTC Trading", icon: DollarSign, route: "/otc", share: "50%", key: "otc" as const,
       investment: d.otc.investment, profit: d.otc.profit, netPosition: d.otc.netPosition, roi: d.otc.roi,
+      hasData: d.otc.hasData, profitOrNull: d.otc.profitOrNull,
       color: "hsl(var(--chart-1))", updatedTo: "Mar 2026",
     },
     {
@@ -319,32 +330,42 @@ const CombinedDashboard = () => {
       share: "100%",
       investment: d.mkAutosCompany.investment, profit: d.mkAutosCompany.profit,
       netPosition: d.mkAutosCompany.netPosition, roi: d.mkAutosCompany.roi,
+      hasData: d.mkAutosCompany.hasData, profitOrNull: d.mkAutosCompany.profitOrNull,
       color: "hsl(var(--chart-2))", subtitle: "Share Capital & P&L", updatedTo: "Mar 2026",
     },
     {
       name: "MK Autos (Cars)", icon: Car, route: "/mk-autos", share: "100%", key: "mkAutosCars" as const,
       investment: d.mkAutosCars.investment, profit: d.mkAutosCars.profit,
       netPosition: d.mkAutosCars.netPosition, roi: d.mkAutosCars.roi,
+      hasData: d.mkAutosCars.hasData, profitOrNull: d.mkAutosCars.profitOrNull,
       color: "hsl(var(--chart-5))", subtitle: "Fleet rental income", updatedTo: "Mar 2026",
     },
     {
       name: "MKX Crypto", icon: Bitcoin, route: "/mkx", share: "50%", key: "mkx" as const,
       investment: d.mkx.investment, profit: d.mkx.profit,
       netPosition: d.mkx.netPosition, roi: d.mkx.roi,
+      hasData: d.mkx.hasData, profitOrNull: d.mkx.profitOrNull,
       color: "hsl(var(--chart-3))", updatedTo: "Mar 2026",
     },
     {
       name: "MK Garage", icon: Wrench, route: "/garage", share: "40%", key: "garage" as const,
       investment: d.garage.investment, profit: d.garage.profit,
       netPosition: d.garage.netPosition, roi: d.garage.roi,
+      hasData: d.garage.hasData, profitOrNull: d.garage.profitOrNull,
       color: "hsl(var(--chart-4))", updatedTo: "Mar 2026",
     },
   ];
 
-  const totalInvestment = companies.reduce((s, c) => s + c.investment, 0);
-  const totalProfit = companies.reduce((s, c) => s + c.profit, 0);
-  const totalNetPosition = companies.reduce((s, c) => s + c.netPosition, 0);
-  const overallROI = (totalProfit / totalInvestment) * 100;
+  // Aggregate ONLY entities that reported for this period. Missing entities are
+  // skipped (never summed as 0) so the portfolio total stays apples-to-apples.
+  const reportingCompanies = companies.filter(c => c.hasData);
+  const missingCount = companies.length - reportingCompanies.length;
+  const isPartial = missingCount > 0;
+
+  const totalInvestment = reportingCompanies.reduce((s, c) => s + c.investment, 0);
+  const totalProfit = reportingCompanies.reduce((s, c) => s + c.profit, 0);
+  const totalNetPosition = reportingCompanies.reduce((s, c) => s + c.netPosition, 0);
+  const overallROI = totalInvestment ? (totalProfit / totalInvestment) * 100 : 0;
 
   // === Ahmad's-share aggregates — DERIVED from companyData (subscribes to selectedMonth) ===
   // Entity P&L for the selected period × Ahmad's ownership % per company.
@@ -361,14 +382,22 @@ const CombinedDashboard = () => {
   const ahmadNetPosition = ahmadTotalInvestment + ahmadITDProfit;                          // 9,904,516
   const ahmadWeightedROI = (ahmadITDProfit / ahmadTotalInvestment) * 100;                  // +3.7%
   // Period-scoped Ahmad profit — recomputes on every selectedMonth change.
-  const ahmadPeriodProfitByKey = (k: keyof typeof VERIFIED): number => {
+  // companyData[k].profit is ALREADY in Ahmad-share basis for OTC/MKX/Garage/MK
+  // Autos Co (computeForMonth applies the share %); RYA & MK Autos Cars are
+  // 100% Ahmad. So the period-share equals d[k].profit directly — multiplying
+  // again would double-count. Returns null when the entity has no data so
+  // missing months don't get summed as 0.
+  const ahmadPeriodProfitByKeyOrNull = (k: keyof typeof VERIFIED): number | null => {
     if (selectedMonth === "all") return VERIFIED[k].ahmadITD;
     if (selectedMonth === "Mar-26") return VERIFIED[k].ahmadMar;
-    // Derive from live company data: entity period profit × Ahmad share %
-    const entityProfit = d[keyToCompanyKey[k]].profit;
-    return entityProfit * (VERIFIED[k].ahmadPct / 100);
+    return d[keyToCompanyKey[k]].profitOrNull;
   };
-  const ahmadProfitForPeriod = ahmadKeys.reduce((s, k) => s + ahmadPeriodProfitByKey(k), 0);
+  const ahmadPeriodProfitByKey = (k: keyof typeof VERIFIED): number =>
+    ahmadPeriodProfitByKeyOrNull(k) ?? 0;
+  const ahmadReportingKeys = ahmadKeys.filter(k => ahmadPeriodProfitByKeyOrNull(k) !== null);
+  const ahmadMissingCount = ahmadKeys.length - ahmadReportingKeys.length;
+  const ahmadIsPartial = ahmadMissingCount > 0 && selectedMonth !== "all";
+  const ahmadProfitForPeriod = ahmadReportingKeys.reduce((s, k) => s + ahmadPeriodProfitByKey(k), 0);
   const ahmadNetPositionForPeriod = ahmadTotalInvestment + ahmadProfitForPeriod;
   const ahmadRows = ahmadKeys.map(k => ({
     key: k,
@@ -378,6 +407,7 @@ const CombinedDashboard = () => {
     entityITD: VERIFIED[k].entityITD,
     ahmadITD: VERIFIED[k].ahmadITD,
     ahmadPeriod: ahmadPeriodProfitByKey(k),
+    ahmadPeriodOrNull: ahmadPeriodProfitByKeyOrNull(k),
     ahmadROI: (VERIFIED[k].ahmadITD / VERIFIED[k].investment) * 100,
   }));
   const ahmadBest = [...ahmadRows].sort((a, b) => b.ahmadROI - a.ahmadROI)[0];
@@ -395,7 +425,12 @@ const CombinedDashboard = () => {
   const cumulativeByKey = (k: keyof typeof cumulative) => cumulative[k];
   const bestPerformer = [...companies].sort((a, b) => cumulativeByKey(b.key).roi - cumulativeByKey(a.key).roi)[0];
   const worstPerformer = [...companies].sort((a, b) => cumulativeByKey(a.key).roi - cumulativeByKey(b.key).roi)[0];
-  const losingCompanies = companies.filter(c => cumulativeByKey(c.key).profit < 0);
+  // Loss alerts reflect the SELECTED period when a specific month is chosen,
+  // and ITD when "all" is selected. Entities with no data for the period are
+  // excluded (can't tell if they're loss-making).
+  const losingCompanies = selectedMonth === "all"
+    ? companies.filter(c => cumulativeByKey(c.key).profit < 0)
+    : companies.filter(c => c.hasData && c.profitOrNull !== null && c.profitOrNull < 0);
   const profitableCompanies = companies.filter(c => cumulativeByKey(c.key).profit >= 0);
   const largestExposure = [...companies].sort((a, b) => b.investment - a.investment)[0];
   const largestExposurePct = (largestExposure.investment / totalInvestment) * 100;
@@ -582,15 +617,25 @@ const CombinedDashboard = () => {
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
             <CardContent className="p-4 relative">
-              <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground">
+              <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground flex items-center gap-1.5">
                 Ahmad Net P&L ({selectedMonth === "all" ? "ITD" : selectedMonth})
+                {ahmadIsPartial && <Badge variant="outline" className="text-[8px] border-yellow-500/40 text-yellow-500 px-1 py-0 leading-none">partial</Badge>}
               </p>
-              <p className={`text-xl font-bold font-serif ${ahmadProfitForPeriod >= 0 ? "text-success" : "text-loss"}`}>
-                {ahmadProfitForPeriod >= 0 ? "+" : ""}{fmt(toDisplay(ahmadProfitForPeriod))}
-              </p>
-              <p className="text-[10px] text-muted-foreground">
-                {ahmadRows.filter(r => r.ahmadPeriod >= 0).length} profitable · {ahmadRows.filter(r => r.ahmadPeriod < 0).length} losing
-              </p>
+              {ahmadReportingKeys.length === 0 ? (
+                <>
+                  <p className="text-xl font-bold font-serif text-muted-foreground">—</p>
+                  <p className="text-[10px] text-muted-foreground">No data for {selectedMonth}</p>
+                </>
+              ) : (
+                <>
+                  <p className={`text-xl font-bold font-serif ${ahmadProfitForPeriod >= 0 ? "text-success" : "text-loss"}`}>
+                    {ahmadProfitForPeriod >= 0 ? "+" : ""}{fmt(toDisplay(ahmadProfitForPeriod))}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {ahmadReportingKeys.length} of {ahmadKeys.length} reporting · {ahmadRows.filter(r => (r.ahmadPeriodOrNull ?? 0) >= 0 && r.ahmadPeriodOrNull !== null).length} profitable · {ahmadRows.filter(r => (r.ahmadPeriodOrNull ?? 0) < 0).length} losing
+                  </p>
+                </>
+              )}
             </CardContent>
           </Card>
           <Card className="relative overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
@@ -833,8 +878,13 @@ const CombinedDashboard = () => {
                         {r.ahmadITD >= 0 ? "+" : ""}{fmt(toDisplay(r.ahmadITD))}
                       </TableCell>
                       {selectedMonth !== "all" && (
-                        <TableCell className={`text-right text-sm tabular-nums ${r.ahmadPeriod >= 0 ? "text-success" : "text-loss"}`}>
-                          {r.ahmadPeriod === 0 ? "—" : `${r.ahmadPeriod >= 0 ? "+" : ""}${fmt(toDisplay(r.ahmadPeriod))}`}
+                        <TableCell className={`text-right text-sm tabular-nums ${r.ahmadPeriodOrNull === null ? "text-muted-foreground" : (r.ahmadPeriodOrNull ?? 0) >= 0 ? "text-success" : "text-loss"}`}>
+                          {r.ahmadPeriodOrNull === null ? (
+                            <div className="flex flex-col items-end leading-tight">
+                              <span>—</span>
+                              <span className="text-[9px] text-muted-foreground">No data</span>
+                            </div>
+                          ) : `${r.ahmadPeriodOrNull >= 0 ? "+" : ""}${fmt(toDisplay(r.ahmadPeriodOrNull))}`}
                         </TableCell>
                       )}
                       <TableCell className={`text-right text-sm font-bold tabular-nums ${r.ahmadROI >= 0 ? "text-success" : "text-loss"}`}>
