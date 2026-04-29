@@ -382,14 +382,22 @@ const CombinedDashboard = () => {
   const ahmadNetPosition = ahmadTotalInvestment + ahmadITDProfit;                          // 9,904,516
   const ahmadWeightedROI = (ahmadITDProfit / ahmadTotalInvestment) * 100;                  // +3.7%
   // Period-scoped Ahmad profit — recomputes on every selectedMonth change.
-  const ahmadPeriodProfitByKey = (k: keyof typeof VERIFIED): number => {
+  // companyData[k].profit is ALREADY in Ahmad-share basis for OTC/MKX/Garage/MK
+  // Autos Co (computeForMonth applies the share %); RYA & MK Autos Cars are
+  // 100% Ahmad. So the period-share equals d[k].profit directly — multiplying
+  // again would double-count. Returns null when the entity has no data so
+  // missing months don't get summed as 0.
+  const ahmadPeriodProfitByKeyOrNull = (k: keyof typeof VERIFIED): number | null => {
     if (selectedMonth === "all") return VERIFIED[k].ahmadITD;
     if (selectedMonth === "Mar-26") return VERIFIED[k].ahmadMar;
-    // Derive from live company data: entity period profit × Ahmad share %
-    const entityProfit = d[keyToCompanyKey[k]].profit;
-    return entityProfit * (VERIFIED[k].ahmadPct / 100);
+    return d[keyToCompanyKey[k]].profitOrNull;
   };
-  const ahmadProfitForPeriod = ahmadKeys.reduce((s, k) => s + ahmadPeriodProfitByKey(k), 0);
+  const ahmadPeriodProfitByKey = (k: keyof typeof VERIFIED): number =>
+    ahmadPeriodProfitByKeyOrNull(k) ?? 0;
+  const ahmadReportingKeys = ahmadKeys.filter(k => ahmadPeriodProfitByKeyOrNull(k) !== null);
+  const ahmadMissingCount = ahmadKeys.length - ahmadReportingKeys.length;
+  const ahmadIsPartial = ahmadMissingCount > 0 && selectedMonth !== "all";
+  const ahmadProfitForPeriod = ahmadReportingKeys.reduce((s, k) => s + ahmadPeriodProfitByKey(k), 0);
   const ahmadNetPositionForPeriod = ahmadTotalInvestment + ahmadProfitForPeriod;
   const ahmadRows = ahmadKeys.map(k => ({
     key: k,
@@ -399,6 +407,7 @@ const CombinedDashboard = () => {
     entityITD: VERIFIED[k].entityITD,
     ahmadITD: VERIFIED[k].ahmadITD,
     ahmadPeriod: ahmadPeriodProfitByKey(k),
+    ahmadPeriodOrNull: ahmadPeriodProfitByKeyOrNull(k),
     ahmadROI: (VERIFIED[k].ahmadITD / VERIFIED[k].investment) * 100,
   }));
   const ahmadBest = [...ahmadRows].sort((a, b) => b.ahmadROI - a.ahmadROI)[0];
