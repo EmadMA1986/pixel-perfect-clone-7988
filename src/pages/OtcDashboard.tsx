@@ -599,55 +599,64 @@ const OtcDashboard = () => {
         {(() => {
           const spec = activeSpec;
           const hasSpec = !!spec;
+          const hasData = period.hasData;
+          const noDataSubtitle = `No data for ${selectedMonth}`;
           const displaySpread = hasSpec ? spec.spreadPct : avgSpreadPct;
           const spreadSubtitle = hasSpec
             ? `Weighted avg across ${spec.txCount} transactions`
             : "Income ÷ Volume";
 
-
           return (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
               <SummaryCard
                 title={`Trading Volume (${periodLabel})`}
-                value={hasSpec ? spec.volumeLabel : formatAEDCompact(totalVolume)}
-                subtitle={hasSpec
-                  ? spec.volumeSubtitle
-                  : `USDT↔AED · est. @ ${(ASSUMED_SPREAD * 100).toFixed(2)}% spread`}
+                value={!hasData ? DASH : (hasSpec ? spec.volumeLabel : formatAEDCompact(totalVolume))}
+                subtitle={!hasData
+                  ? noDataSubtitle
+                  : (hasSpec ? spec.volumeSubtitle : `USDT↔AED · est. @ ${(ASSUMED_SPREAD * 100).toFixed(2)}% spread`)}
                 icon={Repeat}
               />
               <SummaryCard
                 title="Trading Income"
-                value={formatAEDCompact(totalTradingIncome)}
-                subtitle={hasSpec
-                  ? `AED ${spec.revPerM.toLocaleString()} per 1M USDT traded`
-                  : "Spread / commission earned"}
+                value={!hasData ? DASH : formatAEDCompact(totalTradingIncome)}
+                subtitle={!hasData
+                  ? noDataSubtitle
+                  : (hasSpec ? `AED ${spec.revPerM.toLocaleString()} per 1M USDT traded` : "Spread / commission earned")}
                 icon={DollarSign}
-                trend="up"
+                trend={hasData ? "up" : undefined}
               />
               <SummaryCard
                 title="Net Profit"
-                value={formatAEDCompact(totalNetProfit)}
-                subtitle={isFiltered ? (totalNetProfit >= 0 ? "Profitable month" : "Loss month") : `${profitableMonths}/${filteredPL.length} profitable months`}
+                value={!hasData ? DASH : formatAEDCompact(totalNetProfit)}
+                subtitle={!hasData
+                  ? noDataSubtitle
+                  : (isFiltered
+                    ? (totalNetProfit >= 0 ? "Profitable month" : "Loss month")
+                    : `${profitableMonths}/${monthlyPL.length} profitable months`)}
                 icon={TrendingUp}
-                trend={totalNetProfit >= 0 ? "up" : "down"}
+                trend={hasData ? (totalNetProfit >= 0 ? "up" : "down") : undefined}
               />
               <SummaryCard
                 title="Average Spread %"
-                value={`${displaySpread.toFixed(3)}%`}
-                subtitle={spreadSubtitle}
+                value={!hasData ? DASH : `${displaySpread.toFixed(3)}%`}
+                subtitle={!hasData ? noDataSubtitle : spreadSubtitle}
                 icon={Percent}
               />
               <SummaryCard
                 title="Cost-to-Revenue"
-                value={`${costToRevenue.toFixed(1)}%`}
-                subtitle={costToRevenue < 25 ? "Target: <25% ✅ Excellent" : costToRevenue < 40 ? "Target: <25% ⚠ Acceptable" : "Target: <25% ❌ High"}
+                value={!hasData ? DASH : `${costToRevenue.toFixed(1)}%`}
+                subtitle={!hasData
+                  ? noDataSubtitle
+                  : (costToRevenue < 25 ? "Target: <25% ✅ Excellent" : costToRevenue < 40 ? "Target: <25% ⚠ Acceptable" : "Target: <25% ❌ High")}
                 icon={Gauge}
-                trend={costToRevenue < 30 ? "up" : "down"}
+                trend={hasData ? (costToRevenue < 30 ? "up" : "down") : undefined}
               />
               <SummaryCard
                 title="USDT Inventory"
                 value={snapshot ? formatAEDCompact(snapshot.usdtWalletAED) : DASH}
-                subtitle={snapshot ? `${(snapshot.usdtWalletAED / 3.67706).toLocaleString("en-US", { maximumFractionDigits: 0 })} USDT @ 3.67706` : NA_TOOLTIP}
+                subtitle={snapshot
+                  ? `${(snapshot.usdtWalletAED / 3.67706).toLocaleString("en-US", { maximumFractionDigits: 0 })} USDT @ 3.67706`
+                  : (hasData ? NA_TOOLTIP : noDataSubtitle)}
                 icon={Wallet}
               />
             </div>
