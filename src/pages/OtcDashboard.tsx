@@ -747,15 +747,16 @@ const OtcDashboard = () => {
           </div>
           {(() => {
             // Dynamic break-even: selected month's total costs ÷ selected month's spread %
-            // Falls back to avg burn ÷ assumed spread when no month is selected.
-            const selectedRow = selectedMonth !== "all"
-              ? monthlyPL.find((m) => m.month === selectedMonth)
-              : null;
-            const beCosts = selectedRow ? selectedRow.cashExpenses : avgMonthlyBurn;
+            // Falls back to avg burn ÷ assumed spread when "all" is selected.
+            // For non-verified months (pre-Jan-26) we cannot compute a meaningful
+            // break-even because we have no verified spread for that period.
+            const isVerified = period.hasData;
+            const isAll = selectedMonth === "all";
+            const beCosts = isAll ? avgMonthlyBurn : period.directCosts;
             const beSpreadPct = activeSpec ? activeSpec.spreadPct : ASSUMED_SPREAD * 100;
-            const beVolume = beSpreadPct > 0 ? beCosts / (beSpreadPct / 100) : 0;
+            const beVolume = isVerified && beSpreadPct > 0 ? beCosts / (beSpreadPct / 100) : 0;
             const beVolumeM = parseFloat((beVolume / 1_000_000).toFixed(2));
-            const beLabel = selectedRow ? selectedMonth : "avg of last 6 months";
+            const beLabel = isAll ? "avg of last 6 months" : selectedMonth;
 
             return (
               <>
@@ -800,10 +801,14 @@ const OtcDashboard = () => {
                     <div className="mt-3 p-3 rounded-lg border border-primary/30 bg-primary/5 flex items-center justify-between">
                       <div>
                         <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Break-even Volume — {beLabel}</p>
-                        <p className="text-base font-bold font-serif text-primary">{formatAEDCompact(beVolume)}</p>
+                        <p className="text-base font-bold font-serif text-primary">
+                          {isVerified ? formatAEDCompact(beVolume) : DASH}
+                        </p>
                       </div>
                       <p className="text-[10px] text-muted-foreground text-right max-w-[60%]">
-                        {formatAEDCompact(beCosts)} costs ÷ {beSpreadPct.toFixed(3)}% spread = minimum monthly volume to break even
+                        {isVerified
+                          ? <>{formatAEDCompact(beCosts)} costs ÷ {beSpreadPct.toFixed(3)}% spread = minimum monthly volume to break even</>
+                          : <>No data for {selectedMonth} — verified spread unavailable for this period</>}
                       </p>
                     </div>
                   </CardContent>
