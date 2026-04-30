@@ -36,22 +36,116 @@ const OtcDashboard = () => {
 
   const months = useMemo(() => monthlyPL.map((m) => m.month), []);
 
+  // === Verified period registry ===
+  // Per the data-source rule: only Jan/Feb/Mar 2026 are "verified periods"
+  // with full OTC datasets (volume, spread, counterparties, etc.). Older
+  // months exist in monthlyPL only as partial historical aggregates and
+  // must NOT be selectable as a verified single-month view.
+  // "all" / Inception to Date is always valid (aggregates everything).
+  const VERIFIED_MONTHS = new Set(["Jan 2026", "Feb 2026", "Mar 2026"]);
+  const isVerifiedPeriod = selectedMonth === "all" || VERIFIED_MONTHS.has(selectedMonth);
+  const isFiltered = selectedMonth !== "all";
+  const periodLabel = isFiltered ? selectedMonth : "Inception to Date";
+
   const filteredPL = useMemo(
     () => selectedMonth === "all" ? monthlyPL : monthlyPL.filter((m) => m.month === selectedMonth),
     [selectedMonth]
   );
 
-  // === OTC-specific KPIs ===
-  // Trading Income (revenue from spread / commission) = grossProfit
-  const totalTradingIncome = filteredPL.reduce((s, m) => s + m.grossProfit, 0);
-  const totalDirectCosts = filteredPL.reduce((s, m) => s + m.cashExpenses, 0);
-  const totalScam = filteredPL.reduce((s, m) => s + m.scam, 0);
-  const totalNetProfit = filteredPL.reduce((s, m) => s + m.netProfit, 0);
-  const profitableMonths = filteredPL.filter((m) => m.netProfit > 0).length;
+  // === Centralized period data — single source of truth ===
+  // Returns hasData=false for any selected month outside the verified
+  // window. KPI cards, charts and section gates must read from here so a
+  // missing-data month never silently falls back to ITD figures.
+  type PeriodData = {
+    hasData: boolean;
+    tradingIncome: number;       // gross profit / spread revenue
+    directCosts: number;         // cash expenses
+    scam: number;                // counterparty losses
+    netProfit: number;
+    profitableMonths: number;    // months with net > 0 inside window
+    monthCount: number;
+    volumeAED: number;           // AED-equivalent volume (income / spread)
+    volumeUSDT: number;          // explicit USDT figure when verified
+    spreadPct: number;           // % (e.g. 0.307)
+    costToRevenue: number;       // %
+    breakEvenVolumeAED: number;  // costs / spread% (AED)
+  };
 
-  const totalVolume = totalTradingIncome / ASSUMED_SPREAD;
-  const avgSpreadPct = totalVolume > 0 ? (totalTradingIncome / totalVolume) * 100 : 0;
-  const costToRevenue = totalTradingIncome > 0 ? (totalDirectCosts / totalTradingIncome) * 100 : 0;
+  const getDataForPeriod = (month: string): PeriodData => {
+    if (month === "all") {
+      const tradingIncome = monthlyPL.reduce((s, m) => s + m.grossProfit, 0);
+      const directCosts = monthlyPL.reduce((s, m) => s + m.cashExpenses, 0);
+      const scam = monthlyPL.reduce((s, m) => s + m.scam, 0);
+      const netProfit = monthlyPL.reduce((s, m) => s + m.netProfit, 0);
+      const profitableMonths = monthlyPL.filter((m) => m.netProfit > 0).length;
+      const volumeAED = tradingIncome / ASSUMED_SPREAD;
+      const spreadPct = volumeAED > 0 ? (tradingIncome / volumeAED) * 100 : 0;
+      const costToRevenue = tradingIncome > 0 ? (directCosts / tradingIncome) * 100 : 0;
+      return {
+        hasData: true,
+        tradingIncome, directCosts, scam, netProfit,
+        profitableMonths, monthCount: monthlyPL.length,
+        volumeAED, volumeUSDT: 0, spreadPct, costToRevenue,
+        breakEvenVolumeAED: spreadPct > 0 ? directCosts / (spreadPct / 100) : 0,
+      };
+    }
+    if (!VERIFIED_MONTHS.has(month)) {
+      return {
+        hasData: false,
+        tradingIncome: 0, directCosts: 0, scam: 0, netProfit: 0,
+        profitableMonths: 0, monthCount: 0,
+        volumeAED: 0, volumeUSDT: 0, spreadPct: 0, costToRevenue: 0, breakEvenVolumeAED: 0,
+      };
+    }
+    const row = monthlyPL.find((m) => m.month === month);
+    if (!row) {
+      return {
+        hasData: false,
+        tradingIncome: 0, directCosts: 0, scam: 0, netProfit: 0,
+        profitableMonths: 0, monthCount: 0,
+        volumeAED: 0, volumeUSDT: 0, spreadPct: 0, costToRevenue: 0, breakEvenVolumeAED: 0,
+      };
+    }
+    // Verified per-month volume/spread come from monthSpecifics (defined later);
+    // hard-code the same values inline here so this helper is self-contained.
+    const verifiedSpec: Record<string, { volumeUSDT: number; spreadPct: number }> = {
+      "Mar 2026": { volumeUSDT: 36_600_000, spreadPct: 0.307 },
+      "Feb 2026": { volumeUSDT: 50_200_000, spreadPct: 0.260 },
+      "Jan 2026": { volumeUSDT: 72_900_000, spreadPct: 0.120 },
+    };
+    const spec = verifiedSpec[month];
+    const tradingIncome = row.grossProfit;
+    const directCosts = row.cashExpenses;
+    const scam = row.scam;
+    const netProfit = row.netProfit;
+    const spreadPct = spec.spreadPct;
+    const volumeAED = spreadPct > 0 ? tradingIncome / (spreadPct / 100) : 0;
+    const costToRevenue = tradingIncome > 0 ? (directCosts / tradingIncome) * 100 : 0;
+    return {
+      hasData: true,
+      tradingIncome, directCosts, scam, netProfit,
+      profitableMonths: netProfit > 0 ? 1 : 0,
+      monthCount: 1,
+      volumeAED,
+      volumeUSDT: spec.volumeUSDT,
+      spreadPct,
+      costToRevenue,
+      breakEvenVolumeAED: spreadPct > 0 ? directCosts / (spreadPct / 100) : 0,
+    };
+  };
+
+  const period = useMemo(() => getDataForPeriod(selectedMonth), [selectedMonth]);
+
+  // Backwards-compatible aliases (used widely below). When period.hasData is
+  // false these are still safe (zeroed) — sections gate their UI on hasData.
+  const totalTradingIncome = period.tradingIncome;
+  const totalDirectCosts = period.directCosts;
+  const totalScam = period.scam;
+  const totalNetProfit = period.netProfit;
+  const profitableMonths = period.profitableMonths;
+  const totalVolume = period.volumeAED;
+  const avgSpreadPct = period.spreadPct;
+  const costToRevenue = period.costToRevenue;
 
   // Capital deployment: how much of total partner capital is committed (not sitting as cash)
   // Basis = total partner funding (gross capital injected), since net-capital can be skewed by withdrawals.
