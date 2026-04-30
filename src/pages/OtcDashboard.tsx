@@ -278,8 +278,7 @@ const OtcDashboard = () => {
   const partnersByExposure = [...partners].sort((a, b) => b.funding - a.funding);
   const concentrationRisk = partnersByExposure[0].funding / totalPartnerFunding > 0.55;
 
-  const isFiltered = selectedMonth !== "all";
-  const periodLabel = isFiltered ? selectedMonth : "Inception to Date";
+  // isFiltered + periodLabel declared earlier alongside getDataForPeriod.
 
   // ── Period-snapshot data (closing balances). ONLY months listed here have
   // a verified end-of-period snapshot. Any other selected month → dash (-).
