@@ -36,22 +36,116 @@ const OtcDashboard = () => {
 
   const months = useMemo(() => monthlyPL.map((m) => m.month), []);
 
+  // === Verified period registry ===
+  // Per the data-source rule: only Jan/Feb/Mar 2026 are "verified periods"
+  // with full OTC datasets (volume, spread, counterparties, etc.). Older
+  // months exist in monthlyPL only as partial historical aggregates and
+  // must NOT be selectable as a verified single-month view.
+  // "all" / Inception to Date is always valid (aggregates everything).
+  const VERIFIED_MONTHS = new Set(["Jan 2026", "Feb 2026", "Mar 2026"]);
+  const isVerifiedPeriod = selectedMonth === "all" || VERIFIED_MONTHS.has(selectedMonth);
+  const isFiltered = selectedMonth !== "all";
+  const periodLabel = isFiltered ? selectedMonth : "Inception to Date";
+
   const filteredPL = useMemo(
     () => selectedMonth === "all" ? monthlyPL : monthlyPL.filter((m) => m.month === selectedMonth),
     [selectedMonth]
   );
 
-  // === OTC-specific KPIs ===
-  // Trading Income (revenue from spread / commission) = grossProfit
-  const totalTradingIncome = filteredPL.reduce((s, m) => s + m.grossProfit, 0);
-  const totalDirectCosts = filteredPL.reduce((s, m) => s + m.cashExpenses, 0);
-  const totalScam = filteredPL.reduce((s, m) => s + m.scam, 0);
-  const totalNetProfit = filteredPL.reduce((s, m) => s + m.netProfit, 0);
-  const profitableMonths = filteredPL.filter((m) => m.netProfit > 0).length;
+  // === Centralized period data — single source of truth ===
+  // Returns hasData=false for any selected month outside the verified
+  // window. KPI cards, charts and section gates must read from here so a
+  // missing-data month never silently falls back to ITD figures.
+  type PeriodData = {
+    hasData: boolean;
+    tradingIncome: number;       // gross profit / spread revenue
+    directCosts: number;         // cash expenses
+    scam: number;                // counterparty losses
+    netProfit: number;
+    profitableMonths: number;    // months with net > 0 inside window
+    monthCount: number;
+    volumeAED: number;           // AED-equivalent volume (income / spread)
+    volumeUSDT: number;          // explicit USDT figure when verified
+    spreadPct: number;           // % (e.g. 0.307)
+    costToRevenue: number;       // %
+    breakEvenVolumeAED: number;  // costs / spread% (AED)
+  };
 
-  const totalVolume = totalTradingIncome / ASSUMED_SPREAD;
-  const avgSpreadPct = totalVolume > 0 ? (totalTradingIncome / totalVolume) * 100 : 0;
-  const costToRevenue = totalTradingIncome > 0 ? (totalDirectCosts / totalTradingIncome) * 100 : 0;
+  const getDataForPeriod = (month: string): PeriodData => {
+    if (month === "all") {
+      const tradingIncome = monthlyPL.reduce((s, m) => s + m.grossProfit, 0);
+      const directCosts = monthlyPL.reduce((s, m) => s + m.cashExpenses, 0);
+      const scam = monthlyPL.reduce((s, m) => s + m.scam, 0);
+      const netProfit = monthlyPL.reduce((s, m) => s + m.netProfit, 0);
+      const profitableMonths = monthlyPL.filter((m) => m.netProfit > 0).length;
+      const volumeAED = tradingIncome / ASSUMED_SPREAD;
+      const spreadPct = volumeAED > 0 ? (tradingIncome / volumeAED) * 100 : 0;
+      const costToRevenue = tradingIncome > 0 ? (directCosts / tradingIncome) * 100 : 0;
+      return {
+        hasData: true,
+        tradingIncome, directCosts, scam, netProfit,
+        profitableMonths, monthCount: monthlyPL.length,
+        volumeAED, volumeUSDT: 0, spreadPct, costToRevenue,
+        breakEvenVolumeAED: spreadPct > 0 ? directCosts / (spreadPct / 100) : 0,
+      };
+    }
+    if (!VERIFIED_MONTHS.has(month)) {
+      return {
+        hasData: false,
+        tradingIncome: 0, directCosts: 0, scam: 0, netProfit: 0,
+        profitableMonths: 0, monthCount: 0,
+        volumeAED: 0, volumeUSDT: 0, spreadPct: 0, costToRevenue: 0, breakEvenVolumeAED: 0,
+      };
+    }
+    const row = monthlyPL.find((m) => m.month === month);
+    if (!row) {
+      return {
+        hasData: false,
+        tradingIncome: 0, directCosts: 0, scam: 0, netProfit: 0,
+        profitableMonths: 0, monthCount: 0,
+        volumeAED: 0, volumeUSDT: 0, spreadPct: 0, costToRevenue: 0, breakEvenVolumeAED: 0,
+      };
+    }
+    // Verified per-month volume/spread come from monthSpecifics (defined later);
+    // hard-code the same values inline here so this helper is self-contained.
+    const verifiedSpec: Record<string, { volumeUSDT: number; spreadPct: number }> = {
+      "Mar 2026": { volumeUSDT: 36_600_000, spreadPct: 0.307 },
+      "Feb 2026": { volumeUSDT: 50_200_000, spreadPct: 0.260 },
+      "Jan 2026": { volumeUSDT: 72_900_000, spreadPct: 0.120 },
+    };
+    const spec = verifiedSpec[month];
+    const tradingIncome = row.grossProfit;
+    const directCosts = row.cashExpenses;
+    const scam = row.scam;
+    const netProfit = row.netProfit;
+    const spreadPct = spec.spreadPct;
+    const volumeAED = spreadPct > 0 ? tradingIncome / (spreadPct / 100) : 0;
+    const costToRevenue = tradingIncome > 0 ? (directCosts / tradingIncome) * 100 : 0;
+    return {
+      hasData: true,
+      tradingIncome, directCosts, scam, netProfit,
+      profitableMonths: netProfit > 0 ? 1 : 0,
+      monthCount: 1,
+      volumeAED,
+      volumeUSDT: spec.volumeUSDT,
+      spreadPct,
+      costToRevenue,
+      breakEvenVolumeAED: spreadPct > 0 ? directCosts / (spreadPct / 100) : 0,
+    };
+  };
+
+  const period = useMemo(() => getDataForPeriod(selectedMonth), [selectedMonth]);
+
+  // Backwards-compatible aliases (used widely below). When period.hasData is
+  // false these are still safe (zeroed) — sections gate their UI on hasData.
+  const totalTradingIncome = period.tradingIncome;
+  const totalDirectCosts = period.directCosts;
+  const totalScam = period.scam;
+  const totalNetProfit = period.netProfit;
+  const profitableMonths = period.profitableMonths;
+  const totalVolume = period.volumeAED;
+  const avgSpreadPct = period.spreadPct;
+  const costToRevenue = period.costToRevenue;
 
   // Capital deployment: how much of total partner capital is committed (not sitting as cash)
   // Basis = total partner funding (gross capital injected), since net-capital can be skewed by withdrawals.
@@ -184,8 +278,7 @@ const OtcDashboard = () => {
   const partnersByExposure = [...partners].sort((a, b) => b.funding - a.funding);
   const concentrationRisk = partnersByExposure[0].funding / totalPartnerFunding > 0.55;
 
-  const isFiltered = selectedMonth !== "all";
-  const periodLabel = isFiltered ? selectedMonth : "Inception to Date";
+  // isFiltered + periodLabel declared earlier alongside getDataForPeriod.
 
   // ── Period-snapshot data (closing balances). ONLY months listed here have
   // a verified end-of-period snapshot. Any other selected month → dash (-).
@@ -502,59 +595,84 @@ const OtcDashboard = () => {
           </Card>
         )}
 
+        {/* === No-data banner for non-verified pre-Jan-26 months === */}
+        {!period.hasData && (
+          <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-amber-400 mt-0.5 shrink-0" />
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-amber-300">No verified data for {selectedMonth}</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Detailed OTC metrics (volume, spread, counterparties, daily activity) are only available for
+                <span className="text-foreground font-medium"> Jan 2026, Feb 2026 and Mar 2026</span>. KPI cards and
+                period-specific sections will display "—" until verified data is loaded for this period. Switch to
+                "All Time" or one of the verified months to see full figures.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* === OTC-Specific KPI Cards (6) === */}
         {(() => {
           const spec = activeSpec;
           const hasSpec = !!spec;
+          const hasData = period.hasData;
+          const noDataSubtitle = `No data for ${selectedMonth}`;
           const displaySpread = hasSpec ? spec.spreadPct : avgSpreadPct;
           const spreadSubtitle = hasSpec
             ? `Weighted avg across ${spec.txCount} transactions`
             : "Income ÷ Volume";
 
-
           return (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
               <SummaryCard
                 title={`Trading Volume (${periodLabel})`}
-                value={hasSpec ? spec.volumeLabel : formatAEDCompact(totalVolume)}
-                subtitle={hasSpec
-                  ? spec.volumeSubtitle
-                  : `USDT↔AED · est. @ ${(ASSUMED_SPREAD * 100).toFixed(2)}% spread`}
+                value={!hasData ? DASH : (hasSpec ? spec.volumeLabel : formatAEDCompact(totalVolume))}
+                subtitle={!hasData
+                  ? noDataSubtitle
+                  : (hasSpec ? spec.volumeSubtitle : `USDT↔AED · est. @ ${(ASSUMED_SPREAD * 100).toFixed(2)}% spread`)}
                 icon={Repeat}
               />
               <SummaryCard
                 title="Trading Income"
-                value={formatAEDCompact(totalTradingIncome)}
-                subtitle={hasSpec
-                  ? `AED ${spec.revPerM.toLocaleString()} per 1M USDT traded`
-                  : "Spread / commission earned"}
+                value={!hasData ? DASH : formatAEDCompact(totalTradingIncome)}
+                subtitle={!hasData
+                  ? noDataSubtitle
+                  : (hasSpec ? `AED ${spec.revPerM.toLocaleString()} per 1M USDT traded` : "Spread / commission earned")}
                 icon={DollarSign}
-                trend="up"
+                trend={hasData ? "up" : undefined}
               />
               <SummaryCard
                 title="Net Profit"
-                value={formatAEDCompact(totalNetProfit)}
-                subtitle={isFiltered ? (totalNetProfit >= 0 ? "Profitable month" : "Loss month") : `${profitableMonths}/${filteredPL.length} profitable months`}
+                value={!hasData ? DASH : formatAEDCompact(totalNetProfit)}
+                subtitle={!hasData
+                  ? noDataSubtitle
+                  : (isFiltered
+                    ? (totalNetProfit >= 0 ? "Profitable month" : "Loss month")
+                    : `${profitableMonths}/${monthlyPL.length} profitable months`)}
                 icon={TrendingUp}
-                trend={totalNetProfit >= 0 ? "up" : "down"}
+                trend={hasData ? (totalNetProfit >= 0 ? "up" : "down") : undefined}
               />
               <SummaryCard
                 title="Average Spread %"
-                value={`${displaySpread.toFixed(3)}%`}
-                subtitle={spreadSubtitle}
+                value={!hasData ? DASH : `${displaySpread.toFixed(3)}%`}
+                subtitle={!hasData ? noDataSubtitle : spreadSubtitle}
                 icon={Percent}
               />
               <SummaryCard
                 title="Cost-to-Revenue"
-                value={`${costToRevenue.toFixed(1)}%`}
-                subtitle={costToRevenue < 25 ? "Target: <25% ✅ Excellent" : costToRevenue < 40 ? "Target: <25% ⚠ Acceptable" : "Target: <25% ❌ High"}
+                value={!hasData ? DASH : `${costToRevenue.toFixed(1)}%`}
+                subtitle={!hasData
+                  ? noDataSubtitle
+                  : (costToRevenue < 25 ? "Target: <25% ✅ Excellent" : costToRevenue < 40 ? "Target: <25% ⚠ Acceptable" : "Target: <25% ❌ High")}
                 icon={Gauge}
-                trend={costToRevenue < 30 ? "up" : "down"}
+                trend={hasData ? (costToRevenue < 30 ? "up" : "down") : undefined}
               />
               <SummaryCard
                 title="USDT Inventory"
                 value={snapshot ? formatAEDCompact(snapshot.usdtWalletAED) : DASH}
-                subtitle={snapshot ? `${(snapshot.usdtWalletAED / 3.67706).toLocaleString("en-US", { maximumFractionDigits: 0 })} USDT @ 3.67706` : NA_TOOLTIP}
+                subtitle={snapshot
+                  ? `${(snapshot.usdtWalletAED / 3.67706).toLocaleString("en-US", { maximumFractionDigits: 0 })} USDT @ 3.67706`
+                  : (hasData ? NA_TOOLTIP : noDataSubtitle)}
                 icon={Wallet}
               />
             </div>
@@ -645,15 +763,16 @@ const OtcDashboard = () => {
           </div>
           {(() => {
             // Dynamic break-even: selected month's total costs ÷ selected month's spread %
-            // Falls back to avg burn ÷ assumed spread when no month is selected.
-            const selectedRow = selectedMonth !== "all"
-              ? monthlyPL.find((m) => m.month === selectedMonth)
-              : null;
-            const beCosts = selectedRow ? selectedRow.cashExpenses : avgMonthlyBurn;
+            // Falls back to avg burn ÷ assumed spread when "all" is selected.
+            // For non-verified months (pre-Jan-26) we cannot compute a meaningful
+            // break-even because we have no verified spread for that period.
+            const isVerified = period.hasData;
+            const isAll = selectedMonth === "all";
+            const beCosts = isAll ? avgMonthlyBurn : period.directCosts;
             const beSpreadPct = activeSpec ? activeSpec.spreadPct : ASSUMED_SPREAD * 100;
-            const beVolume = beSpreadPct > 0 ? beCosts / (beSpreadPct / 100) : 0;
+            const beVolume = isVerified && beSpreadPct > 0 ? beCosts / (beSpreadPct / 100) : 0;
             const beVolumeM = parseFloat((beVolume / 1_000_000).toFixed(2));
-            const beLabel = selectedRow ? selectedMonth : "avg of last 6 months";
+            const beLabel = isAll ? "avg of last 6 months" : selectedMonth;
 
             return (
               <>
@@ -698,10 +817,14 @@ const OtcDashboard = () => {
                     <div className="mt-3 p-3 rounded-lg border border-primary/30 bg-primary/5 flex items-center justify-between">
                       <div>
                         <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Break-even Volume — {beLabel}</p>
-                        <p className="text-base font-bold font-serif text-primary">{formatAEDCompact(beVolume)}</p>
+                        <p className="text-base font-bold font-serif text-primary">
+                          {isVerified ? formatAEDCompact(beVolume) : DASH}
+                        </p>
                       </div>
                       <p className="text-[10px] text-muted-foreground text-right max-w-[60%]">
-                        {formatAEDCompact(beCosts)} costs ÷ {beSpreadPct.toFixed(3)}% spread = minimum monthly volume to break even
+                        {isVerified
+                          ? <>{formatAEDCompact(beCosts)} costs ÷ {beSpreadPct.toFixed(3)}% spread = minimum monthly volume to break even</>
+                          : <>No data for {selectedMonth} — verified spread unavailable for this period</>}
                       </p>
                     </div>
                   </CardContent>
