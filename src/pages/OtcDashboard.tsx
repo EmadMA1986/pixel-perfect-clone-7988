@@ -595,6 +595,22 @@ const OtcDashboard = () => {
           </Card>
         )}
 
+        {/* === No-data banner for non-verified pre-Jan-26 months === */}
+        {!period.hasData && (
+          <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-amber-400 mt-0.5 shrink-0" />
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-amber-300">No verified data for {selectedMonth}</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Detailed OTC metrics (volume, spread, counterparties, daily activity) are only available for
+                <span className="text-foreground font-medium"> Jan 2026, Feb 2026 and Mar 2026</span>. KPI cards and
+                period-specific sections will display "—" until verified data is loaded for this period. Switch to
+                "All Time" or one of the verified months to see full figures.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* === OTC-Specific KPI Cards (6) === */}
         {(() => {
           const spec = activeSpec;
