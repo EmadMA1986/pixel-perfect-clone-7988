@@ -48,6 +48,40 @@ const normalizeMonth = (m: string): string => {
   return m;
 };
 
+const MONTH_LONG_LABELS: Record<string, string> = {
+  Jan: "January",
+  Feb: "February",
+  Mar: "March",
+  Apr: "April",
+  May: "May",
+  Jun: "June",
+  Jul: "July",
+  Aug: "August",
+  Sep: "September",
+  Oct: "October",
+  Nov: "November",
+  Dec: "December",
+};
+
+const toLongMonthLabel = (month: string) => {
+  if (month === "all") return "Inception to Date";
+  const parts = month.split("-");
+  if (parts.length !== 2) return month;
+  return `${MONTH_LONG_LABELS[parts[0]] ?? parts[0]} 20${parts[1]}`;
+};
+
+const getPreviousMonthLabel = (month: string) => {
+  if (month === "all") return null;
+  const [mon, yy] = month.split("-");
+  const monthOrder = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const index = monthOrder.indexOf(mon);
+  if (index === -1) return null;
+  if (index === 0) {
+    return `Dec-${String(parseInt(yy, 10) - 1).padStart(2, "0")}`;
+  }
+  return `${monthOrder[index - 1]}-${yy}`;
+};
+
 // Build a sorted list of all unique months across all companies
 const buildAllMonths = (): string[] => {
   const set = new Set<string>();
@@ -244,6 +278,8 @@ const CombinedDashboard = () => {
     mkx:            { ahmadPct:  50, investment: 5_788_934, entityITD: -8_126_209, ahmadITD: -4_063_104, entityMar: -333_612, ahmadMar: -166_806 },
     garage:         { ahmadPct:  40, investment:   520_000, entityITD:   -338_134, ahmadITD:   -135_253, entityMar:  -17_855, ahmadMar:   -7_142 },
   } as const;
+  const verifiedKeys = Object.keys(VERIFIED) as (keyof typeof VERIFIED)[];
+  const fixedAhmadInvestment = verifiedKeys.reduce((sum, key) => sum + VERIFIED[key].investment, 0);
 
   // For Ranking Table (entity basis) and aggregate ITD totals shown in that table
   const buildVerifiedSnapshot = (useMar = false) => {
@@ -281,12 +317,12 @@ const CombinedDashboard = () => {
   const allTimeData = useMemo(() => buildVerifiedSnapshot(false), []);
 
   // === Compute previous month data for MoM comparison ===
+  const prevMonthLabel = useMemo(() => getPreviousMonthLabel(selectedMonth), [selectedMonth]);
+
   const prevMonthData = useMemo(() => {
-    if (selectedMonth === "all") return null;
-    const idx = ALL_MONTHS.indexOf(selectedMonth);
-    if (idx <= 0) return null;
-    return computeForMonth(ALL_MONTHS[idx - 1]);
-  }, [selectedMonth]);
+    if (!prevMonthLabel) return null;
+    return computeForMonth(prevMonthLabel);
+  }, [prevMonthLabel]);
 
   const d = companyData;
   const pd = prevMonthData; // previous month data or null
@@ -362,21 +398,21 @@ const CombinedDashboard = () => {
   const missingCount = companies.length - reportingCompanies.length;
   const isPartial = missingCount > 0;
 
-  const totalInvestment = reportingCompanies.reduce((s, c) => s + c.investment, 0);
+  const periodInvestmentTotal = reportingCompanies.reduce((s, c) => s + c.investment, 0);
   const totalProfit = reportingCompanies.reduce((s, c) => s + c.profit, 0);
   const totalNetPosition = reportingCompanies.reduce((s, c) => s + c.netPosition, 0);
-  const overallROI = totalInvestment ? (totalProfit / totalInvestment) * 100 : 0;
+  const overallROI = periodInvestmentTotal ? (totalProfit / periodInvestmentTotal) * 100 : 0;
 
   // === Ahmad's-share aggregates — DERIVED from companyData (subscribes to selectedMonth) ===
   // Entity P&L for the selected period × Ahmad's ownership % per company.
   // For "all" and "Mar-26" we use the verified static figures; every other month
   // pulls live from each company's monthly data via computeForMonth.
-  const ahmadKeys = Object.keys(VERIFIED) as (keyof typeof VERIFIED)[];
+  const ahmadKeys = verifiedKeys;
   const keyToCompanyKey: Record<keyof typeof VERIFIED, keyof typeof d> = {
     rya: "rya", otc: "otc", mkAutosCars: "mkAutosCars",
     mkAutosCompany: "mkAutosCompany", mkx: "mkx", garage: "garage",
   };
-  const ahmadTotalInvestment = ahmadKeys.reduce((s, k) => s + VERIFIED[k].investment, 0);  // 9,552,734 (constant)
+  const ahmadTotalInvestment = fixedAhmadInvestment;  // 9,552,734 (constant)
   // ITD profit & ROI are constant — anchored to verified ITD figures.
   const ahmadITDProfit = ahmadKeys.reduce((s, k) => s + VERIFIED[k].ahmadITD, 0);          // +351,782
   const ahmadNetPosition = ahmadTotalInvestment + ahmadITDProfit;                          // 9,904,516
@@ -414,10 +450,11 @@ const CombinedDashboard = () => {
   const ahmadWorst = [...ahmadRows].sort((a, b) => a.ahmadROI - b.ahmadROI)[0];
 
   // Previous month totals for MoM
-  const prevTotalProfit = pd ? Object.values(pd).reduce((s, v) => s + v.profit, 0) : null;
-  const prevTotalNetPosition = pd ? Object.values(pd).reduce((s, v) => s + v.netPosition, 0) : null;
-  const prevTotalInvestment = pd ? Object.values(pd).reduce((s, v) => s + v.investment, 0) : null;
-  const prevOverallROI = pd && prevTotalInvestment ? (prevTotalProfit! / prevTotalInvestment) * 100 : null;
+  const prevReportingValues = pd ? Object.values(pd).filter(v => v.hasData) : [];
+  const prevTotalProfit = prevReportingValues.length > 0 ? prevReportingValues.reduce((s, v) => s + (v.profitOrNull ?? 0), 0) : null;
+  const prevTotalNetPosition = prevReportingValues.length > 0 ? prevReportingValues.reduce((s, v) => s + (v.netPositionOrNull ?? 0), 0) : null;
+  const prevTotalInvestment = prevReportingValues.length > 0 ? prevReportingValues.reduce((s, v) => s + v.investment, 0) : null;
+  const prevOverallROI = prevTotalInvestment && prevTotalProfit !== null ? (prevTotalProfit / prevTotalInvestment) * 100 : null;
 
   // Derived analytics — use cumulative (all-time) ROI/profit so a single bad month
   // doesn't misclassify a long-term winner (e.g., RYA Gold) as a "losing company".
@@ -431,9 +468,11 @@ const CombinedDashboard = () => {
   const losingCompanies = selectedMonth === "all"
     ? companies.filter(c => cumulativeByKey(c.key).profit < 0)
     : companies.filter(c => c.hasData && c.profitOrNull !== null && c.profitOrNull < 0);
-  const profitableCompanies = companies.filter(c => cumulativeByKey(c.key).profit >= 0);
+  const profitableCompanies = selectedMonth === "all"
+    ? companies.filter(c => cumulativeByKey(c.key).profit >= 0)
+    : companies.filter(c => c.hasData && (c.profitOrNull ?? 0) >= 0);
   const largestExposure = [...companies].sort((a, b) => b.investment - a.investment)[0];
-  const largestExposurePct = (largestExposure.investment / totalInvestment) * 100;
+  const largestExposurePct = fixedAhmadInvestment ? (largestExposure.investment / fixedAhmadInvestment) * 100 : 0;
 
   // Executive Summary
   const executiveSummary = useMemo(() => {
@@ -444,12 +483,17 @@ const CombinedDashboard = () => {
     if (selectedMonth === "Mar-26") {
       return "March 2026 portfolio net loss AED 55,554 (Ahmad share). OTC (+AED 107,462) and RYA Gold (+AED 38,286) were the only profitable companies. MKX (-AED 166,806) consumed all gains. Without MKX, March portfolio profit would be +AED 111,252. Ahmad ITD net position +AED 351,782 — without MKX would be +AED 4,414,886.";
     }
-    const period = `in ${selectedMonth}`;
+    if (reportingCompanies.length === 0) {
+      return `No portfolio data available for ${toLongMonthLabel(selectedMonth)}. Select a month from Oct-25 onwards for verified data, or select Inception to Date for cumulative figures.`;
+    }
+    const period = `in ${toLongMonthLabel(selectedMonth)}`;
     const profitLine = totalProfit >= 0
       ? `Portfolio generated ${fmt(toDisplay(totalProfit))} net profit ${period}`
       : `Portfolio recorded a net loss of ${fmt(toDisplay(Math.abs(totalProfit)))} ${period}`;
-    const drivers = [...companies].sort((a, b) => Math.abs(b.profit) - Math.abs(a.profit)).slice(0, 2);
-    const driverLine = drivers.map(d => `${d.name} (${d.profit >= 0 ? "+" : ""}${fmt(toDisplay(d.profit))})`).join(" and ");
+    const drivers = [...reportingCompanies].sort((a, b) => Math.abs(b.profit) - Math.abs(a.profit)).slice(0, 2);
+    const driverLine = drivers.length > 0
+      ? drivers.map(d => `${d.name} (${d.profit >= 0 ? "+" : ""}${fmt(toDisplay(d.profit))})`).join(" and ")
+      : `no reporting companies`;
     const momLine = prevTotalProfit !== null
       ? totalProfit > prevTotalProfit!
         ? ` Performance improved vs previous month by ${fmt(toDisplay(Math.abs(totalProfit - prevTotalProfit!)))}.`
@@ -458,7 +502,7 @@ const CombinedDashboard = () => {
         : ""
       : "";
     return `${profitLine}, driven by ${driverLine}.${momLine}`;
-  }, [companies, totalProfit, selectedMonth, prevTotalProfit, currency]);
+  }, [reportingCompanies, totalProfit, selectedMonth, prevTotalProfit, currency]);
 
   const roiChartData = companies.map(c => ({
     name: c.name,
@@ -472,7 +516,7 @@ const CombinedDashboard = () => {
     color: c.color,
   }));
 
-  const profitChartData = companies.map(c => ({
+  const profitChartData = reportingCompanies.map(c => ({
     name: c.name,
     profit: toDisplay(c.profit),
     color: c.color,
@@ -489,18 +533,21 @@ const CombinedDashboard = () => {
     const start = Math.max(0, end - 5);
     const slice = ALL_MONTHS.slice(start, end + 1);
     return companies.map(c => {
-      const prev = pd ? pd[c.key] : null;
+        const prev = pd ? pd[c.key] : null;
       const cum = allTimeData[c.key];
-      const trend = slice.map(m => ({ month: m, profit: computeForMonth(m)[c.key].profit }));
+        const trend = slice
+          .map(m => ({ month: m, profit: computeForMonth(m)[c.key].profitOrNull }))
+          .filter((point): point is { month: string; profit: number } => point.profit !== null);
       return {
         key: c.key,
         name: c.name,
         share: c.share,
         current: { investment: c.investment, profit: c.profit, netPosition: c.netPosition, roi: cum.roi },
-        previous: prev ? { investment: prev.investment, profit: prev.profit, netPosition: prev.netPosition, roi: prev.roi } : null,
+          previous: prev && prev.hasData ? { investment: prev.investment, profit: prev.profitOrNull ?? 0, netPosition: prev.netPositionOrNull ?? prev.investment, roi: prev.roiOrNull ?? 0 } : null,
         trend,
         itdProfit: cum.profit,
-        marProfit: c.profit,
+          marProfit: c.hasData ? c.profit : undefined,
+          hasData: c.hasData,
       };
     });
   }, [companies, pd, selectedMonth, allTimeData]);
@@ -513,21 +560,14 @@ const CombinedDashboard = () => {
     const slice = ALL_MONTHS.slice(start, end + 1);
     return slice.map(m => {
       const data = computeForMonth(m);
-      const profit = Object.values(data).reduce((s, v) => s + v.profit, 0);
-      const investment = Object.values(data).reduce((s, v) => s + v.investment, 0);
-      // Use abs profit as a proxy for "revenue activity" since true revenue isn't aggregated here
-      const revenue = Object.values(data).reduce((s, v) => s + Math.max(v.profit, 0), 0);
+      const reporting = Object.values(data).filter(v => v.hasData);
+      const profit = reporting.reduce((s, v) => s + (v.profitOrNull ?? 0), 0);
+      const investment = reporting.reduce((s, v) => s + v.investment, 0);
+      const revenue = reporting.reduce((s, v) => s + Math.max(v.profitOrNull ?? 0, 0), 0);
       const roi = investment ? (profit / investment) * 100 : 0;
       return { month: m, revenue, profit, roi };
     });
   }, [selectedMonth]);
-
-  const prevMonthLabel = useMemo(() => {
-    if (selectedMonth === "all") return null;
-    const idx = ALL_MONTHS.indexOf(selectedMonth);
-    return idx > 0 ? ALL_MONTHS[idx - 1] : null;
-  }, [selectedMonth]);
-
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -690,6 +730,7 @@ const CombinedDashboard = () => {
             format={fmt}
             toDisplay={toDisplay}
             portfolioTrend={portfolioTrend}
+            fixedTotalInvestment={fixedAhmadInvestment}
           />
         </div>
 
@@ -698,9 +739,15 @@ const CombinedDashboard = () => {
         {/* 6a. Portfolio Risk Dashboard — Critical / Watch / Healthy */}
         <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
-              <Shield className="h-4 w-4 text-primary" /> Portfolio Risk Dashboard
-            </CardTitle>
+            <div className="space-y-2">
+              <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+                <Shield className="h-4 w-4 text-primary" /> Portfolio Risk Dashboard
+              </CardTitle>
+              <div className="rounded-md border border-yellow-500/40 bg-yellow-500/10 px-3 py-2 text-xs text-yellow-600 dark:text-yellow-400">
+                ⚠️ Risk Dashboard always shows latest available data (Mar-26). Switch to Mar-26 for period-specific risk analysis.
+              </div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Risk data: latest available (Mar-26) — not period filtered</p>
+            </div>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {/* CRITICAL */}
@@ -779,7 +826,7 @@ const CombinedDashboard = () => {
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-loss">{c.name} — Loss Alert</p>
                   <p className="text-xs text-muted-foreground">
-                    ROI: {c.roi.toFixed(1)}% · Loss: {fmt(toDisplay(c.profit))} · {((c.investment / totalInvestment) * 100).toFixed(0)}% of portfolio exposure
+                    ROI: {c.roi.toFixed(1)}% · Loss: {fmt(toDisplay(c.profit))} · {((c.investment / fixedAhmadInvestment) * 100).toFixed(1)}% of portfolio exposure
                   </p>
                 </div>
                 <ArrowRight className="h-4 w-4 text-loss" />
@@ -787,7 +834,7 @@ const CombinedDashboard = () => {
             ))}
             {losingCompanies.length === 0 && (
               <div className="rounded-md border border-success/30 bg-success/5 p-3 text-xs text-muted-foreground">
-                No active loss alerts — all entities profitable on a cumulative basis.
+                {selectedMonth === "all" ? "No active loss alerts — all entities profitable on a cumulative basis." : `No active loss alerts for ${selectedMonth}.`}
               </div>
             )}
 
