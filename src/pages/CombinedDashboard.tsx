@@ -70,6 +70,18 @@ const toLongMonthLabel = (month: string) => {
   return `${MONTH_LONG_LABELS[parts[0]] ?? parts[0]} 20${parts[1]}`;
 };
 
+const getPreviousMonthLabel = (month: string) => {
+  if (month === "all") return null;
+  const [mon, yy] = month.split("-");
+  const monthOrder = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const index = monthOrder.indexOf(mon);
+  if (index === -1) return null;
+  if (index === 0) {
+    return `Dec-${String(parseInt(yy, 10) - 1).padStart(2, "0")}`;
+  }
+  return `${monthOrder[index - 1]}-${yy}`;
+};
+
 // Build a sorted list of all unique months across all companies
 const buildAllMonths = (): string[] => {
   const set = new Set<string>();
@@ -305,12 +317,12 @@ const CombinedDashboard = () => {
   const allTimeData = useMemo(() => buildVerifiedSnapshot(false), []);
 
   // === Compute previous month data for MoM comparison ===
+  const prevMonthLabel = useMemo(() => getPreviousMonthLabel(selectedMonth), [selectedMonth]);
+
   const prevMonthData = useMemo(() => {
-    if (selectedMonth === "all") return null;
-    const idx = ALL_MONTHS.indexOf(selectedMonth);
-    if (idx <= 0) return null;
-    return computeForMonth(ALL_MONTHS[idx - 1]);
-  }, [selectedMonth]);
+    if (!prevMonthLabel) return null;
+    return computeForMonth(prevMonthLabel);
+  }, [prevMonthLabel]);
 
   const d = companyData;
   const pd = prevMonthData; // previous month data or null
@@ -556,13 +568,6 @@ const CombinedDashboard = () => {
       return { month: m, revenue, profit, roi };
     });
   }, [selectedMonth]);
-
-  const prevMonthLabel = useMemo(() => {
-    if (selectedMonth === "all") return null;
-    const idx = ALL_MONTHS.indexOf(selectedMonth);
-    return idx > 0 ? ALL_MONTHS[idx - 1] : null;
-  }, [selectedMonth]);
-
 
   return (
     <div className="min-h-screen bg-background text-foreground">
