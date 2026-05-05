@@ -386,21 +386,21 @@ const CombinedDashboard = () => {
   const missingCount = companies.length - reportingCompanies.length;
   const isPartial = missingCount > 0;
 
-  const totalInvestment = reportingCompanies.reduce((s, c) => s + c.investment, 0);
+  const periodInvestmentTotal = reportingCompanies.reduce((s, c) => s + c.investment, 0);
   const totalProfit = reportingCompanies.reduce((s, c) => s + c.profit, 0);
   const totalNetPosition = reportingCompanies.reduce((s, c) => s + c.netPosition, 0);
-  const overallROI = totalInvestment ? (totalProfit / totalInvestment) * 100 : 0;
+  const overallROI = periodInvestmentTotal ? (totalProfit / periodInvestmentTotal) * 100 : 0;
 
   // === Ahmad's-share aggregates — DERIVED from companyData (subscribes to selectedMonth) ===
   // Entity P&L for the selected period × Ahmad's ownership % per company.
   // For "all" and "Mar-26" we use the verified static figures; every other month
   // pulls live from each company's monthly data via computeForMonth.
-  const ahmadKeys = Object.keys(VERIFIED) as (keyof typeof VERIFIED)[];
+  const ahmadKeys = verifiedKeys;
   const keyToCompanyKey: Record<keyof typeof VERIFIED, keyof typeof d> = {
     rya: "rya", otc: "otc", mkAutosCars: "mkAutosCars",
     mkAutosCompany: "mkAutosCompany", mkx: "mkx", garage: "garage",
   };
-  const ahmadTotalInvestment = ahmadKeys.reduce((s, k) => s + VERIFIED[k].investment, 0);  // 9,552,734 (constant)
+  const ahmadTotalInvestment = fixedAhmadInvestment;  // 9,552,734 (constant)
   // ITD profit & ROI are constant — anchored to verified ITD figures.
   const ahmadITDProfit = ahmadKeys.reduce((s, k) => s + VERIFIED[k].ahmadITD, 0);          // +351,782
   const ahmadNetPosition = ahmadTotalInvestment + ahmadITDProfit;                          // 9,904,516
@@ -438,10 +438,11 @@ const CombinedDashboard = () => {
   const ahmadWorst = [...ahmadRows].sort((a, b) => a.ahmadROI - b.ahmadROI)[0];
 
   // Previous month totals for MoM
-  const prevTotalProfit = pd ? Object.values(pd).reduce((s, v) => s + v.profit, 0) : null;
-  const prevTotalNetPosition = pd ? Object.values(pd).reduce((s, v) => s + v.netPosition, 0) : null;
-  const prevTotalInvestment = pd ? Object.values(pd).reduce((s, v) => s + v.investment, 0) : null;
-  const prevOverallROI = pd && prevTotalInvestment ? (prevTotalProfit! / prevTotalInvestment) * 100 : null;
+  const prevReportingValues = pd ? Object.values(pd).filter(v => v.hasData) : [];
+  const prevTotalProfit = prevReportingValues.length > 0 ? prevReportingValues.reduce((s, v) => s + (v.profitOrNull ?? 0), 0) : null;
+  const prevTotalNetPosition = prevReportingValues.length > 0 ? prevReportingValues.reduce((s, v) => s + (v.netPositionOrNull ?? 0), 0) : null;
+  const prevTotalInvestment = prevReportingValues.length > 0 ? prevReportingValues.reduce((s, v) => s + v.investment, 0) : null;
+  const prevOverallROI = prevTotalInvestment && prevTotalProfit !== null ? (prevTotalProfit / prevTotalInvestment) * 100 : null;
 
   // Derived analytics — use cumulative (all-time) ROI/profit so a single bad month
   // doesn't misclassify a long-term winner (e.g., RYA Gold) as a "losing company".
@@ -455,9 +456,11 @@ const CombinedDashboard = () => {
   const losingCompanies = selectedMonth === "all"
     ? companies.filter(c => cumulativeByKey(c.key).profit < 0)
     : companies.filter(c => c.hasData && c.profitOrNull !== null && c.profitOrNull < 0);
-  const profitableCompanies = companies.filter(c => cumulativeByKey(c.key).profit >= 0);
+  const profitableCompanies = selectedMonth === "all"
+    ? companies.filter(c => cumulativeByKey(c.key).profit >= 0)
+    : companies.filter(c => c.hasData && (c.profitOrNull ?? 0) >= 0);
   const largestExposure = [...companies].sort((a, b) => b.investment - a.investment)[0];
-  const largestExposurePct = (largestExposure.investment / totalInvestment) * 100;
+  const largestExposurePct = fixedAhmadInvestment ? (largestExposure.investment / fixedAhmadInvestment) * 100 : 0;
 
   // Executive Summary
   const executiveSummary = useMemo(() => {
@@ -468,12 +471,17 @@ const CombinedDashboard = () => {
     if (selectedMonth === "Mar-26") {
       return "March 2026 portfolio net loss AED 55,554 (Ahmad share). OTC (+AED 107,462) and RYA Gold (+AED 38,286) were the only profitable companies. MKX (-AED 166,806) consumed all gains. Without MKX, March portfolio profit would be +AED 111,252. Ahmad ITD net position +AED 351,782 — without MKX would be +AED 4,414,886.";
     }
-    const period = `in ${selectedMonth}`;
+    if (reportingCompanies.length === 0) {
+      return `No portfolio data available for ${toLongMonthLabel(selectedMonth)}. Select a month from Oct-25 onwards for verified data, or select Inception to Date for cumulative figures.`;
+    }
+    const period = `in ${toLongMonthLabel(selectedMonth)}`;
     const profitLine = totalProfit >= 0
       ? `Portfolio generated ${fmt(toDisplay(totalProfit))} net profit ${period}`
       : `Portfolio recorded a net loss of ${fmt(toDisplay(Math.abs(totalProfit)))} ${period}`;
-    const drivers = [...companies].sort((a, b) => Math.abs(b.profit) - Math.abs(a.profit)).slice(0, 2);
-    const driverLine = drivers.map(d => `${d.name} (${d.profit >= 0 ? "+" : ""}${fmt(toDisplay(d.profit))})`).join(" and ");
+    const drivers = [...reportingCompanies].sort((a, b) => Math.abs(b.profit) - Math.abs(a.profit)).slice(0, 2);
+    const driverLine = drivers.length > 0
+      ? drivers.map(d => `${d.name} (${d.profit >= 0 ? "+" : ""}${fmt(toDisplay(d.profit))})`).join(" and ")
+      : `no reporting companies`;
     const momLine = prevTotalProfit !== null
       ? totalProfit > prevTotalProfit!
         ? ` Performance improved vs previous month by ${fmt(toDisplay(Math.abs(totalProfit - prevTotalProfit!)))}.`
@@ -482,7 +490,7 @@ const CombinedDashboard = () => {
         : ""
       : "";
     return `${profitLine}, driven by ${driverLine}.${momLine}`;
-  }, [companies, totalProfit, selectedMonth, prevTotalProfit, currency]);
+  }, [reportingCompanies, totalProfit, selectedMonth, prevTotalProfit, currency]);
 
   const roiChartData = companies.map(c => ({
     name: c.name,
@@ -496,7 +504,7 @@ const CombinedDashboard = () => {
     color: c.color,
   }));
 
-  const profitChartData = companies.map(c => ({
+  const profitChartData = reportingCompanies.map(c => ({
     name: c.name,
     profit: toDisplay(c.profit),
     color: c.color,
@@ -513,18 +521,21 @@ const CombinedDashboard = () => {
     const start = Math.max(0, end - 5);
     const slice = ALL_MONTHS.slice(start, end + 1);
     return companies.map(c => {
-      const prev = pd ? pd[c.key] : null;
+        const prev = pd ? pd[c.key] : null;
       const cum = allTimeData[c.key];
-      const trend = slice.map(m => ({ month: m, profit: computeForMonth(m)[c.key].profit }));
+        const trend = slice
+          .map(m => ({ month: m, profit: computeForMonth(m)[c.key].profitOrNull }))
+          .filter((point): point is { month: string; profit: number } => point.profit !== null);
       return {
         key: c.key,
         name: c.name,
         share: c.share,
         current: { investment: c.investment, profit: c.profit, netPosition: c.netPosition, roi: cum.roi },
-        previous: prev ? { investment: prev.investment, profit: prev.profit, netPosition: prev.netPosition, roi: prev.roi } : null,
+          previous: prev && prev.hasData ? { investment: prev.investment, profit: prev.profitOrNull ?? 0, netPosition: prev.netPositionOrNull ?? prev.investment, roi: prev.roiOrNull ?? 0 } : null,
         trend,
         itdProfit: cum.profit,
-        marProfit: c.profit,
+          marProfit: c.hasData ? c.profit : undefined,
+          hasData: c.hasData,
       };
     });
   }, [companies, pd, selectedMonth, allTimeData]);
@@ -537,10 +548,10 @@ const CombinedDashboard = () => {
     const slice = ALL_MONTHS.slice(start, end + 1);
     return slice.map(m => {
       const data = computeForMonth(m);
-      const profit = Object.values(data).reduce((s, v) => s + v.profit, 0);
-      const investment = Object.values(data).reduce((s, v) => s + v.investment, 0);
-      // Use abs profit as a proxy for "revenue activity" since true revenue isn't aggregated here
-      const revenue = Object.values(data).reduce((s, v) => s + Math.max(v.profit, 0), 0);
+      const reporting = Object.values(data).filter(v => v.hasData);
+      const profit = reporting.reduce((s, v) => s + (v.profitOrNull ?? 0), 0);
+      const investment = reporting.reduce((s, v) => s + v.investment, 0);
+      const revenue = reporting.reduce((s, v) => s + Math.max(v.profitOrNull ?? 0, 0), 0);
       const roi = investment ? (profit / investment) * 100 : 0;
       return { month: m, revenue, profit, roi };
     });
