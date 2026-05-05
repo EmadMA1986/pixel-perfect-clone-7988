@@ -328,7 +328,7 @@ const PortfolioInsights = ({
                 const sig = signal(c);
                 const sum = companySummary(c);
                 const Icon = sig.Icon;
-                const share = totals.investment ? (c.current.investment / totals.investment) * 100 : 0;
+                const share = fixedTotalInvestment ? (c.current.investment / fixedTotalInvestment) * 100 : 0;
                 const sparkData = c.trend.map((t, idx) => ({ i: idx, v: toDisplay(t.profit) }));
                 const sparkColor =
                   sig.label === "SCALE" || sig.label === "HOLD"
@@ -352,8 +352,13 @@ const PortfolioInsights = ({
                     <TableCell className={`text-right text-sm font-bold tabular-nums ${c.current.roi >= 0 ? "text-success" : "text-loss"}`}>
                       {c.current.roi >= 0 ? "+" : ""}{c.current.roi.toFixed(1)}%
                     </TableCell>
-                    <TableCell className={`text-right text-sm tabular-nums ${(c.marProfit ?? c.current.profit) >= 0 ? "text-success" : "text-loss"}`}>
-                      {(c.marProfit ?? c.current.profit) >= 0 ? "+" : ""}{format(toDisplay(c.marProfit ?? c.current.profit))}
+                    <TableCell className={`text-right text-sm tabular-nums ${c.periodProfit === null || c.periodProfit === undefined ? "text-muted-foreground" : c.periodProfit >= 0 ? "text-success" : "text-loss"}`}>
+                      {c.periodProfit === null || c.periodProfit === undefined ? (
+                        <div className="flex flex-col items-end leading-tight">
+                          <span>—</span>
+                          <span className="text-[9px] text-muted-foreground">No data</span>
+                        </div>
+                      ) : `${c.periodProfit >= 0 ? "+" : ""}${format(toDisplay(c.periodProfit))}`}
                     </TableCell>
                     <TableCell className="text-right">
                       <Delta cur={c.current.profit} prev={c.previous?.profit} />
@@ -407,11 +412,11 @@ const PortfolioInsights = ({
                 <TableCell className={`text-right text-sm font-bold tabular-nums ${totals.itdProfit >= 0 ? "text-success" : "text-loss"}`}>
                   {totals.itdProfit >= 0 ? "+" : ""}{format(toDisplay(totals.itdProfit))}
                 </TableCell>
-                <TableCell className={`text-right text-sm font-bold tabular-nums ${totals.roi >= 0 ? "text-success" : "text-loss"}`}>
-                  {totals.roi >= 0 ? "+" : ""}{totals.roi.toFixed(1)}%
+                <TableCell className={`text-right text-sm font-bold tabular-nums ${totals.itdRoi >= 0 ? "text-success" : "text-loss"}`}>
+                  {totals.itdRoi >= 0 ? "+" : ""}{totals.itdRoi.toFixed(1)}%
                 </TableCell>
-                <TableCell className={`text-right text-sm font-bold tabular-nums ${totals.marProfit >= 0 ? "text-success" : "text-loss"}`}>
-                  {totals.marProfit >= 0 ? "+" : ""}{format(toDisplay(totals.marProfit))}
+                <TableCell className={`text-right text-sm font-bold tabular-nums ${totals.periodProfit >= 0 ? "text-success" : "text-loss"}`}>
+                  {totals.hasData ? `${totals.periodProfit >= 0 ? "+" : ""}${format(toDisplay(totals.periodProfit))}` : "—"}
                 </TableCell>
                 <TableCell className="text-right">
                   <Delta cur={totals.profit} prev={totals.prevProfit} />
@@ -443,8 +448,8 @@ const PortfolioInsights = ({
               </div>
               <div className="rounded-md border border-border/50 p-3">
                 <p className="text-[10px] uppercase text-muted-foreground">Portfolio ROI</p>
-                <p className={`text-lg font-bold ${totals.roi >= 0 ? "text-success" : "text-loss"}`}>{totals.roi.toFixed(1)}%</p>
-                <Delta cur={totals.roi} prev={totals.prevROI} isPct />
+                <p className={`text-lg font-bold ${totals.periodRoi >= 0 ? "text-success" : "text-loss"}`}>{totals.periodRoi.toFixed(1)}%</p>
+                <Delta cur={totals.periodRoi} prev={totals.prevROI} isPct />
               </div>
               <div className="rounded-md border border-border/50 p-3">
                 <p className="text-[10px] uppercase text-muted-foreground">Top Gainer</p>
