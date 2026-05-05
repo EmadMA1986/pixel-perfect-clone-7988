@@ -42,11 +42,12 @@ export interface CompanySnapshot {
   key: string;
   name: string;
   share: string;
+  hasData: boolean;
   current: CompanyMonthMetrics;
   previous?: CompanyMonthMetrics | null;
   trend: { month: string; profit: number }[]; // last N months
   itdProfit?: number; // cumulative profit (ITD) — used for P&L (ITD) column
-  marProfit?: number; // current month's profit — used for Mar Profit column
+  periodProfit?: number | null; // selected-period profit only
 }
 
 interface Props {
@@ -56,6 +57,7 @@ interface Props {
   format: (v: number) => string;
   toDisplay: (v: number) => number;
   portfolioTrend: { month: string; revenue: number; profit: number; roi: number }[];
+  fixedTotalInvestment: number;
 }
 
 const pctChange = (cur: number, prev: number | undefined | null) => {
@@ -86,36 +88,46 @@ const PortfolioInsights = ({
   format,
   toDisplay,
   portfolioTrend,
+  fixedTotalInvestment,
 }: Props) => {
   // === Aggregate totals ===
   const totals = useMemo(() => {
-    const inv = companies.reduce((s, c) => s + c.current.investment, 0);
-    const profit = companies.reduce((s, c) => s + c.current.profit, 0);
-    const netPos = companies.reduce((s, c) => s + c.current.netPosition, 0);
-    // Use companies that have ANY previous data (don't require all)
-    const withPrev = companies.filter(c => c.previous);
+    const reporting = companies.filter(c => c.hasData);
+    const inv = reporting.reduce((s, c) => s + c.current.investment, 0);
+    const profit = reporting.reduce((s, c) => s + c.current.profit, 0);
+    const netPos = reporting.reduce((s, c) => s + c.current.netPosition, 0);
+    const withPrev = reporting.filter(c => c.previous);
     const prevProfit = withPrev.length > 0
       ? withPrev.reduce((s, c) => s + (c.previous?.profit ?? 0), 0)
       : null;
     const prevInv = withPrev.length > 0
       ? withPrev.reduce((s, c) => s + (c.previous?.investment ?? 0), 0)
       : null;
-    const itdProfit = companies.reduce((s, c) => s + (c.itdProfit ?? c.current.profit), 0);
-    const marProfit = companies.reduce((s, c) => s + (c.marProfit ?? c.current.profit), 0);
+    const itdProfit = companies.reduce((s, c) => s + (c.itdProfit ?? 0), 0);
+    const periodProfit = reporting.reduce((s, c) => s + (c.periodProfit ?? 0), 0);
     return {
+      hasData: reporting.length > 0,
+      reportingCount: reporting.length,
       investment: inv,
       profit,
       itdProfit,
-      marProfit,
+      periodProfit,
       netPosition: netPos,
-      roi: inv ? (itdProfit / inv) * 100 : 0,
+      itdRoi: fixedTotalInvestment ? (itdProfit / fixedTotalInvestment) * 100 : 0,
+      periodRoi: inv ? (profit / inv) * 100 : 0,
       prevProfit,
       prevROI: prevProfit !== null && prevInv ? (prevProfit / prevInv) * 100 : null,
     };
-  }, [companies]);
+  }, [companies, fixedTotalInvestment]);
 
   // === Performance verdict ===
   const verdict = useMemo<{ status: "improving" | "stable" | "declining"; reason: string }>(() => {
+    if (!totals.hasData) {
+      return {
+        status: "stable",
+        reason: `No reporting data for ${selectedMonth}.`,
+      };
+    }
     const p = pctChange(totals.profit, totals.prevProfit);
     if (p === null) {
       return {
@@ -135,6 +147,9 @@ const PortfolioInsights = ({
 
   // === Investment signals ===
   const signal = (c: CompanySnapshot): { label: "SCALE" | "HOLD" | "WATCH" | "EXIT"; reason: string; color: string; Icon: any } => {
+    if (!c.hasData) {
+      return { label: "HOLD", reason: "No reporting data for selected month", color: "text-muted-foreground border-border bg-muted/20", Icon: Minus };
+    }
     const growth = pctChange(c.current.profit, c.previous?.profit);
     // EXIT: deep losses (ROI <= -50%) — catastrophic / wind-down
     if (c.current.roi <= -50) {
@@ -182,10 +197,12 @@ const PortfolioInsights = ({
   // === Alerts ===
   const alerts = useMemo(() => {
     const out: { severity: "high" | "med"; msg: string }[] = [];
+    if (!totals.hasData) return out;
     if (totals.prevProfit !== null && totals.profit < totals.prevProfit && pctChange(totals.profit, totals.prevProfit)! < -15) {
       out.push({ severity: "high", msg: `Portfolio profit declined ${Math.abs(pctChange(totals.profit, totals.prevProfit)!).toFixed(1)}% vs ${prevMonthLabel}.` });
     }
     companies.forEach(c => {
+      if (!c.hasData) return;
       const g = pctChange(c.current.profit, c.previous?.profit);
       if (g !== null && g < -25 && c.current.profit < (c.previous?.profit ?? 0)) {
         out.push({ severity: "high", msg: `${c.name}: profit dropped ${Math.abs(g).toFixed(0)}% MoM.` });
@@ -202,6 +219,9 @@ const PortfolioInsights = ({
 
   // === AI-style 2-line summaries per company ===
   const companySummary = (c: CompanySnapshot): { line1: string; action: string } => {
+    if (!c.hasData) {
+      return { line1: `No data for ${selectedMonth}.`, action: "Wait for the next reported month." };
+    }
     const hasPriorData = !!c.previous && (c.previous.profit !== 0 || c.previous.investment !== 0);
     const g = hasPriorData ? pctChange(c.current.profit, c.previous?.profit) : null;
     const status = c.current.profit >= 0 ? "profitable" : "loss-making";
