@@ -725,6 +725,7 @@ const CombinedDashboard = () => {
             format={fmt}
             toDisplay={toDisplay}
             portfolioTrend={portfolioTrend}
+            fixedTotalInvestment={fixedAhmadInvestment}
           />
         </div>
 
@@ -814,7 +815,7 @@ const CombinedDashboard = () => {
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-loss">{c.name} — Loss Alert</p>
                   <p className="text-xs text-muted-foreground">
-                    ROI: {c.roi.toFixed(1)}% · Loss: {fmt(toDisplay(c.profit))} · {((c.investment / totalInvestment) * 100).toFixed(0)}% of portfolio exposure
+                    ROI: {c.roi.toFixed(1)}% · Loss: {fmt(toDisplay(c.profit))} · {((c.investment / fixedAhmadInvestment) * 100).toFixed(1)}% of portfolio exposure
                   </p>
                 </div>
                 <ArrowRight className="h-4 w-4 text-loss" />
