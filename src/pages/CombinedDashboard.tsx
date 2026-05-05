@@ -48,6 +48,28 @@ const normalizeMonth = (m: string): string => {
   return m;
 };
 
+const MONTH_LONG_LABELS: Record<string, string> = {
+  Jan: "January",
+  Feb: "February",
+  Mar: "March",
+  Apr: "April",
+  May: "May",
+  Jun: "June",
+  Jul: "July",
+  Aug: "August",
+  Sep: "September",
+  Oct: "October",
+  Nov: "November",
+  Dec: "December",
+};
+
+const toLongMonthLabel = (month: string) => {
+  if (month === "all") return "Inception to Date";
+  const parts = month.split("-");
+  if (parts.length !== 2) return month;
+  return `${MONTH_LONG_LABELS[parts[0]] ?? parts[0]} 20${parts[1]}`;
+};
+
 // Build a sorted list of all unique months across all companies
 const buildAllMonths = (): string[] => {
   const set = new Set<string>();
@@ -244,6 +266,8 @@ const CombinedDashboard = () => {
     mkx:            { ahmadPct:  50, investment: 5_788_934, entityITD: -8_126_209, ahmadITD: -4_063_104, entityMar: -333_612, ahmadMar: -166_806 },
     garage:         { ahmadPct:  40, investment:   520_000, entityITD:   -338_134, ahmadITD:   -135_253, entityMar:  -17_855, ahmadMar:   -7_142 },
   } as const;
+  const verifiedKeys = Object.keys(VERIFIED) as (keyof typeof VERIFIED)[];
+  const fixedAhmadInvestment = verifiedKeys.reduce((sum, key) => sum + VERIFIED[key].investment, 0);
 
   // For Ranking Table (entity basis) and aggregate ITD totals shown in that table
   const buildVerifiedSnapshot = (useMar = false) => {
