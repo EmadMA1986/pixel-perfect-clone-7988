@@ -734,9 +734,15 @@ const CombinedDashboard = () => {
         {/* 6a. Portfolio Risk Dashboard — Critical / Watch / Healthy */}
         <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
-              <Shield className="h-4 w-4 text-primary" /> Portfolio Risk Dashboard
-            </CardTitle>
+            <div className="space-y-2">
+              <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+                <Shield className="h-4 w-4 text-primary" /> Portfolio Risk Dashboard
+              </CardTitle>
+              <div className="rounded-md border border-yellow-500/40 bg-yellow-500/10 px-3 py-2 text-xs text-yellow-600 dark:text-yellow-400">
+                ⚠️ Risk Dashboard always shows latest available data (Mar-26). Switch to Mar-26 for period-specific risk analysis.
+              </div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Risk data: latest available (Mar-26) — not period filtered</p>
+            </div>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {/* CRITICAL */}
@@ -823,7 +829,7 @@ const CombinedDashboard = () => {
             ))}
             {losingCompanies.length === 0 && (
               <div className="rounded-md border border-success/30 bg-success/5 p-3 text-xs text-muted-foreground">
-                No active loss alerts — all entities profitable on a cumulative basis.
+                {selectedMonth === "all" ? "No active loss alerts — all entities profitable on a cumulative basis." : `No active loss alerts for ${selectedMonth}.`}
               </div>
             )}
 
