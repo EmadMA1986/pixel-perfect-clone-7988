@@ -313,6 +313,50 @@ const CombinedDashboard = () => {
     return computeForMonth(selectedMonth);
   }, [selectedMonth]);
 
+  // === Entity-level (full-company, 100%) period profit ===
+  // Ranking table & loss alerts must reflect the FULL company P&L for the
+  // selected period, not Ahmad's share. Returns null when no data exists.
+  const entityProfitForMonth = (key: keyof typeof VERIFIED, month: string): number | null => {
+    if (month === "all") return VERIFIED[key].entityITD;
+    if (month === "Mar-26") return VERIFIED[key].entityMar;
+    const norm = month;
+    switch (key) {
+      case "rya": {
+        const matches = (dateStr: string) => {
+          const d = new Date(dateStr);
+          if (isNaN(d.getTime())) return false;
+          return `${d.toLocaleString("en-US", { month: "short" })}-${String(d.getFullYear()).slice(2)}` === norm;
+        };
+        const s = goldSales.filter(x => matches(x.date));
+        const e = goldExpenses.filter(x => matches(x.date));
+        const dsc = goldDiscounts.filter(x => matches(x.date));
+        if (s.length + e.length + dsc.length === 0) return null;
+        const usd = s.reduce((a, t) => a + t.profitUSD, 0) - e.reduce((a, t) => a + t.amount, 0) - dsc.reduce((a, t) => a + t.amount, 0);
+        return usd * AED_TO_USD_RATE;
+      }
+      case "otc": {
+        const r = otcMonthlyPL.find(x => normalizeMonth(x.month) === norm);
+        return r ? r.netProfit : null;
+      }
+      case "mkAutosCars": {
+        const r = mkAutosMonthlyIncome.find(x => normalizeMonth(x.month) === norm);
+        return r ? r.total : null;
+      }
+      case "mkAutosCompany": {
+        const r = mkAutosCompanyMonthlyPL.find(x => normalizeMonth(x.month) === norm);
+        return r ? r.netProfit : null;
+      }
+      case "mkx": {
+        const r = mkxMonthlyData.find(x => normalizeMonth(x.month) === norm);
+        return r ? r.netProfit : null;
+      }
+      case "garage": {
+        const r = garagePL.find(x => normalizeMonth(x.month) === norm);
+        return r ? r.netProfit : null;
+      }
+    }
+  };
+
   // === All-time (cumulative) per-company snapshot — verified ITD figures ===
   const allTimeData = useMemo(() => buildVerifiedSnapshot(false), []);
 
