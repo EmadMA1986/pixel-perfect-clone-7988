@@ -313,6 +313,50 @@ const CombinedDashboard = () => {
     return computeForMonth(selectedMonth);
   }, [selectedMonth]);
 
+  // === Entity-level (full-company, 100%) period profit ===
+  // Ranking table & loss alerts must reflect the FULL company P&L for the
+  // selected period, not Ahmad's share. Returns null when no data exists.
+  const entityProfitForMonth = (key: keyof typeof VERIFIED, month: string): number | null => {
+    if (month === "all") return VERIFIED[key].entityITD;
+    if (month === "Mar-26") return VERIFIED[key].entityMar;
+    const norm = month;
+    switch (key) {
+      case "rya": {
+        const matches = (dateStr: string) => {
+          const d = new Date(dateStr);
+          if (isNaN(d.getTime())) return false;
+          return `${d.toLocaleString("en-US", { month: "short" })}-${String(d.getFullYear()).slice(2)}` === norm;
+        };
+        const s = goldSales.filter(x => matches(x.date));
+        const e = goldExpenses.filter(x => matches(x.date));
+        const dsc = goldDiscounts.filter(x => matches(x.date));
+        if (s.length + e.length + dsc.length === 0) return null;
+        const usd = s.reduce((a, t) => a + t.profitUSD, 0) - e.reduce((a, t) => a + t.amount, 0) - dsc.reduce((a, t) => a + t.amount, 0);
+        return usd * AED_TO_USD_RATE;
+      }
+      case "otc": {
+        const r = otcMonthlyPL.find(x => normalizeMonth(x.month) === norm);
+        return r ? r.netProfit : null;
+      }
+      case "mkAutosCars": {
+        const r = mkAutosMonthlyIncome.find(x => normalizeMonth(x.month) === norm);
+        return r ? r.total : null;
+      }
+      case "mkAutosCompany": {
+        const r = mkAutosCompanyMonthlyPL.find(x => normalizeMonth(x.month) === norm);
+        return r ? r.netProfit : null;
+      }
+      case "mkx": {
+        const r = mkxMonthlyData.find(x => normalizeMonth(x.month) === norm);
+        return r ? r.netProfit : null;
+      }
+      case "garage": {
+        const r = garagePL.find(x => normalizeMonth(x.month) === norm);
+        return r ? r.netProfit : null;
+      }
+    }
+  };
+
   // === All-time (cumulative) per-company snapshot — verified ITD figures ===
   const allTimeData = useMemo(() => buildVerifiedSnapshot(false), []);
 
@@ -532,25 +576,53 @@ const CombinedDashboard = () => {
     const end = idx >= 0 ? idx : ALL_MONTHS.length - 1;
     const start = Math.max(0, end - 5);
     const slice = ALL_MONTHS.slice(start, end + 1);
+    const keyMap: Record<string, keyof typeof VERIFIED> = {
+      rya: "rya", otc: "otc", mkAutosCars: "mkAutosCars",
+      mkAutosCompany: "mkAutosCompany", mkx: "mkx", garage: "garage",
+    };
     return companies.map(c => {
-        const prev = pd ? pd[c.key] : null;
-      const cum = allTimeData[c.key];
-        const trend = slice
-          .map(m => ({ month: m, profit: computeForMonth(m)[c.key].profitOrNull }))
-          .filter((point): point is { month: string; profit: number } => point.profit !== null);
+      const vk = keyMap[c.key];
+      const v = VERIFIED[vk];
+      // Ahmad-share period profit for the selected month (null if no data)
+      const ahmadPeriod = ahmadPeriodProfitByKeyOrNull(vk);
+      // ITD figures — verified Ahmad share
+      const ahmadITDProf = v.ahmadITD;
+      const ahmadITDRoi = (v.ahmadITD / v.investment) * 100;
+      const investment = v.investment;
+      // Previous month Ahmad-share profit (period)
+      const prevRaw = pd ? pd[c.key] : null;
+      const prevAhmad = prevRaw && prevRaw.hasData ? prevRaw.profitOrNull : null;
+      const trend = slice
+        .map(m => {
+          if (m === "all") return null;
+          const periodData = m === "Mar-26"
+            ? VERIFIED[vk].ahmadMar
+            : computeForMonth(m)[c.key].profitOrNull;
+          return periodData === null ? null : { month: m, profit: periodData };
+        })
+        .filter((p): p is { month: string; profit: number } => p !== null);
+      const hasPeriodData = ahmadPeriod !== null;
       return {
         key: c.key,
         name: c.name,
         share: c.share,
-        current: { investment: c.investment, profit: c.profit, netPosition: c.netPosition, roi: cum.roi },
-          previous: prev && prev.hasData ? { investment: prev.investment, profit: prev.profitOrNull ?? 0, netPosition: prev.netPositionOrNull ?? prev.investment, roi: prev.roiOrNull ?? 0 } : null,
+        // current.profit = Ahmad-share period profit (used in AI insight, alerts, totals)
+        // current.roi = Ahmad ITD ROI (used in ranking sort, alert text, ROI column)
+        // current.netPosition = investment + period profit (or just investment if no data)
+        current: {
+          investment,
+          profit: ahmadPeriod ?? 0,
+          netPosition: investment + (ahmadPeriod ?? 0),
+          roi: ahmadITDRoi,
+        },
+        previous: prevAhmad !== null ? { investment, profit: prevAhmad, netPosition: investment + prevAhmad, roi: ahmadITDRoi } : null,
         trend,
-        itdProfit: cum.profit,
-          marProfit: c.hasData ? c.profit : undefined,
-          hasData: c.hasData,
+        itdProfit: ahmadITDProf,
+        periodProfit: ahmadPeriod,
+        hasData: hasPeriodData,
       };
     });
-  }, [companies, pd, selectedMonth, allTimeData]);
+  }, [companies, pd, selectedMonth]);
 
   // === Portfolio trend across last 6 months (revenue proxy = sum of profits + investment turnover; here we use profits aggregated) ===
   const portfolioTrend = useMemo(() => {

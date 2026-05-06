@@ -175,26 +175,29 @@ const PortfolioInsights = ({
   }, [companies]);
 
   // === Concentration risk ===
+  // Uses fixedTotalInvestment (constant across periods) so concentration % is stable.
   const concentration = useMemo(() => {
     const sorted = [...companies].sort((a, b) => b.current.investment - a.current.investment);
     const top = sorted[0];
-    const pct = totals.investment ? (top.current.investment / totals.investment) * 100 : 0;
+    const denom = fixedTotalInvestment || companies.reduce((s, c) => s + c.current.investment, 0);
+    const pct = denom ? (top.current.investment / denom) * 100 : 0;
     let action: "REDUCE" | "REBALANCE" | "MAINTAIN";
     let reason: string;
     if (pct > 50) {
       action = "REDUCE";
-      reason = `${top.name} at ${pct.toFixed(0)}% of portfolio — divest to <40% to limit single-entity risk.`;
+      reason = `${top.name} at ${pct.toFixed(1)}% of portfolio — divest to <40% to limit single-entity risk.`;
     } else if (pct > 35) {
       action = "REBALANCE";
-      reason = `${top.name} at ${pct.toFixed(0)}% — rebalance toward underweighted entities.`;
+      reason = `${top.name} at ${pct.toFixed(1)}% — rebalance toward underweighted entities.`;
     } else {
       action = "MAINTAIN";
-      reason = `Top exposure at ${pct.toFixed(0)}% — diversification healthy.`;
+      reason = `Top exposure at ${pct.toFixed(1)}% — diversification healthy.`;
     }
     return { top, pct, action, reason };
-  }, [companies, totals.investment]);
+  }, [companies, fixedTotalInvestment]);
 
   // === Alerts ===
+  // Loss alerts reflect the SELECTED period (periodProfit). ROI in copy is ITD ROI.
   const alerts = useMemo(() => {
     const out: { severity: "high" | "med"; msg: string }[] = [];
     if (!totals.hasData) return out;
@@ -203,12 +206,13 @@ const PortfolioInsights = ({
     }
     companies.forEach(c => {
       if (!c.hasData) return;
+      const periodP = c.periodProfit ?? c.current.profit;
       const g = pctChange(c.current.profit, c.previous?.profit);
       if (g !== null && g < -25 && c.current.profit < (c.previous?.profit ?? 0)) {
         out.push({ severity: "high", msg: `${c.name}: profit dropped ${Math.abs(g).toFixed(0)}% MoM.` });
       }
-      if (c.current.profit < 0 && c.current.roi < -10) {
-        out.push({ severity: "med", msg: `${c.name}: loss-making at ${c.current.roi.toFixed(1)}% ROI.` });
+      if (periodP < 0 && c.current.roi < -10) {
+        out.push({ severity: "med", msg: `${c.name}: loss-making at ${c.current.roi.toFixed(1)}% ITD ROI.` });
       }
     });
     if (concentration.action === "REDUCE") {
@@ -222,15 +226,16 @@ const PortfolioInsights = ({
     if (!c.hasData) {
       return { line1: `No data for ${selectedMonth}.`, action: "Wait for the next reported month." };
     }
+    const periodP = c.periodProfit ?? c.current.profit;
     const hasPriorData = !!c.previous && (c.previous.profit !== 0 || c.previous.investment !== 0);
-    const g = hasPriorData ? pctChange(c.current.profit, c.previous?.profit) : null;
-    const status = c.current.profit >= 0 ? "profitable" : "loss-making";
+    const g = hasPriorData ? pctChange(periodP, c.previous?.profit) : null;
+    const status = periodP >= 0 ? "profitable" : "loss-making";
     const dir = g === null
       ? "MoM trend unavailable"
       : g > 0.5 ? `up ${g.toFixed(0)}% MoM`
       : g < -0.5 ? `down ${Math.abs(g).toFixed(0)}% MoM`
       : "flat MoM";
-    const line1 = `${status} at ${format(toDisplay(c.current.profit))} (${c.current.roi.toFixed(1)}% ROI), ${dir}.`;
+    const line1 = `${status} at ${format(toDisplay(periodP))} (${c.current.roi.toFixed(1)}% ITD ROI), ${dir}.`;
     const sig = signal(c);
     const actionMap: Record<typeof sig.label, string> = {
       SCALE: "Increase capital allocation to capture upside.",
@@ -314,7 +319,7 @@ const PortfolioInsights = ({
                 <TableHead className="text-xs">Company</TableHead>
                 <TableHead className="text-xs text-right">Investment</TableHead>
                 <TableHead className="text-xs text-right">P&L (ITD)</TableHead>
-                <TableHead className="text-xs text-right">ROI %</TableHead>
+                <TableHead className="text-xs text-right">ROI % (ITD)</TableHead>
                 <TableHead className="text-xs text-right">{selectedMonth === "all" ? "Period Profit" : `${selectedMonth} Profit`}</TableHead>
                 <TableHead className="text-xs text-right">vs Last Month</TableHead>
                 <TableHead className="text-xs text-right">% of Portfolio</TableHead>
