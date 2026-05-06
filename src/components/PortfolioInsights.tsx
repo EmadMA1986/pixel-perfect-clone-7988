@@ -226,15 +226,16 @@ const PortfolioInsights = ({
     if (!c.hasData) {
       return { line1: `No data for ${selectedMonth}.`, action: "Wait for the next reported month." };
     }
+    const periodP = c.periodProfit ?? c.current.profit;
     const hasPriorData = !!c.previous && (c.previous.profit !== 0 || c.previous.investment !== 0);
-    const g = hasPriorData ? pctChange(c.current.profit, c.previous?.profit) : null;
-    const status = c.current.profit >= 0 ? "profitable" : "loss-making";
+    const g = hasPriorData ? pctChange(periodP, c.previous?.profit) : null;
+    const status = periodP >= 0 ? "profitable" : "loss-making";
     const dir = g === null
       ? "MoM trend unavailable"
       : g > 0.5 ? `up ${g.toFixed(0)}% MoM`
       : g < -0.5 ? `down ${Math.abs(g).toFixed(0)}% MoM`
       : "flat MoM";
-    const line1 = `${status} at ${format(toDisplay(c.current.profit))} (${c.current.roi.toFixed(1)}% ROI), ${dir}.`;
+    const line1 = `${status} at ${format(toDisplay(periodP))} (${c.current.roi.toFixed(1)}% ITD ROI), ${dir}.`;
     const sig = signal(c);
     const actionMap: Record<typeof sig.label, string> = {
       SCALE: "Increase capital allocation to capture upside.",
