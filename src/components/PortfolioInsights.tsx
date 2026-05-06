@@ -175,26 +175,29 @@ const PortfolioInsights = ({
   }, [companies]);
 
   // === Concentration risk ===
+  // Uses fixedTotalInvestment (constant across periods) so concentration % is stable.
   const concentration = useMemo(() => {
     const sorted = [...companies].sort((a, b) => b.current.investment - a.current.investment);
     const top = sorted[0];
-    const pct = totals.investment ? (top.current.investment / totals.investment) * 100 : 0;
+    const denom = fixedTotalInvestment || companies.reduce((s, c) => s + c.current.investment, 0);
+    const pct = denom ? (top.current.investment / denom) * 100 : 0;
     let action: "REDUCE" | "REBALANCE" | "MAINTAIN";
     let reason: string;
     if (pct > 50) {
       action = "REDUCE";
-      reason = `${top.name} at ${pct.toFixed(0)}% of portfolio — divest to <40% to limit single-entity risk.`;
+      reason = `${top.name} at ${pct.toFixed(1)}% of portfolio — divest to <40% to limit single-entity risk.`;
     } else if (pct > 35) {
       action = "REBALANCE";
-      reason = `${top.name} at ${pct.toFixed(0)}% — rebalance toward underweighted entities.`;
+      reason = `${top.name} at ${pct.toFixed(1)}% — rebalance toward underweighted entities.`;
     } else {
       action = "MAINTAIN";
-      reason = `Top exposure at ${pct.toFixed(0)}% — diversification healthy.`;
+      reason = `Top exposure at ${pct.toFixed(1)}% — diversification healthy.`;
     }
     return { top, pct, action, reason };
-  }, [companies, totals.investment]);
+  }, [companies, fixedTotalInvestment]);
 
   // === Alerts ===
+  // Loss alerts reflect the SELECTED period (periodProfit). ROI in copy is ITD ROI.
   const alerts = useMemo(() => {
     const out: { severity: "high" | "med"; msg: string }[] = [];
     if (!totals.hasData) return out;
@@ -203,12 +206,13 @@ const PortfolioInsights = ({
     }
     companies.forEach(c => {
       if (!c.hasData) return;
+      const periodP = c.periodProfit ?? c.current.profit;
       const g = pctChange(c.current.profit, c.previous?.profit);
       if (g !== null && g < -25 && c.current.profit < (c.previous?.profit ?? 0)) {
         out.push({ severity: "high", msg: `${c.name}: profit dropped ${Math.abs(g).toFixed(0)}% MoM.` });
       }
-      if (c.current.profit < 0 && c.current.roi < -10) {
-        out.push({ severity: "med", msg: `${c.name}: loss-making at ${c.current.roi.toFixed(1)}% ROI.` });
+      if (periodP < 0 && c.current.roi < -10) {
+        out.push({ severity: "med", msg: `${c.name}: loss-making at ${c.current.roi.toFixed(1)}% ITD ROI.` });
       }
     });
     if (concentration.action === "REDUCE") {
