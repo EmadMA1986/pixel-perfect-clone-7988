@@ -95,6 +95,7 @@ export const monthlyIncome: MonthlyIncome[] = [
   { month: "Jan-26", g63: 15560, lamborghini: 16913.34, corvette: 4486.66, cadillac: 12000, patrol: 0, bmw440i: 2276.33, gle53: 8755.13, c200: 2352, q8: 0, cayenne: 0, total: 62343.46, percentage: 3.37 },
   { month: "Feb-26", g63: 9671.67, lamborghini: 0, corvette: 8959.99, cadillac: 4706.67, patrol: 0, bmw440i: 2870, gle53: 9223.87, c200: 0, q8: 0, cayenne: 0, total: 35432.20, percentage: 1.92 },
   { month: "Mar-26", g63: 6991.85, lamborghini: 0, corvette: 7763.33, cadillac: 6906.10, patrol: 0, bmw440i: 470, gle53: 4283.34, c200: 0, q8: 0, cayenne: 0, total: 26414.62, percentage: 1.43 },
+  { month: "Apr-26", g63: 11555, lamborghini: 0, corvette: 8246, cadillac: 5167, patrol: 0, bmw440i: 4242, gle53: 0, c200: 0, q8: 0, cayenne: 0, total: 29210, percentage: 1.58 },
 ];
 
 export const vehicleKeys = ["g63", "lamborghini", "corvette", "cadillac", "patrol", "bmw440i", "gle53", "c200", "q8", "cayenne"] as const;
@@ -241,6 +242,7 @@ export const monthlyPL: MonthlyPL[] = [
   { month: "Jan-26",  directIncome: 450488.36, costOfSales: 72549.37, grossProfit: 377938.99, indirectExpenses: 157109.86, otherExpense: 206138.37, netProfit: 14690.76 },
   { month: "Feb-26",  directIncome: 364132.76, costOfSales: 64321.19, grossProfit: 299811.57, indirectExpenses: 140513.13, otherExpense: 133965.02, netProfit: 25333.42 },
   { month: "Mar-26",  directIncome: 246433.12, costOfSales: 42396.94, grossProfit: 204036.18, indirectExpenses: 132738.74, otherExpense: 84974.73,  netProfit: -13677.29 },
+  { month: "Apr-26",  directIncome: 347684.25, costOfSales: 21283.49, grossProfit: 326400.76, indirectExpenses: 71090.10,  otherExpense: 102587.05, netProfit: 152723.61 },
 ];
 
 // Balance sheet snapshots — high-level totals per period
@@ -296,6 +298,16 @@ export const balanceSheetSnapshots: BalanceSheetSnapshot[] = [
     loansTotal: 3659909.53,
     profitLoss: { opening: -195992.09, currentPeriod: 26346.89, total: -169645.20 },
     total: 4102920.94,
+  },
+  {
+    asOf: "30-Apr-26", monthKey: "Apr-26",
+    capitalAccount: 300000,
+    fixedAssetsTotal: 2962690.76,
+    currentAssetsTotal: 1141046.75,
+    currentLiabilitiesTotal: 240097.98,
+    loansTotal: 3605566.17,
+    profitLoss: { opening: -195992.09, currentPeriod: 179897.49, total: -16094.60 },
+    total: 4103737.51,
   },
 ];
 

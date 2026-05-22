@@ -52,6 +52,7 @@ export const monthlyPL: MonthlyPL[] = [
   { month: "Jan 26", period: "1-Jan-26 to 31-Jan-26", sales: 152261.98, directIncome: 1910, totalRevenue: 154171.98, costOfSales: 68480.39, grossProfit: 85691.59, indirectExpenses: 91378.94, netProfit: -5687.35, payroll: 59460, rent: 10677, labourRevenue: 62780.59, partsRevenue: 78952.34, paintRevenue: 6080, otherRevenue: 5913.81, dummyExcluded: 30000 },
   { month: "Feb 26", period: "1-Feb-26 to 28-Feb-26", sales: 176341.77, directIncome: 0, totalRevenue: 176341.77, costOfSales: 89129.97, grossProfit: 87211.80, indirectExpenses: 97206.95, netProfit: -9995.15, payroll: 54271, rent: 10677, labourRevenue: 83428.74, partsRevenue: 62814.77, paintRevenue: 18264.23, otherRevenue: 11834.03, dummyExcluded: 30000 },
   { month: "Mar 26", period: "1-Mar-26 to 31-Mar-26", sales: 61995.29, directIncome: 0, totalRevenue: 61995.29, costOfSales: 20114.30, grossProfit: 41880.99, indirectExpenses: 49022.93, netProfit: -7141.94, payroll: 29835, rent: 10677, labourRevenue: 35883.09, partsRevenue: 18305.03, paintRevenue: 4369.07, otherRevenue: 3438.10, dummyExcluded: 30000 },
+  { month: "Apr 26", period: "1-Apr-26 to 30-Apr-26", sales: 124314.62, directIncome: 0, totalRevenue: 124314.62, costOfSales: 101030.56, grossProfit: 53284.06, indirectExpenses: 42934.93, netProfit: 10349.13, payroll: 22979, rent: 10677, labourRevenue: 35832.59, partsRevenue: 63926.14, paintRevenue: 12421.10, otherRevenue: 12134.79, dummyExcluded: 30000 },
 ];
 
 export const balanceSheet = {
@@ -141,4 +142,5 @@ export const indirectExpenseDetail: Record<string, Record<string, number>> = {
   "Jan 26": { Payroll: 59460, Rent: 10677, Meals: 7500, Office: 5915.50, PRO: 2831, "WiFi & Mobile": 1937.77, DEWA: 783.36, "Card Charges": 744.29, Fuel: 598.36, "Visa Fine": 370, "Bank Charges": 250, "FB Ads": 143.03, Taxi: 138, "Al Ansari": 30 },
   "Feb 26": { Payroll: 54271, "Trade License": 23366.25, Rent: 10677, PRO: 4790, Office: 1450, "Legal & Prof": 1095.96, "WiFi & Mobile": 510.84, "Card Charges": 369.86, Fuel: 289.58, "Bank Charges": 254, "Staff Visa": 72.54, "Al Ansari": 60 },
   "Mar 26": { Payroll: 29835, Rent: 10677, Office: 4171.14, PRO: 2292.34, DEWA: 778.93, "WiFi & Mobile": 494.26, Office_extra: 0, "Card Charges": 341.89, "Bank Charges": 251, Fuel: 121.37, "Al Ansari": 60 },
+  "Apr 26": { Payroll: 22979, Rent: 10677, "Staff Visa": 5547.96, Office: 1500, PRO: 1100, DEWA: 600, "WiFi & Mobile": 500, "Card Charges": 31.97 },
 };

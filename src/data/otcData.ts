@@ -31,16 +31,16 @@ export interface CapitalEntry {
 }
 
 export const otcSummary = {
-  grossProfitYTD: 3104579.96,
-  cashExpensesYTD: 649159.24,
+  grossProfitYTD: 3288077.55,
+  cashExpensesYTD: 666374.24,
   scamYTD: 950000.00,
-  netProfitYTD: 1505420.72,
+  netProfitYTD: 1671703.31,
   initialCapital: 4120024.83,
   capitalWithdrawal: 2780158.46,
   netCapital: 1339866.37,
-  cashPosition: 2844091.67,
-  totalCash: 3968613.46,
-  ar: -1124521.79,
+  cashPosition: 3011653.00,
+  totalCash: 2049175.00,
+  ar: 962478.00,
   currency: "AED",
 };
 
@@ -61,6 +61,7 @@ export const monthlyPL: MonthlyPL[] = [
   { month: "Jan 2026", grossProfit: 186557.93, cashExpenses: 50104.24, scam: 0, netProfit: 136453.69 },
   { month: "Feb 2026", grossProfit: 212187.14, cashExpenses: 49296, scam: 0, netProfit: 162891.14 },
   { month: "Mar 2026", grossProfit: 198690.54, cashExpenses: 91229, scam: 0, netProfit: 107461.54 },
+  { month: "Apr 2026", grossProfit: 183497.59, cashExpenses: 17215.00, scam: 0, netProfit: 166282.59 },
 ];
 
 export const expenseBreakdown = [

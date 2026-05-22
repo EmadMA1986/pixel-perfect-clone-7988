@@ -144,6 +144,16 @@ export const monthlyData: MkxMonthlyData[] = [
     clientDepositsFiat: 20168937.85, clientWithdrawalsFiat: 8467627.34,
     clientDepositsVA: 8722304.79, clientWithdrawalsVA: 20249330.57,
   },
+  {
+    month: "Apr-26",
+    revenue: 127489.00, gasFees: 2368.83, grossProfit: 125120.17,
+    totalExpenses: 284074.58, otherIncome: 0, netProfit: -158954.41,
+    assetMarketValue: 2932205.93, assetBookValue: 2348412,
+    clientLiabilitiesFiat: 410432.62, clientLiabilitiesVA: 1593613.98,
+    tradingVolume: 0,
+    clientDepositsFiat: 0, clientWithdrawalsFiat: 0,
+    clientDepositsVA: 0, clientWithdrawalsVA: 0,
+  },
 ];
 
 export const kpiData: MkxKPI[] = [
@@ -235,10 +245,21 @@ export const kpiData: MkxKPI[] = [
     revenuePerTotalClientFlow: 0.00124, netProfitPerTradingVolume: -0.00289,
     assetValuationDiff: -210190, assetValuationRatio: -0.08950,
   },
+  {
+    month: "Apr-26",
+    grossMarginPct: 98.14, netMarginPct: -124.68, assetCoverageRatio: 1.4630,
+    liquidityBuffer: 750159,
+    fiatDepositWithdrawalRatio: 0, vaDepositWithdrawalRatio: 0,
+    netFiatFlow: 0, netVAFlow: 0,
+    tradingVolumePerTotalDeposits: 0, netFlowPerTradingVolume: 0,
+    revenuePerTradingVolume: 0, breakEvenTradingVolume: 0,
+    revenuePerTotalClientFlow: 0, netProfitPerTradingVolume: 0,
+    assetValuationDiff: 583793.93, assetValuationRatio: 0.2486,
+  },
 ];
 
-// Full P&L by month (Jan 2025 - Mar 2026)
-export const plMonths = ["Jan-25","Feb-25","Mar-25","Apr-25","May-25","Jun-25","Jul-25","Aug-25","Sep-25","Oct-25","Nov-25","Dec-25","Jan-26","Feb-26","Mar-26"];
+// Full P&L by month (Jan 2025 - Apr 2026)
+export const plMonths = ["Jan-25","Feb-25","Mar-25","Apr-25","May-25","Jun-25","Jul-25","Aug-25","Sep-25","Oct-25","Nov-25","Dec-25","Jan-26","Feb-26","Mar-26","Apr-26"];
 
 export interface PLLineItem {
   label: string;
@@ -383,6 +404,7 @@ export const ahmadCapitalByMonth: Record<string, number> = {
   "Jan-26": 5329871.48,
   "Feb-26": 5329871.48,
   "Mar-26": 5788933.98,
+  "Apr-26": 5504936.85,
 };
 
 // Summary / averages
