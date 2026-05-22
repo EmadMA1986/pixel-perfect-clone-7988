@@ -271,28 +271,28 @@ const CombinedDashboard = () => {
   // Adjustments applied: dummy visa-sponsorship income removed (MK Co + Garage),
   // intercompany AED 79,125 (Co ↔ Garage) eliminated, RYA Gold updated to Apr 2026.
   const VERIFIED = {
-    rya:            { ahmadPct: 100, investment:   203_200, entityITD:  2_293_945, ahmadITD:  2_293_945, entityMar:   38_286, ahmadMar:   38_286 },
-    otc:            { ahmadPct:  50, investment:   515_600, entityITD:  1_505_420, ahmadITD:    752_710, entityMar:  214_924, ahmadMar:  107_462 },
-    mkAutosCars:    { ahmadPct: 100, investment: 2_390_000, entityITD:  1_579_855, ahmadITD:  1_579_855, entityMar:  -13_677, ahmadMar:  -13_677 },
-    mkAutosCompany: { ahmadPct:  45, investment:   135_000, entityITD:   -169_714, ahmadITD:    -76_371, entityMar:  -30_393, ahmadMar:  -13_677 },
-    mkx:            { ahmadPct:  50, investment: 5_788_934, entityITD: -8_126_209, ahmadITD: -4_063_104, entityMar: -333_612, ahmadMar: -166_806 },
-    garage:         { ahmadPct:  40, investment:   520_000, entityITD:   -338_134, ahmadITD:   -135_253, entityMar:  -17_855, ahmadMar:   -7_142 },
+    rya:            { ahmadPct: 100, investment:   203_200, entityITD:  2_293_945, ahmadITD:  2_293_945, entityMar:   38_286, ahmadMar:   38_286, entityApr:   38_286, ahmadApr:   38_286 },
+    otc:            { ahmadPct:  50, investment:   515_600, entityITD:  1_671_703, ahmadITD:    835_852, entityMar:  214_924, ahmadMar:  107_462, entityApr:  166_283, ahmadApr:   83_141 },
+    mkAutosCars:    { ahmadPct: 100, investment: 2_060_110, entityITD:  1_609_066, ahmadITD:  1_609_066, entityMar:  -13_677, ahmadMar:  -13_677, entityApr:   29_210, ahmadApr:   29_210 },
+    mkAutosCompany: { ahmadPct:  45, investment:   135_000, entityITD:    -16_095, ahmadITD:     -7_243, entityMar:  -30_393, ahmadMar:  -13_677, entityApr:  152_724, ahmadApr:   68_726 },
+    mkx:            { ahmadPct:  50, investment: 5_504_937, entityITD: -8_285_164, ahmadITD: -4_142_582, entityMar: -333_612, ahmadMar: -166_806, entityApr: -158_954, ahmadApr:  -79_477 },
+    garage:         { ahmadPct:  40, investment:   520_000, entityITD:   -327_785, ahmadITD:   -131_114, entityMar:  -17_855, ahmadMar:   -7_142, entityApr:   10_349, ahmadApr:    4_140 },
   } as const;
   const verifiedKeys = Object.keys(VERIFIED) as (keyof typeof VERIFIED)[];
   const fixedAhmadInvestment = verifiedKeys.reduce((sum, key) => sum + VERIFIED[key].investment, 0);
 
   // For Ranking Table (entity basis) and aggregate ITD totals shown in that table
-  const buildVerifiedSnapshot = (useMar = false) => {
+  const buildVerifiedSnapshot = (mode: "ITD" | "Mar" | "Apr" = "ITD") => {
     const mk = (k: keyof typeof VERIFIED) => {
       const v = VERIFIED[k];
-      const profit = useMar ? v.entityMar : v.entityITD;
+      const profit = mode === "Mar" ? v.entityMar : mode === "Apr" ? v.entityApr : v.entityITD;
       return {
         investment: v.investment,
         profit,
         profitOrNull: profit as number | null,
         netPosition: v.investment + profit,
         netPositionOrNull: (v.investment + profit) as number | null,
-        roi: (v.entityITD / v.investment) * 100, // ROI always reflects ITD performance
+        roi: (v.entityITD / v.investment) * 100,
         roiOrNull: ((v.entityITD / v.investment) * 100) as number | null,
         hasData: true,
       };
@@ -308,8 +308,9 @@ const CombinedDashboard = () => {
   };
 
   const companyData = useMemo(() => {
-    if (selectedMonth === "all") return buildVerifiedSnapshot(false);
-    if (selectedMonth === "Mar-26") return buildVerifiedSnapshot(true);
+    if (selectedMonth === "all") return buildVerifiedSnapshot("ITD");
+    if (selectedMonth === "Apr-26") return buildVerifiedSnapshot("Apr");
+    if (selectedMonth === "Mar-26") return buildVerifiedSnapshot("Mar");
     return computeForMonth(selectedMonth);
   }, [selectedMonth]);
 
@@ -318,6 +319,7 @@ const CombinedDashboard = () => {
   // selected period, not Ahmad's share. Returns null when no data exists.
   const entityProfitForMonth = (key: keyof typeof VERIFIED, month: string): number | null => {
     if (month === "all") return VERIFIED[key].entityITD;
+    if (month === "Apr-26") return VERIFIED[key].entityApr;
     if (month === "Mar-26") return VERIFIED[key].entityMar;
     const norm = month;
     switch (key) {
@@ -358,7 +360,7 @@ const CombinedDashboard = () => {
   };
 
   // === All-time (cumulative) per-company snapshot — verified ITD figures ===
-  const allTimeData = useMemo(() => buildVerifiedSnapshot(false), []);
+  const allTimeData = useMemo(() => buildVerifiedSnapshot("ITD"), []);
 
   // === Compute previous month data for MoM comparison ===
   const prevMonthLabel = useMemo(() => getPreviousMonthLabel(selectedMonth), [selectedMonth]);
