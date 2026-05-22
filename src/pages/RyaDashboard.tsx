@@ -269,6 +269,9 @@ const RyaDashboard = () => {
           <Badge variant="outline" className="text-[10px] border-primary/40 text-primary">
             View: {period === "ITD" ? "Inception to Date" : selectedMonth} · {currency}
           </Badge>
+          <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-500">
+            Apr-26 data pending — figures shown through Mar-26
+          </Badge>
           {currency === "AED" && (
             <span className="text-[10px] text-muted-foreground">All values × {AED_TO_USD_RATE} (USD→AED)</span>
           )}
