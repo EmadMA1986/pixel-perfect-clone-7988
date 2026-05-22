@@ -183,24 +183,30 @@ const VERIFIED_MAR_26_FULL: Record<string, Partial<PLRow>> = {
   cars:    { revenue:   26_415, cogs: 4_543, grossProfit: 21_872, indirect: 35_549, netProfit: -13_677 },
   company: { revenue:  246_433, netProfit:  -13_677 },
   mkx:     { revenue:   71_450, netProfit: -166_806 },
-  // Garage cogs/GP/indirect intentionally zeroed — flagged below pending classification reconciliation
   garage:  { revenue:   61_995, cogs: 0, grossProfit: 0, indirect: 0, netProfit: -7_142 },
   rya:     { revenue:  248_025, netProfit:   38_286 },
 };
 
-// Per-(month, company) metrics that should display "—" instead of a computed value.
-// Used when source data classification is in dispute and management has not yet reconciled.
+const VERIFIED_APR_26_FULL: Record<string, Partial<PLRow>> = {
+  otc:     { revenue:  183_498, cogs: 0, grossProfit: 183_498, indirect: 17_215, netProfit:  166_283, investment:   515_600 },
+  cars:    { revenue:   29_210, cogs: 0, grossProfit: 29_210, indirect: 63_759, netProfit:  -34_549, investment: 2_060_110 },
+  company: { revenue:  347_684, cogs: 21_283, grossProfit: 326_401, indirect: 173_677, netProfit:  152_724, investment:   135_000 },
+  mkx:     { revenue:  127_489, cogs: 2_369, grossProfit: 125_120, indirect: 284_075, netProfit: -158_954, investment: 5_504_937 },
+  garage:  { revenue:  124_315, cogs: 101_031, grossProfit: 53_284, indirect: 42_935, netProfit:   10_349, investment:   520_000 },
+  rya:     { revenue:  248_025, cogs: 0, grossProfit: 248_025, indirect: 0, netProfit:   38_286, investment:   203_200 },
+};
+
 const FLAGGED_MAR_26: Record<string, Set<string>> = {
   garage: new Set(["cogs", "grossProfit", "grossMargin", "indirect"]),
 };
 
 const VERIFIED_ITD_FULL: Record<string, Partial<PLRow>> = {
-  otc:     { netProfit:  1_505_420 },
-  cars:    { netProfit:  1_579_855 },
-  company: { netProfit:   -169_714 },
-  mkx:     { netProfit: -8_126_209 },
-  garage:  { netProfit:   -338_134 },
-  rya:     { netProfit:  2_293_945 },
+  otc:     { netProfit:  1_671_703, investment:   515_600 },
+  cars:    { netProfit:  1_609_066, investment: 2_060_110 },
+  company: { netProfit:    -16_095, investment:   135_000 },
+  mkx:     { netProfit: -8_285_164, investment: 5_504_937 },
+  garage:  { netProfit:   -327_785, investment:   520_000 },
+  rya:     { netProfit:  2_293_945, investment:   203_200 },
 };
 
 const applyOverride = (computed: PLRow, override: Partial<PLRow>): PLRow => ({
@@ -276,8 +282,9 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
     return COMPANIES.map(c => {
       const rawCurrent = period === "MTD" ? c.forMonth(anchor ?? "") : sumRows(currentMonths.map(c.forMonth));
       let current = rawCurrent;
-      // Apply verified Full-Company overrides where applicable
-      if (period === "MTD" && anchor === "Mar-26" && VERIFIED_MAR_26_FULL[c.key]) {
+      if (period === "MTD" && anchor === "Apr-26" && VERIFIED_APR_26_FULL[c.key]) {
+        current = applyOverride(current, VERIFIED_APR_26_FULL[c.key]);
+      } else if (period === "MTD" && anchor === "Mar-26" && VERIFIED_MAR_26_FULL[c.key]) {
         current = applyOverride(current, VERIFIED_MAR_26_FULL[c.key]);
       } else if (period === "ALL" && VERIFIED_ITD_FULL[c.key]) {
         current = applyOverride(current, VERIFIED_ITD_FULL[c.key]);
@@ -286,8 +293,10 @@ const ConsolidatedPLMatrix = ({ allMonths, selectedMonth }: Props) => {
         ...c,
         current,
         previous: sumRows(prevMonths.map(c.forMonth)),
-        // Track whether the company has ANY data in the selected period — used to render '—' for empty cells
-        hasData: !isRowEmpty(rawCurrent) || (period === "MTD" && anchor === "Mar-26" && !!VERIFIED_MAR_26_FULL[c.key]) || (period === "ALL" && !!VERIFIED_ITD_FULL[c.key]),
+        hasData: !isRowEmpty(rawCurrent)
+          || (period === "MTD" && anchor === "Apr-26" && !!VERIFIED_APR_26_FULL[c.key])
+          || (period === "MTD" && anchor === "Mar-26" && !!VERIFIED_MAR_26_FULL[c.key])
+          || (period === "ALL" && !!VERIFIED_ITD_FULL[c.key]),
       };
     });
   }, [currentMonths, prevMonths, period]);

@@ -96,6 +96,7 @@ const MkAutosCarsDashboard = () => {
   const cashProfitByMonth: Record<string, number> = {
     "Feb-26": 162891,
     "Mar-26": 107462,
+    "Apr-26": 29210,
   };
   const curCashProfit = cashProfitByMonth[selectedMonth];
   const prevCashProfit = prev ? cashProfitByMonth[prev.month] : undefined;

@@ -42,7 +42,7 @@ const OtcDashboard = () => {
   // months exist in monthlyPL only as partial historical aggregates and
   // must NOT be selectable as a verified single-month view.
   // "all" / Inception to Date is always valid (aggregates everything).
-  const VERIFIED_MONTHS = new Set(["Jan 2026", "Feb 2026", "Mar 2026"]);
+  const VERIFIED_MONTHS = new Set(["Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026"]);
   const isVerifiedPeriod = selectedMonth === "all" || VERIFIED_MONTHS.has(selectedMonth);
   const isFiltered = selectedMonth !== "all";
   const periodLabel = isFiltered ? selectedMonth : "Inception to Date";
@@ -109,6 +109,7 @@ const OtcDashboard = () => {
     // Verified per-month volume/spread come from monthSpecifics (defined later);
     // hard-code the same values inline here so this helper is self-contained.
     const verifiedSpec: Record<string, { volumeUSDT: number; spreadPct: number }> = {
+      "Apr 2026": { volumeUSDT: 46_982_212, spreadPct: 0.218 },
       "Mar 2026": { volumeUSDT: 36_600_000, spreadPct: 0.307 },
       "Feb 2026": { volumeUSDT: 50_200_000, spreadPct: 0.260 },
       "Jan 2026": { volumeUSDT: 72_900_000, spreadPct: 0.120 },
@@ -179,24 +180,26 @@ const OtcDashboard = () => {
   // populated for months with a verified end-of-period snapshot. Used by the
   // Risk Dashboard "Liquidity vs Minimum" card.
   const ownCashByMonth: Record<string, number> = {
-    "Mar 2026": otcSummary.cashPosition, // 2,844,091.67
+    "Apr 2026": 3011653.00,
+    "Mar 2026": 2844091.67,
   };
   const ownCashForLiquidity: number | null =
     selectedMonth === "all"
-      ? ownCashByMonth["Mar 2026"]
+      ? ownCashByMonth["Apr 2026"]
       : ownCashByMonth[selectedMonth] ?? null;
   const liquidityHealthy = ownCashForLiquidity !== null && ownCashForLiquidity >= MIN_LIQUIDITY;
   const liquidityRatio = ownCashForLiquidity !== null ? ownCashForLiquidity / MIN_LIQUIDITY : null;
 
   // Top counterparty per month (sourced from same data as Counterparty Concentration section).
   const topCounterpartyByMonth: Record<string, { name: string; pct: number }> = {
+    "Apr 2026": { name: "NICK", pct: 21.1 },
     "Mar 2026": { name: "NICK", pct: 22.8 },
     "Feb 2026": { name: "NICK", pct: 26.7 },
     "Jan 2026": { name: "NICK", pct: 36.5 },
   };
   const topCp =
     selectedMonth === "all"
-      ? topCounterpartyByMonth["Mar 2026"]
+      ? topCounterpartyByMonth["Apr 2026"]
       : topCounterpartyByMonth[selectedMonth] ?? null;
 
   // === Trend data: last 6 months ending at the selected month (or last 6 overall when "all") ===
@@ -293,15 +296,22 @@ const OtcDashboard = () => {
     aedClosing: number; // AED closing balance (DR + DFZ)
   };
   const periodSnapshots: Record<string, PeriodSnapshot> = {
+    "Apr 2026": {
+      cashPosition: 3011653.00,
+      ar: 962478.00,
+      totalCash: 2049175.00,
+      usdtWalletAED: 1031535.00,
+      aedClosing: 1017640.00,
+    },
     "Mar 2026": {
-      cashPosition: otcSummary.cashPosition, // 2,844,091.67
-      ar: otcSummary.ar,                      // -1,124,521.79
-      totalCash: otcSummary.totalCash,        // 3,968,613.46
+      cashPosition: 2844091.67,
+      ar: -1124521.79,
+      totalCash: 3968613.46,
       usdtWalletAED: 2565782.46,
       aedClosing: 1402831.00,
     },
   };
-  const LATEST_SNAPSHOT_MONTH = "Mar 2026";
+  const LATEST_SNAPSHOT_MONTH = "Apr 2026";
   const snapshotKey = selectedMonth === "all" ? LATEST_SNAPSHOT_MONTH : selectedMonth;
   const snapshot: PeriodSnapshot | null = periodSnapshots[snapshotKey] ?? null;
   const DASH = "—";
@@ -318,6 +328,14 @@ const OtcDashboard = () => {
     realizedSpread: number;
   };
   const monthSpecifics: Record<string, MonthSpec> = {
+    "Apr 2026": {
+      volumeLabel: "USDT 47.0M",
+      volumeSubtitle: "AED 173.0M throughput · 200+ trades · spread 21.8 bps",
+      txCount: 200,
+      spreadPct: 0.218,
+      revPerM: 3904,
+      realizedSpread: 183498,
+    },
     "Mar 2026": {
       volumeLabel: "USDT 36.6M",
       volumeSubtitle: "18.7M bought + 17.9M sold · 23/31 active days",
@@ -467,11 +485,22 @@ const OtcDashboard = () => {
               costToRevenue: (91229 / 198691) * 100,
               breakEvenVolume: 91229 / (0.307 / 100),
             },
+            "Apr 2026": {
+              netProfit: 166283,
+              volumeUSDT: 46_982_212,
+              spreadPct: 0.218,
+              activeDays: 25,
+              totalDays: 30,
+              counterparties: 30,
+              top3Concentration: 50.0,
+              costToRevenue: (17215 / 183498) * 100,
+              breakEvenVolume: 17215 / (0.218 / 100),
+            },
           };
 
           // Resolve effective current month (use latest snapshot when "all").
           const effectiveMonth =
-            selectedMonth === "all" ? "Mar 2026" : selectedMonth;
+            selectedMonth === "all" ? "Apr 2026" : selectedMonth;
           const cur = metricsByMonth[effectiveMonth];
           if (!cur) return null;
 
@@ -493,6 +522,21 @@ const OtcDashboard = () => {
 
           // Pre-written narratives + signal lists per month
           const presets: Record<string, { narrative: string; improved: string[]; deteriorated: string[]; watch: string[] }> = {
+            "Apr 2026": {
+              narrative:
+                "April 2026 recorded a 54.7% rebound in net profit vs March (+AED 166,283 vs +AED 107,462) on a 28.4% volume increase to 47.0M USDT. Spread compressed from 0.307% to 0.218% (21.8 bps) but cash expenses dropped sharply to AED 17,215. EZYGO AED 3.53M receivable is the largest single counterparty risk. Signal: HOLD — spread healthy, collection risk to monitor.",
+              improved: [
+                "Net Profit ▲54.7%",
+                "Volume ▲28.4% (36.6M → 47.0M USDT)",
+                "Cash expenses ▼81.1%",
+              ],
+              deteriorated: ["Spread ▼29.0% (0.307% → 0.218%)"],
+              watch: [
+                "EZYGO AED 3,531,096 receivable — largest single risk",
+                "USDT wallet $280K — monitor min operating liquidity",
+                "Sustain spread above 20 bps",
+              ],
+            },
             "Mar 2026": {
               narrative:
                 "March 2026 recorded a 34.0% decline in net profit vs February, driven by a 27.1% volume drop from 50.2M to 36.6M USDT. Spread improved from 0.260% to 0.307% partially offsetting the volume decline. Counterparty base contracted sharply from 54 to 28 active clients. Eight zero trading days including 5 consecutive mid-month days require investigation. Positive: concentration risk improved slightly with top 3 at 53.4% vs 58.0%.",
