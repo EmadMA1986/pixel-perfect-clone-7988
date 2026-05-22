@@ -522,6 +522,21 @@ const OtcDashboard = () => {
 
           // Pre-written narratives + signal lists per month
           const presets: Record<string, { narrative: string; improved: string[]; deteriorated: string[]; watch: string[] }> = {
+            "Apr 2026": {
+              narrative:
+                "April 2026 recorded a 54.7% rebound in net profit vs March (+AED 166,283 vs +AED 107,462) on a 28.4% volume increase to 47.0M USDT. Spread compressed from 0.307% to 0.218% (21.8 bps) but cash expenses dropped sharply to AED 17,215. EZYGO AED 3.53M receivable is the largest single counterparty risk. Signal: HOLD — spread healthy, collection risk to monitor.",
+              improved: [
+                "Net Profit ▲54.7%",
+                "Volume ▲28.4% (36.6M → 47.0M USDT)",
+                "Cash expenses ▼81.1%",
+              ],
+              deteriorated: ["Spread ▼29.0% (0.307% → 0.218%)"],
+              watch: [
+                "EZYGO AED 3,531,096 receivable — largest single risk",
+                "USDT wallet $280K — monitor min operating liquidity",
+                "Sustain spread above 20 bps",
+              ],
+            },
             "Mar 2026": {
               narrative:
                 "March 2026 recorded a 34.0% decline in net profit vs February, driven by a 27.1% volume drop from 50.2M to 36.6M USDT. Spread improved from 0.260% to 0.307% partially offsetting the volume decline. Counterparty base contracted sharply from 54 to 28 active clients. Eight zero trading days including 5 consecutive mid-month days require investigation. Positive: concentration risk improved slightly with top 3 at 53.4% vs 58.0%.",
